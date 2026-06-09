@@ -46,3 +46,17 @@ export async function deleteStore(id: string) {
   const { error } = await supabase.from("stores").delete().eq("id", id);
   return { error };
 }
+export async function updateProduct(id: string, updates: {
+  name: string;
+  price: number;
+  in_stock: boolean;
+}) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("products")
+    .update(updates)
+    .eq("id", id)
+    .select();
+    
+  return { data, error };
+}
