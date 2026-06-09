@@ -1,14 +1,5 @@
-import { FeaturedProducts } from "@/components/home/featured-products";
-import { HeroSearch } from "@/components/home/hero-search";
-import { getProducts } from "@/lib/data/catalog";
+import { redirect } from "next/navigation";
 
-export default async function HomePage() {
-  const featured = await getProducts({ limit: 8 });
-
-  return (
-    <main>
-      <HeroSearch />
-      <FeaturedProducts products={featured} />
-    </main>
-  );
+export default function HomePage() {
+  redirect("/catalog");
 }
