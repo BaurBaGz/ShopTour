@@ -1,12 +1,26 @@
 import { getAdminStats, getAdminStores, getAdminProducts } from "@/lib/data/admin";
 import ProductsTable from "./_components/ProductsTable";
 
+interface Store {
+  id: string;
+  name: string;
+  city: string;
+  address: string;
+  phone: string | null;
+  created_at: string;
+  products: { count: number }[];
+}
+
 export default async function AdminPage() {
   const [stats, stores, products] = await Promise.all([
     getAdminStats(),
     getAdminStores(),
     getAdminProducts(),
   ]);
+
+  // Приводим данные к типам, которые ожидает TypeScript
+  const typedStores = (stores as unknown as Store[]) ?? [];
+  const typedProducts = products ?? [];
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-8">
@@ -43,7 +57,7 @@ export default async function AdminPage() {
             </tr>
           </thead>
           <tbody>
-            {stores.map((store: any) => (
+            {typedStores.map((store) => (
               <tr key={store.id} className="border-t hover:bg-stone-50">
                 <td className="px-4 py-3 font-medium">{store.name}</td>
                 <td className="px-4 py-3 text-stone-500">{store.city}</td>
@@ -61,7 +75,7 @@ export default async function AdminPage() {
 
       {/* Интерактивная таблица товаров */}
       <h2 className="text-xl font-semibold mb-4">Товары</h2>
-      <ProductsTable initialProducts={products} />
+      <ProductsTable initialProducts={typedProducts} />
     </main>
   );
 }

@@ -1,10 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { deleteProductAction } from "../actions";
 
-export default function ProductsTable({ initialProducts }: { initialProducts: any[] }) {
-  const [products, setProducts] = useState(initialProducts);
+// Описываем форму данных товара, чтобы TypeScript не ругался
+interface Product {
+  id: string;
+  name: string;
+  images: string[] | null;
+  price: number;
+  in_stock: boolean;
+  stores: { name: string } | null;
+  categories: { name: string } | null;
+}
+
+export default function ProductsTable({ initialProducts }: { initialProducts: Product[] }) {
+  const [products, setProducts] = useState<Product[]>(initialProducts);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function handleDelete(id: string, name: string) {
@@ -17,7 +29,6 @@ export default function ProductsTable({ initialProducts }: { initialProducts: an
       alert("Ошибка при удалении: " + error.message);
       setDeletingId(null);
     } else {
-      // Локально убираем из списка, чтобы интерфейс среагировал мгновенно
       setProducts(products.filter((p) => p.id !== id));
       setDeletingId(null);
     }
@@ -38,22 +49,26 @@ export default function ProductsTable({ initialProducts }: { initialProducts: an
           </tr>
         </thead>
         <tbody>
-          {products.map((product: any) => (
+          {products.map((product) => (
             <tr key={product.id} className="border-t hover:bg-stone-50">
               <td className="px-4 py-3">
                 {product.images?.[0] ? (
-                  <img
-                    src={product.images[0]}
-                    alt={product.name}
-                    className="w-12 h-12 object-cover rounded-lg"
-                  />
+                  <div className="relative w-12 h-12">
+                    <Image
+                      src={product.images[0]}
+                      alt={product.name}
+                      fill
+                      className="object-cover rounded-lg"
+                      sizes="48px"
+                    />
+                  </div>
                 ) : (
                   <div className="w-12 h-12 bg-stone-100 rounded-lg" />
                 )}
               </td>
               <td className="px-4 py-3 font-medium">{product.name}</td>
-              <td className="px-4 py-3 text-stone-500">{product.stores?.name}</td>
-              <td className="px-4 py-3 text-stone-500">{product.categories?.name}</td>
+              <td className="px-4 py-3 text-stone-500">{product.stores?.name ?? "—"}</td>
+              <td className="px-4 py-3 text-stone-500">{product.categories?.name ?? "—"}</td>
               <td className="px-4 py-3">{product.price.toLocaleString()} ₸</td>
               <td className="px-4 py-3">
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
