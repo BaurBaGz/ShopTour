@@ -50,6 +50,7 @@ export async function updateProduct(id: string, updates: {
   name: string;
   price: number;
   in_stock: boolean;
+  images: string[] | null; // Добавили сюда тоже
 }) {
   const supabase = await createClient();
   const { data, error } = await supabase

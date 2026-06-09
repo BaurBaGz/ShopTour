@@ -22,13 +22,14 @@ export async function deleteStoreAction(id: string) {
 import { updateProduct } from "@/lib/data/admin"; // убедитесь, что импорт есть или добавьте его
 
 export async function updateProductAction(id: string, updates: {
-  name: string;
-  price: number;
-  in_stock: boolean;
-}) {
-  const { error } = await updateProduct(id, updates);
-  if (!error) {
-    revalidatePath("/admin");
+    name: string;
+    price: number;
+    in_stock: boolean;
+    images: string[] | null; // Добавили поле для картинок
+  }) {
+    const { error } = await updateProduct(id, updates);
+    if (!error) {
+      revalidatePath("/admin");
+    }
+    return { error };
   }
-  return { error };
-}
