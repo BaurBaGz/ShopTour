@@ -72,9 +72,10 @@ export default function ProductsTable({ initialProducts }: { initialProducts: Pr
         images: [publicUrl] // Записываем её как основную
       });
 
-    } catch (error: any) {
-      alert("Ошибка при загрузке фото: " + error.message);
-    } finally {
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Неизвестная ошибка";
+        alert("Ошибка при загрузке фото: " + errorMessage);
+      } finally {
       setIsUploading(false);
     }
   }
