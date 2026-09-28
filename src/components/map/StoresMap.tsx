@@ -9,6 +9,8 @@ type Leaflet = typeof import("leaflet");
 // Центр Алматы — если у магазинов нет координат
 const ALMATY_CENTER: [number, number] = [43.238949, 76.889709];
 const LOGO_SIZE = 44;
+// Длительность плавных перелётов карты, секунды
+const FLY_DURATION = 0.8;
 const SELECTED_LOGO_SIZE = 56;
 
 type StoresMapProps = {
@@ -123,6 +125,7 @@ export default function StoresMap({
   const mapInstanceRef = useRef<LeafletMap | null>(null);
   const layerRef = useRef<LayerGroup | null>(null);
   const markersRef = useRef(new Map<string, Marker>());
+  const hasFittedRef = useRef(false);
   const [ready, setReady] = useState(false);
 
   // Актуальные значения для обработчиков маркеров, которые создаются реже, чем меняются пропсы
@@ -142,7 +145,12 @@ export default function StoresMap({
     import("leaflet").then((L) => {
       if (cancelled || !mapRef.current) return;
 
-      const map = L.map(mapRef.current).setView(ALMATY_CENTER, 12);
+      const map = L.map(mapRef.current, {
+        // Плавный зум колесом и трекпадом: шаг 0.25 уровня, в 2 раза больше прокрутки на уровень
+        zoomSnap: 0.25,
+        wheelPxPerZoomLevel: 120,
+        wheelDebounceTime: 60,
+      }).setView(ALMATY_CENTER, 12);
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: "© OpenStreetMap contributors",
       }).addTo(map);
@@ -193,10 +201,22 @@ export default function StoresMap({
       markersRef.current.set(store.id, marker);
     }
 
+    // Первый показ — сразу, дальнейшие изменения (фильтры) — плавным перелётом
+    const animate = hasFittedRef.current;
+    hasFittedRef.current = true;
     if (points.length > 1) {
-      map.fitBounds(points, { padding: [40, 40], maxZoom: 15 });
+      const options = { padding: [40, 40] as [number, number], maxZoom: 15 };
+      if (animate) {
+        map.flyToBounds(points, { ...options, duration: FLY_DURATION });
+      } else {
+        map.fitBounds(points, options);
+      }
     } else if (points.length === 1) {
-      map.setView(points[0], 14);
+      if (animate) {
+        map.flyTo(points[0], 14, { duration: FLY_DURATION });
+      } else {
+        map.setView(points[0], 14);
+      }
     }
   }, [ready, stores, counts]);
 
@@ -216,7 +236,11 @@ export default function StoresMap({
       marker.setIcon(makeIcon(L, store, selected, countsRef.current?.[id]));
       marker.setZIndexOffset(selected ? 1000 : 0);
       if (selected) {
-        mapInstanceRef.current?.panTo(marker.getLatLng());
+        mapInstanceRef.current?.panTo(marker.getLatLng(), {
+          animate: true,
+          duration: 0.5,
+          easeLinearity: 0.2,
+        });
       }
     }
   }, [ready, selectedId, stores]);
@@ -233,7 +257,8 @@ export default function StoresMap({
       const marker = selectedIdRef.current
         ? markersRef.current.get(selectedIdRef.current)
         : null;
-      if (marker) map.panTo(marker.getLatLng());
+      // Во время анимации высоты срабатывает много раз — без своей анимации, чтобы не дёргалось
+      if (marker) map.panTo(marker.getLatLng(), { animate: false });
     });
     observer.observe(container);
     return () => observer.disconnect();
