@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ProductCard } from "@/components/catalog/product-card";
 import StoresMap from "@/components/map/StoresMapWrapper";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
@@ -19,22 +19,42 @@ type StoresExplorerProps = {
   stores: MapStore[];
   products: ProductWithRelations[];
   initialStoreId?: string;
+  /** Показывать на значках число подходящих товаров (включены фильтры) */
+  showCounts?: boolean;
 };
 
-export function StoresExplorer({ stores, products, initialStoreId }: StoresExplorerProps) {
-  const [selectedId, setSelectedId] = useState<string | null>(
-    stores.some((s) => s.id === initialStoreId) ? initialStoreId! : null,
-  );
+export function StoresExplorer({
+  stores,
+  products,
+  initialStoreId,
+  showCounts = false,
+}: StoresExplorerProps) {
+  const [chosenId, setSelectedId] = useState<string | null>(initialStoreId ?? null);
   const panelRef = useRef<HTMLElement>(null);
 
-  const selectedStore = stores.find((s) => s.id === selectedId) ?? null;
+  // Магазин мог пропасть с карты после смены фильтров — тогда выбор снимается
+  const selectedStore = stores.find((s) => s.id === chosenId) ?? null;
+  const selectedId = selectedStore?.id ?? null;
+
+  // Мемоизация обязательна: новый объект пересобирает маркеры и сбрасывает масштаб карты
+  const counts = useMemo(() => {
+    if (!showCounts) return undefined;
+    const result: Record<string, number> = {};
+    for (const product of products) {
+      result[product.store_id] = (result[product.store_id] ?? 0) + 1;
+    }
+    return result;
+  }, [products, showCounts]);
   const storeProducts = selectedStore
     ? products.filter((p) => p.store_id === selectedStore.id)
     : [];
 
-  const select = useCallback((storeId: string | null) => {
-    setSelectedId((current) => (current === storeId ? null : storeId));
-  }, []);
+  const select = useCallback(
+    (storeId: string | null) => {
+      setSelectedId(selectedId === storeId ? null : storeId);
+    },
+    [selectedId],
+  );
 
   // Выбранный магазин — в адресе страницы, чтобы ссылкой можно было поделиться
   useEffect(() => {
@@ -72,6 +92,7 @@ export function StoresExplorer({ stores, products, initialStoreId }: StoresExplo
         height={selectedStore ? COMPACT_MAP_HEIGHT : FULL_MAP_HEIGHT}
         selectedId={selectedId}
         onSelect={select}
+        counts={counts}
       />
 
       {selectedStore ? (

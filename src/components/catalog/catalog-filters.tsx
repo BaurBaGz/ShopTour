@@ -1,25 +1,23 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
-import type { Category } from "@/lib/data/types";
+import type { CatalogFilterValues, FilterKey } from "@/lib/catalog-filters";
 import type { CatalogFilterOptions } from "@/lib/data/catalog";
+import type { Category } from "@/lib/data/types";
 import { cn } from "@/lib/utils/cn";
-
-export type CatalogFilterValues = {
-  q?: string;
-  category?: string;
-  store?: string;
-  size?: string;
-  min?: string;
-  max?: string;
-  sort?: string;
-};
 
 type CatalogFiltersProps = {
   values: CatalogFilterValues;
   categories: Category[];
   options: CatalogFilterOptions;
+  /** Страница, на которую отправляется форма */
+  basePath?: string;
+  /** На карте магазин выбирают на самой карте — поле «Магазин» не нужно */
+  showStoreFilter?: boolean;
+  /** Параметры адреса, которые форма не трогает (например, выбранный на карте магазин) */
+  preserveKeys?: FilterKey[];
 };
 
 const fieldClass =
@@ -27,13 +25,21 @@ const fieldClass =
 
 const labelClass = "mb-1.5 block text-xs font-medium text-stone-500";
 
-export function CatalogFilters({ values, categories, options }: CatalogFiltersProps) {
+export function CatalogFilters({
+  values,
+  categories,
+  options,
+  basePath = "/catalog",
+  showStoreFilter = true,
+  preserveKeys = [],
+}: CatalogFiltersProps) {
   const formRef = useRef<HTMLFormElement>(null);
+  const searchParams = useSearchParams();
 
   // Сколько фильтров из панели выбрано (поиск и сортировка — отдельно)
   const panelCount = [
     values.category,
-    values.store,
+    showStoreFilter && values.store,
     values.size,
     values.min || values.max,
   ].filter(Boolean).length;
@@ -42,9 +48,21 @@ export function CatalogFilters({ values, categories, options }: CatalogFiltersPr
 
   // Пустые поля не отправляем, чтобы адрес оставался коротким
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    for (const element of Array.from(event.currentTarget.elements)) {
+    const form = event.currentTarget;
+    // Значения берём из текущего адреса: на карте он меняется без перезагрузки
+    for (const key of preserveKeys) {
+      const value = searchParams.get(key);
+      if (!value || form.elements.namedItem(key)) continue;
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = key;
+      input.value = value;
+      form.append(input);
+    }
+    for (const element of Array.from(form.elements)) {
       if (
-        (element instanceof HTMLInputElement || element instanceof HTMLSelectElement) &&
+        (element instanceof HTMLInputElement ||
+          element instanceof HTMLSelectElement) &&
         element.name &&
         !element.value
       ) {
@@ -55,10 +73,20 @@ export function CatalogFilters({ values, categories, options }: CatalogFiltersPr
 
   const submitOnChange = () => formRef.current?.requestSubmit();
 
+  const resetHref = (() => {
+    const params = new URLSearchParams();
+    for (const key of preserveKeys) {
+      const value = searchParams.get(key);
+      if (value) params.set(key, value);
+    }
+    const qs = params.toString();
+    return qs ? `${basePath}?${qs}` : basePath;
+  })();
+
   return (
     <form
       ref={formRef}
-      action="/catalog"
+      action={basePath}
       method="get"
       onSubmit={handleSubmit}
       className="flex flex-col gap-3"
@@ -133,7 +161,12 @@ export function CatalogFilters({ values, categories, options }: CatalogFiltersPr
         hidden={!panelOpen}
         className="rounded-2xl border border-stone-200/80 bg-white p-4 sm:p-5"
       >
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div
+          className={cn(
+            "grid grid-cols-1 gap-4 sm:grid-cols-2",
+            showStoreFilter ? "lg:grid-cols-4" : "lg:grid-cols-3",
+          )}
+        >
           <div>
             <label className={labelClass} htmlFor="filter-category">
               Категория
@@ -154,25 +187,27 @@ export function CatalogFilters({ values, categories, options }: CatalogFiltersPr
             </select>
           </div>
 
-          <div>
-            <label className={labelClass} htmlFor="filter-store">
-              Магазин
-            </label>
-            <select
-              id="filter-store"
-              name="store"
-              defaultValue={values.store ?? ""}
-              onChange={submitOnChange}
-              className={fieldClass}
-            >
-              <option value="">Все магазины</option>
-              {options.stores.map((store) => (
-                <option key={store.id} value={store.id}>
-                  {store.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          {showStoreFilter && (
+            <div>
+              <label className={labelClass} htmlFor="filter-store">
+                Магазин
+              </label>
+              <select
+                id="filter-store"
+                name="store"
+                defaultValue={values.store ?? ""}
+                onChange={submitOnChange}
+                className={fieldClass}
+              >
+                <option value="">Все магазины</option>
+                {options.stores.map((store) => (
+                  <option key={store.id} value={store.id}>
+                    {store.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div>
             <label className={labelClass} htmlFor="filter-size">
@@ -232,7 +267,7 @@ export function CatalogFilters({ values, categories, options }: CatalogFiltersPr
             Показать товары
           </button>
           <Link
-            href="/catalog"
+            href={resetHref}
             className="rounded-xl px-4 py-2.5 text-sm font-medium text-stone-500 transition hover:bg-stone-100 hover:text-stone-900"
           >
             Сбросить все

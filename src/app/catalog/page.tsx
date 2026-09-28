@@ -1,18 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  CatalogFilters,
-  type CatalogFilterValues,
-} from "@/components/catalog/catalog-filters";
+import { ActiveFilterChips } from "@/components/catalog/active-filter-chips";
+import { CatalogFilters } from "@/components/catalog/catalog-filters";
 import { ProductCard } from "@/components/catalog/product-card";
 import { SupabaseErrorBanner } from "@/components/catalog/supabase-error-banner";
+import {
+  buildFilterChips,
+  buildFilterHref,
+  parsePrice,
+  parseSort,
+  readFilterValues,
+} from "@/lib/catalog-filters";
 import {
   getCatalogFilterOptions,
   getCategoriesWithError,
   getProductsWithError,
-  type ProductSort,
 } from "@/lib/data/catalog";
-import { formatPrice, formatProductCount } from "@/lib/utils/format";
+import { formatProductCount } from "@/lib/utils/format";
 
 export const metadata: Metadata = {
   title: "Каталог — ShopTour",
@@ -23,44 +27,9 @@ type CatalogPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-const FILTER_KEYS = ["q", "category", "store", "size", "min", "max", "sort"] as const;
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-// Берём по одному значению на параметр; неверные id отбрасываем, иначе Postgres вернёт ошибку
-function readFilterValues(
-  params: Record<string, string | string[] | undefined>,
-): CatalogFilterValues {
-  const values: CatalogFilterValues = {};
-  for (const key of FILTER_KEYS) {
-    const raw = params[key];
-    const value = (Array.isArray(raw) ? raw[0] : raw)?.trim();
-    if (value) values[key] = value;
-  }
-  if (values.category && !UUID_RE.test(values.category)) delete values.category;
-  if (values.store && !UUID_RE.test(values.store)) delete values.store;
-  return values;
-}
-
-const SORTS: ProductSort[] = ["new", "price_asc", "price_desc"];
-
-function parsePrice(value?: string): number | undefined {
-  if (!value?.trim()) return undefined;
-  const price = Number(value);
-  return Number.isFinite(price) && price >= 0 ? price : undefined;
-}
-
-function buildHref(values: CatalogFilterValues): string {
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(values)) {
-    if (value) params.set(key, value);
-  }
-  const qs = params.toString();
-  return qs ? `/catalog?${qs}` : "/catalog";
-}
-
 export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   const values = readFilterValues(await searchParams);
-  const sort = SORTS.find((s) => s === values.sort);
+  const sort = parseSort(values.sort);
   const minPrice = parsePrice(values.min);
   const maxPrice = parsePrice(values.max);
 
@@ -82,36 +51,10 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   const products = productsResult.data;
   const loadError = productsResult.errorMessage ?? categoriesResult.errorMessage;
 
-  // Выбранные фильтры — чипсы с крестиком (ссылка без этого параметра)
-  const chips: { label: string; href: string }[] = [];
-  const without = (...keys: (keyof CatalogFilterValues)[]) =>
-    buildHref(
-      Object.fromEntries(
-        Object.entries(values).filter(
-          ([key]) => !keys.includes(key as keyof CatalogFilterValues),
-        ),
-      ),
-    );
-
-  if (values.q?.trim()) {
-    chips.push({ label: `«${values.q.trim()}»`, href: without("q") });
-  }
-  const category = categories.find((c) => c.id === values.category);
-  if (category) chips.push({ label: category.name, href: without("category") });
-  const store = filterOptions.stores.find((s) => s.id === values.store);
-  if (store) chips.push({ label: store.name, href: without("store") });
-  if (values.size) {
-    chips.push({ label: `Размер ${values.size}`, href: without("size") });
-  }
-  if (minPrice !== undefined || maxPrice !== undefined) {
-    const label =
-      minPrice !== undefined && maxPrice !== undefined
-        ? `${formatPrice(minPrice)} — ${formatPrice(maxPrice)}`
-        : minPrice !== undefined
-          ? `от ${formatPrice(minPrice)}`
-          : `до ${formatPrice(maxPrice!)}`;
-    chips.push({ label, href: without("min", "max") });
-  }
+  const chips = buildFilterChips(values, {
+    categories,
+    stores: filterOptions.stores,
+  });
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -129,7 +72,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
       <div className="mb-6">
         {/* key: при переходе по чипсам форма пересоздаётся с актуальными значениями */}
         <CatalogFilters
-          key={buildHref(values)}
+          key={buildFilterHref("/catalog", values)}
           values={values}
           categories={categories}
           options={filterOptions}
@@ -137,28 +80,8 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
       </div>
 
       {chips.length > 0 && (
-        <div className="mb-6 flex flex-wrap items-center gap-2">
-          {chips.map((chip) => (
-            <Link
-              key={chip.label}
-              href={chip.href}
-              className="group inline-flex items-center gap-1.5 rounded-full bg-white py-1.5 pl-3 pr-2 text-sm text-stone-700 ring-1 ring-stone-200 transition hover:ring-stone-300"
-              aria-label={`Убрать фильтр: ${chip.label}`}
-            >
-              {chip.label}
-              <span className="text-stone-400 group-hover:text-rose-600" aria-hidden>
-                ✕
-              </span>
-            </Link>
-          ))}
-          {chips.length > 1 && (
-            <Link
-              href={buildHref({ sort: values.sort })}
-              className="px-2 text-sm font-medium text-stone-500 hover:text-stone-900"
-            >
-              Сбросить все
-            </Link>
-          )}
+        <div className="mb-6">
+          <ActiveFilterChips chips={chips} keepOnReset={["sort"]} />
         </div>
       )}
 
