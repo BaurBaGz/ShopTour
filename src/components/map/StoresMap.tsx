@@ -1,5 +1,5 @@
 "use client";
-
+import "leaflet/dist/leaflet.css";
 import { useEffect, useRef } from "react";
 
 interface Store {
@@ -18,8 +18,6 @@ export default function StoresMap({ stores }: { stores: Store[] }) {
     if (!mapRef.current || mapInstanceRef.current) return;
 
     import("leaflet").then((L) => {
-      import("leaflet/dist/leaflet.css");
-
       const map = L.map(mapRef.current!).setView([43.238949, 76.889709], 12);
 
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
