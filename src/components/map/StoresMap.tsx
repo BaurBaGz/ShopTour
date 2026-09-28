@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 
 interface Store {
   id: string;
@@ -12,7 +12,7 @@ interface Store {
 
 export default function StoresMap({ stores }: { stores: Store[] }) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null);
+  const mapInstanceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
