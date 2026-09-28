@@ -5,7 +5,6 @@ import { SupabaseErrorBanner } from "@/components/catalog/supabase-error-banner"
 import {
   getCategoriesWithError,
   getProductsWithError,
-  getStoresWithCoords,
 } from "@/lib/data/catalog";
 
 
