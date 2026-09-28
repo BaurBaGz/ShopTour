@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import { CategoryFilter } from "@/components/catalog/category-filter";
 import { ProductCard } from "@/components/catalog/product-card";
 import { SupabaseErrorBanner } from "@/components/catalog/supabase-error-banner";
+import StoresMap from "@/components/map/StoresMapWrapper";
 import {
   getCategoriesWithError,
   getProductsWithError,
+  getStoresWithCoords,
 } from "@/lib/data/catalog";
-
 
 export const metadata: Metadata = {
   title: "Каталог — ShopTour",
@@ -23,9 +24,10 @@ type CatalogPageProps = {
 export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   const { category: categoryId, q: searchQuery } = await searchParams;
 
-  const [categoriesResult, productsResult] = await Promise.all([
+  const [categoriesResult, productsResult, stores] = await Promise.all([
     getCategoriesWithError(),
     getProductsWithError({ categoryId, search: searchQuery }),
+    getStoresWithCoords(),
   ]);
 
   const categories = categoriesResult.data;
@@ -50,6 +52,15 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
 
       {loadError && (
         <SupabaseErrorBanner message={loadError} context="getProducts" />
+      )}
+
+      {stores.length > 0 && (
+        <section className="mb-8">
+          <h2 className="mb-3 text-lg font-semibold text-stone-900">
+            Магазины на карте
+          </h2>
+          <StoresMap stores={stores} />
+        </section>
       )}
 
       <div className="mb-8">
