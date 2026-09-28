@@ -43,6 +43,8 @@ export interface Database {
           whatsapp: string | null;
           instagram: string | null;
           logo_url: string | null;
+          latitude: number | null;
+          longitude: number | null;
           owner_id: string | null;
           created_at: string;
         };
@@ -56,6 +58,8 @@ export interface Database {
           whatsapp?: string | null;
           instagram?: string | null;
           logo_url?: string | null;
+          latitude?: number | null;
+          longitude?: number | null;
           owner_id?: string | null;
           created_at?: string;
         };
@@ -69,6 +73,8 @@ export interface Database {
           whatsapp?: string | null;
           instagram?: string | null;
           logo_url?: string | null;
+          latitude?: number | null;
+          longitude?: number | null;
           owner_id?: string | null;
           created_at?: string;
         };

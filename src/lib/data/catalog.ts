@@ -219,11 +219,27 @@ export async function getStoreIds(): Promise<string[]> {
   if (error || !data) return [];
   return data.map((row) => row.id);
 }
-export async function getStoresWithCoords() {
+export type MapStore = Pick<
+  Store,
+  | "id"
+  | "name"
+  | "address"
+  | "city"
+  | "logo_url"
+  | "phone"
+  | "whatsapp"
+  | "instagram"
+  | "latitude"
+  | "longitude"
+>;
+
+export async function getStoresWithCoords(): Promise<MapStore[]> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("stores")
-    .select("id, name, address, latitude, longitude")
+    .select(
+      "id, name, address, city, logo_url, phone, whatsapp, instagram, latitude, longitude",
+    )
     .not("latitude", "is", null)
     .not("longitude", "is", null);
   return data ?? [];
