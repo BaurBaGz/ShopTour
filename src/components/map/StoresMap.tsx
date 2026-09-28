@@ -1,6 +1,7 @@
 "use client";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useRef } from "react";
+import type { Map as LeafletMap } from "leaflet";
 
 interface Store {
   id: string;
@@ -12,7 +13,7 @@ interface Store {
 
 export default function StoresMap({ stores }: { stores: Store[] }) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mapInstanceRef = useRef<LeafletMap | null>(null);
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
