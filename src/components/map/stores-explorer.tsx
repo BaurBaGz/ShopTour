@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ProductCard } from "@/components/catalog/product-card";
 import StoresMap from "@/components/map/StoresMapWrapper";
+import { StoreAvatar } from "@/components/store/store-avatar";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import type { MapStore } from "@/lib/data/catalog";
 import type { ProductWithRelations } from "@/lib/data/types";
@@ -103,19 +103,7 @@ export function StoresExplorer({
         >
           <div className="relative flex flex-col gap-4 rounded-3xl border border-stone-200/80 bg-white p-5 pr-14 sm:flex-row sm:items-center sm:p-6 sm:pr-16">
             <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-stone-100">
-              {selectedStore.logo_url ? (
-                <Image
-                  src={selectedStore.logo_url}
-                  alt={selectedStore.name}
-                  fill
-                  className="object-cover"
-                  sizes="64px"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-xl font-bold text-stone-400">
-                  {selectedStore.name.charAt(0).toUpperCase()}
-                </div>
-              )}
+              <StoreAvatar store={selectedStore} sizes="64px" textClassName="text-2xl" />
             </div>
 
             <div className="min-w-0 flex-1">

@@ -2,11 +2,19 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useRef, useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import type { CatalogFilterValues, FilterKey } from "@/lib/catalog-filters";
 import type { CatalogFilterOptions } from "@/lib/data/catalog";
 import type { Category } from "@/lib/data/types";
 import { cn } from "@/lib/utils/cn";
+
+const DESKTOP_QUERY = "(min-width: 640px)";
+
+function subscribeDesktop(onChange: () => void) {
+  const media = window.matchMedia(DESKTOP_QUERY);
+  media.addEventListener("change", onChange);
+  return () => media.removeEventListener("change", onChange);
+}
 
 type CatalogFiltersProps = {
   values: CatalogFilterValues;
@@ -44,7 +52,19 @@ export function CatalogFilters({
     values.min || values.max,
   ].filter(Boolean).length;
 
-  const [panelOpen, setPanelOpen] = useState(panelCount > 0);
+  // null — «как по умолчанию»: с выбранными фильтрами панель раскрыта на компьютере
+  // и свёрнута на телефоне (там она закрывает весь экран). Решает CSS, без мигания.
+  const [panelOpen, setPanelOpen] = useState<boolean | null>(null);
+  const autoOpen = panelCount > 0;
+
+  const isDesktop = useSyncExternalStore(
+    subscribeDesktop,
+    () => window.matchMedia(DESKTOP_QUERY).matches,
+    () => false,
+  );
+  const isPanelShown = panelOpen ?? (autoOpen && isDesktop);
+
+  const togglePanel = () => setPanelOpen(!isPanelShown);
 
   // Пустые поля не отправляем, чтобы адрес оставался коротким
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -122,12 +142,12 @@ export function CatalogFilters({
 
           <button
             type="button"
-            onClick={() => setPanelOpen((open) => !open)}
-            aria-expanded={panelOpen}
+            onClick={togglePanel}
+            aria-expanded={isPanelShown}
             aria-controls="catalog-filter-panel"
             className={cn(
               "flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition",
-              panelOpen || panelCount > 0
+              panelOpen || autoOpen
                 ? "bg-stone-900 text-white hover:bg-stone-800"
                 : "bg-white text-stone-700 ring-1 ring-stone-200 hover:bg-stone-50",
             )}
@@ -158,8 +178,11 @@ export function CatalogFilters({
 
       <div
         id="catalog-filter-panel"
-        hidden={!panelOpen}
-        className="rounded-2xl border border-stone-200/80 bg-white p-4 sm:p-5"
+        hidden={panelOpen === null ? !autoOpen : !panelOpen}
+        className={cn(
+          "rounded-2xl border border-stone-200/80 bg-white p-4 sm:p-5",
+          panelOpen === null && autoOpen && "hidden sm:block",
+        )}
       >
         <div
           className={cn(

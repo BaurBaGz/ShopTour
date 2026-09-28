@@ -1,5 +1,5 @@
-import Image from "next/image";
 import type { Store } from "@/lib/data/types";
+import { StoreAvatar } from "@/components/store/store-avatar";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { formatProductCount } from "@/lib/utils/format";
 import { buildInstagramUrl } from "@/lib/utils/instagram";
@@ -28,19 +28,7 @@ export function StoreHero({ store, productCount }: StoreHeroProps) {
       <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
           <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-stone-800 ring-2 ring-white/10 sm:h-28 sm:w-28">
-            {store.logo_url ? (
-              <Image
-                src={store.logo_url}
-                alt={store.name}
-                fill
-                className="object-cover"
-                sizes="112px"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-stone-400">
-                {store.name.charAt(0).toUpperCase()}
-              </div>
-            )}
+            <StoreAvatar store={store} sizes="112px" textClassName="text-4xl" />
           </div>
 
           <div className="min-w-0 flex-1">

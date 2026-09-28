@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/catalog/product-card";
+import { StoreAvatar } from "@/components/store/store-avatar";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { getProductById, getProducts } from "@/lib/data/catalog";
 import { formatPrice } from "@/lib/utils/format";
@@ -173,19 +174,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <section className="rounded-3xl border border-stone-200/80 bg-white p-5 sm:p-6">
               <div className="flex items-center gap-4">
                 <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-stone-100">
-                  {store.logo_url ? (
-                    <Image
-                      src={store.logo_url}
-                      alt={store.name}
-                      fill
-                      className="object-cover"
-                      sizes="56px"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-lg font-bold text-stone-400">
-                      {store.name.charAt(0).toUpperCase()}
-                    </div>
-                  )}
+                  <StoreAvatar store={store} sizes="56px" textClassName="text-2xl" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs text-stone-500">Продаёт магазин</p>

@@ -3,6 +3,7 @@ import "leaflet/dist/leaflet.css";
 import { useEffect, useRef, useState } from "react";
 import type { DivIcon, LayerGroup, Map as LeafletMap, Marker } from "leaflet";
 import type { MapStore } from "@/lib/data/catalog";
+import { getStoreColor, getStoreInitial } from "@/lib/utils/store-color";
 
 type Leaflet = typeof import("leaflet");
 
@@ -64,9 +65,9 @@ function createLogoElement(
     Object.assign(img.style, { width: "100%", height: "100%", objectFit: "cover" });
     circle.append(img);
   } else {
-    circle.textContent = store.name.charAt(0).toUpperCase();
+    circle.textContent = getStoreInitial(store.name);
     Object.assign(circle.style, {
-      background: "#1c1917",
+      background: getStoreColor(store.id),
       color: "#fff",
       fontWeight: "700",
       fontSize: `${Math.round(size * 0.4)}px`,

@@ -139,6 +139,13 @@ select v.id::uuid, v.store_id::uuid, v.name, v.description, v.price, c.id, v.siz
 ) as v(id, store_id, name, description, price, category, sizes, images)
 join public.categories c on c.name = v.category;
 
+-- 5. Логотипы демо-магазинов — стоковые фото, их не отличить на карте.
+--    Без logo_url сайт показывает первую букву названия на цветном фоне.
+update public.stores
+set logo_url = null
+where owner_id is null
+  and id::text like 'f8a10001-%';
+
 commit;
 
 -- Проверка: должно быть 20 магазинов и 100 товаров

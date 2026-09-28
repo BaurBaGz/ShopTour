@@ -1,3 +1,4 @@
+import { isAuthSessionMissingError } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import type { Store } from "@/lib/data/types";
 
@@ -8,12 +9,12 @@ export async function getSessionUser() {
     error,
   } = await supabase.auth.getUser();
 
-  if (error) {
+  // Гость без входа — нормальная ситуация, а не ошибка
+  if (error && !isAuthSessionMissingError(error)) {
     console.error("[auth] getUser:", error.message);
-    return null;
   }
 
-  return user;
+  return error ? null : user;
 }
 
 export async function getStoreForOwner(userId: string): Promise<Store | null> {
