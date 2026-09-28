@@ -5,7 +5,9 @@ import { SupabaseErrorBanner } from "@/components/catalog/supabase-error-banner"
 import {
   getCategoriesWithError,
   getProductsWithError,
+  getStoresWithCoords,
 } from "@/lib/data/catalog";
+
 
 export const metadata: Metadata = {
   title: "Каталог — ShopTour",
@@ -24,17 +26,12 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
 
   const [categoriesResult, productsResult] = await Promise.all([
     getCategoriesWithError(),
-    getProductsWithError({
-      categoryId,
-      search: searchQuery,
-    }),
+    getProductsWithError({ categoryId, search: searchQuery }),
   ]);
 
   const categories = categoriesResult.data;
   const products = productsResult.data;
-  const loadError =
-    productsResult.errorMessage ?? categoriesResult.errorMessage;
-
+  const loadError = productsResult.errorMessage ?? categoriesResult.errorMessage;
   const activeCategory = categories.find((c) => c.id === categoryId);
 
   return (

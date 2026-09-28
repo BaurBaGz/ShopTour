@@ -168,3 +168,10 @@ export async function getStoreIds(): Promise<string[]> {
   if (error || !data) return [];
   return data.map((row) => row.id);
 }
+export async function getStoresWithCoords() {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("stores")
+    .select("id, name, address, latitude, longitude");
+  return data ?? [];
+}
