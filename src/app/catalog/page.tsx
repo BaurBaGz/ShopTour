@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { CategoryFilter } from "@/components/catalog/category-filter";
-import { ProductCard } from "@/components/catalog/product-card";
+import {
+  CategorySections,
+  type CategoryGroup,
+} from "@/components/catalog/category-sections";
 import { SupabaseErrorBanner } from "@/components/catalog/supabase-error-banner";
 import StoresMap from "@/components/map/StoresMapWrapper";
 import {
@@ -8,6 +11,7 @@ import {
   getProductsWithError,
   getStoresWithCoords,
 } from "@/lib/data/catalog";
+import { formatProductCount } from "@/lib/utils/format";
 
 export const metadata: Metadata = {
   title: "Каталог — ShopTour",
@@ -34,6 +38,15 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   const products = productsResult.data;
   const loadError = productsResult.errorMessage ?? categoriesResult.errorMessage;
   const activeCategory = categories.find((c) => c.id === categoryId);
+
+  // Группы в порядке справочника категорий; пустые не показываем
+  const groups: CategoryGroup[] = categories
+    .map((category) => ({
+      id: category.id,
+      name: category.name,
+      products: products.filter((p) => p.category_id === category.id),
+    }))
+    .filter((group) => group.products.length > 0);
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -74,18 +87,9 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
       {products.length > 0 ? (
         <>
           <p className="mb-4 text-sm text-stone-500">
-            {products.length}{" "}
-            {products.length === 1
-              ? "товар"
-              : products.length < 5
-                ? "товара"
-                : "товаров"}
+            {formatProductCount(products.length)}
           </p>
-          <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          <CategorySections groups={groups} />
         </>
       ) : (
         <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-stone-300 bg-white px-6 py-20 text-center">
