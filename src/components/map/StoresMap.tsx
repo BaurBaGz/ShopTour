@@ -33,7 +33,12 @@ function createPopup(store: Store): HTMLElement {
   return root;
 }
 
-export default function StoresMap({ stores }: { stores: Store[] }) {
+type StoresMapProps = {
+  stores: Store[];
+  height?: number;
+};
+
+export default function StoresMap({ stores, height = 400 }: StoresMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<LeafletMap | null>(null);
 
@@ -86,7 +91,7 @@ export default function StoresMap({ stores }: { stores: Store[] }) {
   return (
     <div
       ref={mapRef}
-      style={{ height: "400px", width: "100%", borderRadius: "12px" }}
+      style={{ height: `${height}px`, width: "100%", borderRadius: "12px" }}
     />
   );
 }

@@ -65,10 +65,16 @@ export async function getCategories(): Promise<Category[]> {
   return data;
 }
 
+export type ProductSort = "new" | "price_asc" | "price_desc";
+
 export async function getProductsWithError(options?: {
   categoryId?: string;
   search?: string;
   storeId?: string;
+  size?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  sort?: ProductSort;
   limit?: number;
   /** По умолчанию только in_stock; для страницы магазина и кабинета — true */
   includeOutOfStock?: boolean;
@@ -81,10 +87,15 @@ export async function getProductsWithError(options?: {
 
   const supabase = await createClient();
 
-  let query = supabase
-    .from("products")
-    .select(PRODUCT_SELECT)
-    .order("created_at", { ascending: false });
+  let query = supabase.from("products").select(PRODUCT_SELECT);
+
+  if (options?.sort === "price_asc" || options?.sort === "price_desc") {
+    query = query
+      .order("price", { ascending: options.sort === "price_asc" })
+      .order("created_at", { ascending: false });
+  } else {
+    query = query.order("created_at", { ascending: false });
+  }
 
   if (!options?.includeOutOfStock) {
     query = query.eq("in_stock", true);
@@ -98,8 +109,21 @@ export async function getProductsWithError(options?: {
     query = query.eq("store_id", options.storeId);
   }
 
-  if (options?.search?.trim()) {
-    const term = options.search.trim();
+  if (options?.size) {
+    query = query.contains("sizes", [options.size]);
+  }
+
+  if (options?.minPrice !== undefined) {
+    query = query.gte("price", options.minPrice);
+  }
+
+  if (options?.maxPrice !== undefined) {
+    query = query.lte("price", options.maxPrice);
+  }
+
+  // Запятые, скобки и спецсимволы ломают синтаксис фильтра .or() в PostgREST
+  const term = options?.search?.replace(/[,()%*\\]/g, " ").trim();
+  if (term) {
     query = query.or(`name.ilike.%${term}%,description.ilike.%${term}%`);
   }
 
@@ -118,13 +142,9 @@ export async function getProductsWithError(options?: {
   };
 }
 
-export async function getProducts(options?: {
-  categoryId?: string;
-  search?: string;
-  storeId?: string;
-  limit?: number;
-  includeOutOfStock?: boolean;
-}): Promise<ProductWithRelations[]> {
+export async function getProducts(
+  options?: Parameters<typeof getProductsWithError>[0],
+): Promise<ProductWithRelations[]> {
   const { data } = await getProductsWithError(options);
   return data;
 }
@@ -176,4 +196,47 @@ export async function getStoresWithCoords() {
     .not("latitude", "is", null)
     .not("longitude", "is", null);
   return data ?? [];
+}
+
+const LETTER_SIZES = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"];
+
+// Буквенные размеры по порядку, затем числовые по возрастанию, затем остальные
+function compareSizes(a: string, b: string): number {
+  const rank = (size: string): [number, number] => {
+    const letter = LETTER_SIZES.indexOf(size);
+    if (letter !== -1) return [0, letter];
+    const num = Number(size);
+    if (!Number.isNaN(num)) return [1, num];
+    return [2, 0];
+  };
+  const [groupA, valueA] = rank(a);
+  const [groupB, valueB] = rank(b);
+  return groupA - groupB || valueA - valueB || a.localeCompare(b);
+}
+
+export type CatalogFilterOptions = {
+  stores: { id: string; name: string }[];
+  sizes: string[];
+};
+
+/** Магазины и размеры для панели фильтров каталога */
+export async function getCatalogFilterOptions(): Promise<CatalogFilterOptions> {
+  const supabase = await createClient();
+  const [storesResult, sizesResult] = await Promise.all([
+    supabase.from("stores").select("id, name").order("name"),
+    supabase.from("products").select("sizes").eq("in_stock", true),
+  ]);
+
+  logSupabaseError("getCatalogFilterOptions (stores)", storesResult.error);
+  logSupabaseError("getCatalogFilterOptions (sizes)", sizesResult.error);
+
+  const sizes = new Set<string>();
+  for (const row of sizesResult.data ?? []) {
+    for (const size of row.sizes ?? []) sizes.add(size);
+  }
+
+  return {
+    stores: storesResult.data ?? [],
+    sizes: [...sizes].sort(compareSizes),
+  };
 }

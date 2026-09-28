@@ -14,6 +14,9 @@ export function SiteFooter() {
           <Link href="/catalog" className="hover:text-stone-900">
             Каталог
           </Link>
+          <Link href="/stores" className="hover:text-stone-900">
+            Магазины на карте
+          </Link>
         </div>
       </div>
     </footer>

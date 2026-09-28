@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
-import { CategoryFilter } from "@/components/catalog/category-filter";
+import Link from "next/link";
 import {
-  CategorySections,
-  type CategoryGroup,
-} from "@/components/catalog/category-sections";
+  CatalogFilters,
+  type CatalogFilterValues,
+} from "@/components/catalog/catalog-filters";
+import { ProductCard } from "@/components/catalog/product-card";
 import { SupabaseErrorBanner } from "@/components/catalog/supabase-error-banner";
-import StoresMap from "@/components/map/StoresMapWrapper";
 import {
+  getCatalogFilterOptions,
   getCategoriesWithError,
   getProductsWithError,
-  getStoresWithCoords,
+  type ProductSort,
 } from "@/lib/data/catalog";
-import { formatProductCount } from "@/lib/utils/format";
+import { formatPrice, formatProductCount } from "@/lib/utils/format";
 
 export const metadata: Metadata = {
   title: "Каталог — ShopTour",
@@ -19,34 +20,98 @@ export const metadata: Metadata = {
 };
 
 type CatalogPageProps = {
-  searchParams: Promise<{
-    category?: string;
-    q?: string;
-  }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default async function CatalogPage({ searchParams }: CatalogPageProps) {
-  const { category: categoryId, q: searchQuery } = await searchParams;
+const FILTER_KEYS = ["q", "category", "store", "size", "min", "max", "sort"] as const;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-  const [categoriesResult, productsResult, stores] = await Promise.all([
+// Берём по одному значению на параметр; неверные id отбрасываем, иначе Postgres вернёт ошибку
+function readFilterValues(
+  params: Record<string, string | string[] | undefined>,
+): CatalogFilterValues {
+  const values: CatalogFilterValues = {};
+  for (const key of FILTER_KEYS) {
+    const raw = params[key];
+    const value = (Array.isArray(raw) ? raw[0] : raw)?.trim();
+    if (value) values[key] = value;
+  }
+  if (values.category && !UUID_RE.test(values.category)) delete values.category;
+  if (values.store && !UUID_RE.test(values.store)) delete values.store;
+  return values;
+}
+
+const SORTS: ProductSort[] = ["new", "price_asc", "price_desc"];
+
+function parsePrice(value?: string): number | undefined {
+  if (!value?.trim()) return undefined;
+  const price = Number(value);
+  return Number.isFinite(price) && price >= 0 ? price : undefined;
+}
+
+function buildHref(values: CatalogFilterValues): string {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(values)) {
+    if (value) params.set(key, value);
+  }
+  const qs = params.toString();
+  return qs ? `/catalog?${qs}` : "/catalog";
+}
+
+export default async function CatalogPage({ searchParams }: CatalogPageProps) {
+  const values = readFilterValues(await searchParams);
+  const sort = SORTS.find((s) => s === values.sort);
+  const minPrice = parsePrice(values.min);
+  const maxPrice = parsePrice(values.max);
+
+  const [categoriesResult, productsResult, filterOptions] = await Promise.all([
     getCategoriesWithError(),
-    getProductsWithError({ categoryId, search: searchQuery }),
-    getStoresWithCoords(),
+    getProductsWithError({
+      categoryId: values.category,
+      storeId: values.store,
+      size: values.size,
+      search: values.q,
+      minPrice,
+      maxPrice,
+      sort,
+    }),
+    getCatalogFilterOptions(),
   ]);
 
   const categories = categoriesResult.data;
   const products = productsResult.data;
   const loadError = productsResult.errorMessage ?? categoriesResult.errorMessage;
-  const activeCategory = categories.find((c) => c.id === categoryId);
 
-  // Группы в порядке справочника категорий; пустые не показываем
-  const groups: CategoryGroup[] = categories
-    .map((category) => ({
-      id: category.id,
-      name: category.name,
-      products: products.filter((p) => p.category_id === category.id),
-    }))
-    .filter((group) => group.products.length > 0);
+  // Выбранные фильтры — чипсы с крестиком (ссылка без этого параметра)
+  const chips: { label: string; href: string }[] = [];
+  const without = (...keys: (keyof CatalogFilterValues)[]) =>
+    buildHref(
+      Object.fromEntries(
+        Object.entries(values).filter(
+          ([key]) => !keys.includes(key as keyof CatalogFilterValues),
+        ),
+      ),
+    );
+
+  if (values.q?.trim()) {
+    chips.push({ label: `«${values.q.trim()}»`, href: without("q") });
+  }
+  const category = categories.find((c) => c.id === values.category);
+  if (category) chips.push({ label: category.name, href: without("category") });
+  const store = filterOptions.stores.find((s) => s.id === values.store);
+  if (store) chips.push({ label: store.name, href: without("store") });
+  if (values.size) {
+    chips.push({ label: `Размер ${values.size}`, href: without("size") });
+  }
+  if (minPrice !== undefined || maxPrice !== undefined) {
+    const label =
+      minPrice !== undefined && maxPrice !== undefined
+        ? `${formatPrice(minPrice)} — ${formatPrice(maxPrice)}`
+        : minPrice !== undefined
+          ? `от ${formatPrice(minPrice)}`
+          : `до ${formatPrice(maxPrice!)}`;
+    chips.push({ label, href: without("min", "max") });
+  }
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -54,42 +119,59 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
         <h1 className="text-3xl font-semibold tracking-tight text-stone-900 sm:text-4xl">
           Каталог
         </h1>
-        <p className="mt-2 text-stone-500">
-          {searchQuery
-            ? `Результаты по запросу «${searchQuery}»`
-            : activeCategory
-              ? activeCategory.name
-              : "Все товары от магазинов города"}
-        </p>
+        <p className="mt-2 text-stone-500">Все товары от магазинов города</p>
       </div>
 
       {loadError && (
         <SupabaseErrorBanner message={loadError} context="getProducts" />
       )}
 
-      {stores.length > 0 && (
-        <section className="mb-8">
-          <h2 className="mb-3 text-lg font-semibold text-stone-900">
-            Магазины на карте
-          </h2>
-          <StoresMap stores={stores} />
-        </section>
-      )}
-
-      <div className="mb-8">
-        <CategoryFilter
+      <div className="mb-6">
+        {/* key: при переходе по чипсам форма пересоздаётся с актуальными значениями */}
+        <CatalogFilters
+          key={buildHref(values)}
+          values={values}
           categories={categories}
-          activeCategoryId={categoryId}
-          searchQuery={searchQuery}
+          options={filterOptions}
         />
       </div>
+
+      {chips.length > 0 && (
+        <div className="mb-6 flex flex-wrap items-center gap-2">
+          {chips.map((chip) => (
+            <Link
+              key={chip.label}
+              href={chip.href}
+              className="group inline-flex items-center gap-1.5 rounded-full bg-white py-1.5 pl-3 pr-2 text-sm text-stone-700 ring-1 ring-stone-200 transition hover:ring-stone-300"
+              aria-label={`Убрать фильтр: ${chip.label}`}
+            >
+              {chip.label}
+              <span className="text-stone-400 group-hover:text-rose-600" aria-hidden>
+                ✕
+              </span>
+            </Link>
+          ))}
+          {chips.length > 1 && (
+            <Link
+              href={buildHref({ sort: values.sort })}
+              className="px-2 text-sm font-medium text-stone-500 hover:text-stone-900"
+            >
+              Сбросить все
+            </Link>
+          )}
+        </div>
+      )}
 
       {products.length > 0 ? (
         <>
           <p className="mb-4 text-sm text-stone-500">
             {formatProductCount(products.length)}
           </p>
-          <CategorySections groups={groups} />
+          <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
         </>
       ) : (
         <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-stone-300 bg-white px-6 py-20 text-center">
@@ -97,10 +179,18 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
           <p className="mt-2 max-w-sm text-sm text-stone-500">
             {loadError
               ? "Исправьте ошибку выше — данные в базе есть, но запрос не доходит до Supabase."
-              : searchQuery || categoryId
-                ? "Попробуйте другой запрос или сбросьте фильтр категории."
+              : chips.length > 0
+                ? "Попробуйте изменить или сбросить фильтры."
                 : "Добавьте товары в Supabase (Table Editor) или выполните demo_almaty_stores.sql."}
           </p>
+          {chips.length > 0 && (
+            <Link
+              href="/catalog"
+              className="mt-6 rounded-xl bg-stone-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-600"
+            >
+              Сбросить фильтры
+            </Link>
+          )}
         </div>
       )}
     </main>
