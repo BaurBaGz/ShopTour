@@ -8,3 +8,8 @@ export type ProductWithRelations = Product & {
   stores: Pick<Store, "id" | "name" | "city"> | null;
   categories: Pick<Category, "id" | "name"> | null;
 };
+
+export type ProductDetails = Product & {
+  stores: Store | null;
+  categories: Pick<Category, "id" | "name"> | null;
+};

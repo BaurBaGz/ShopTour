@@ -4,7 +4,12 @@ import {
   logSupabaseError,
 } from "@/lib/supabase/log-error";
 import type { PostgrestError } from "@supabase/supabase-js";
-import type { Category, ProductWithRelations, Store } from "@/lib/data/types";
+import type {
+  Category,
+  ProductDetails,
+  ProductWithRelations,
+  Store,
+} from "@/lib/data/types";
 
 export type DataResult<T> = {
   data: T;
@@ -147,6 +152,32 @@ export async function getProducts(
 ): Promise<ProductWithRelations[]> {
   const { data } = await getProductsWithError(options);
   return data;
+}
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Товар с полными данными магазина — для страницы товара */
+export async function getProductById(id: string): Promise<ProductDetails | null> {
+  // Некорректный id Postgres отклонит ошибкой — сразу считаем, что товара нет
+  if (!UUID_RE.test(id)) return null;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("products")
+    .select(
+      `
+      *,
+      stores!products_store_id_fkey ( * ),
+      categories!products_category_id_fkey ( id, name )
+    `,
+    )
+    .eq("id", id)
+    .maybeSingle();
+
+  logSupabaseError("getProductById", error);
+
+  return (data as ProductDetails | null) ?? null;
 }
 
 export async function getStoreByIdWithError(

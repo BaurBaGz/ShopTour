@@ -21,7 +21,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
       )}
     >
       <Link
-        href={store ? `/stores/${store.id}` : "/catalog"}
+        href={`/products/${product.id}`}
         className="relative aspect-[4/5] overflow-hidden bg-stone-100"
       >
         {imageUrl ? (
@@ -61,7 +61,12 @@ export function ProductCard({ product, className }: ProductCardProps) {
       <div className="flex flex-1 flex-col gap-2 p-4">
         <div className="flex items-start justify-between gap-2">
           <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-stone-900">
-            {product.name}
+            <Link
+              href={`/products/${product.id}`}
+              className="transition hover:text-rose-600"
+            >
+              {product.name}
+            </Link>
           </h3>
           <p className="shrink-0 text-sm font-bold text-stone-900">
             {formatPrice(product.price)}
