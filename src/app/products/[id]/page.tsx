@@ -3,12 +3,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/catalog/product-card";
+import { ProductPurchase } from "@/components/catalog/product-purchase";
 import { StoreAvatar } from "@/components/store/store-avatar";
-import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { getProductById, getProducts } from "@/lib/data/catalog";
 import { formatPrice } from "@/lib/utils/format";
 import { buildInstagramUrl } from "@/lib/utils/instagram";
-import { buildWhatsAppUrl } from "@/lib/utils/whatsapp";
+import { getDiscountPercent } from "@/lib/utils/product";
 
 type ProductPageProps = {
   params: Promise<{ id: string }>;
@@ -49,14 +49,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
         .slice(0, 4)
     : [];
 
-  const contactPhone = store?.whatsapp ?? store?.phone;
-  const whatsappHref =
-    store && contactPhone
-      ? buildWhatsAppUrl(
-          contactPhone,
-          `Здравствуйте! Пишу с ShopTour. Интересует «${product.name}» за ${formatPrice(product.price)}. Он ещё в наличии?`,
-        )
-      : null;
+  const contactPhone = store?.whatsapp ?? store?.phone ?? null;
+  const discount = getDiscountPercent(product);
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
@@ -130,9 +124,25 @@ export default async function ProductPage({ params }: ProductPageProps) {
               {product.name}
             </h1>
             <div className="mt-4 flex flex-wrap items-center gap-3">
-              <p className="text-2xl font-bold text-stone-900">
+              <p
+                className={
+                  discount
+                    ? "text-2xl font-bold text-rose-600"
+                    : "text-2xl font-bold text-stone-900"
+                }
+              >
                 {formatPrice(product.price)}
               </p>
+              {discount && product.old_price && (
+                <>
+                  <p className="text-lg text-stone-400 line-through">
+                    {formatPrice(product.old_price)}
+                  </p>
+                  <span className="rounded-full bg-rose-600 px-2.5 py-1 text-xs font-bold text-white">
+                    −{discount}%
+                  </span>
+                </>
+              )}
               <span
                 className={
                   product.in_stock
@@ -143,23 +153,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 {product.in_stock ? "В наличии" : "Нет в наличии"}
               </span>
             </div>
+            {discount && product.old_price && (
+              <p className="mt-1 text-sm text-rose-600">
+                Экономия {formatPrice(product.old_price - product.price)}
+              </p>
+            )}
           </div>
 
-          {product.sizes?.length > 0 && (
-            <div>
-              <h2 className="mb-2 text-sm font-medium text-stone-500">Размеры</h2>
-              <ul className="flex flex-wrap gap-2">
-                {product.sizes.map((size) => (
-                  <li
-                    key={size}
-                    className="min-w-11 rounded-xl border border-stone-200 bg-white px-3 py-2 text-center text-sm font-medium text-stone-800"
-                  >
-                    {size}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          <ProductPurchase product={product} contactPhone={contactPhone} />
 
           {product.description && (
             <div>
@@ -191,17 +192,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </div>
 
               <div className="mt-5 flex flex-wrap gap-3 text-sm">
-                {whatsappHref && (
-                  <a
-                    href={whatsappHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-full bg-[#25D366] px-5 py-2.5 font-semibold text-white transition hover:bg-[#20bd5a]"
-                  >
-                    <WhatsAppIcon className="h-5 w-5" />
-                    Спросить в WhatsApp
-                  </a>
-                )}
                 {store.phone && (
                   <a
                     href={`tel:${store.phone.replace(/\s/g, "")}`}

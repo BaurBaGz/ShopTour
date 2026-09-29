@@ -87,9 +87,11 @@ export interface Database {
           name: string;
           description: string | null;
           price: number;
+          old_price: number | null;
           category_id: string;
           sizes: string[];
           images: string[];
+          size_stock: Json;
           in_stock: boolean;
           created_at: string;
         };
@@ -99,9 +101,11 @@ export interface Database {
           name: string;
           description?: string | null;
           price: number;
+          old_price?: number | null;
           category_id: string;
           sizes?: string[];
           images?: string[];
+          size_stock?: Json;
           in_stock?: boolean;
           created_at?: string;
         };
@@ -111,9 +115,11 @@ export interface Database {
           name?: string;
           description?: string | null;
           price?: number;
+          old_price?: number | null;
           category_id?: string;
           sizes?: string[];
           images?: string[];
+          size_stock?: Json;
           in_stock?: boolean;
           created_at?: string;
         };

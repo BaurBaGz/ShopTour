@@ -6,6 +6,7 @@ import {
   saveProductAction,
   type ProductActionState,
 } from "@/app/dashboard/actions";
+import { SizeStockEditor } from "@/components/dashboard/size-stock-editor";
 import type { Category, Product } from "@/lib/data/types";
 import { cn } from "@/lib/utils/cn";
 
@@ -27,9 +28,7 @@ export function ProductForm({ categories, product }: ProductFormProps) {
       action={formAction}
       className="space-y-5 rounded-3xl border border-stone-200 bg-white p-6 shadow-sm sm:p-8"
     >
-      {product && (
-        <input type="hidden" name="productId" value={product.id} />
-      )}
+      {product && <input type="hidden" name="productId" value={product.id} />}
 
       <div>
         <label className="mb-1.5 block text-sm font-medium text-stone-700">
@@ -55,7 +54,7 @@ export function ProductForm({ categories, product }: ProductFormProps) {
         />
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-2">
+      <div className="grid gap-5 sm:grid-cols-3">
         <div>
           <label className="mb-1.5 block text-sm font-medium text-stone-700">
             Цена (₸) *
@@ -69,6 +68,23 @@ export function ProductForm({ categories, product }: ProductFormProps) {
             required
             className="w-full rounded-xl border border-stone-200 px-4 py-3 outline-none focus:border-rose-300 focus:ring-4 focus:ring-rose-500/15"
           />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-stone-700">
+            Старая цена (₸)
+          </label>
+          <input
+            name="oldPrice"
+            type="number"
+            min={0}
+            step={100}
+            defaultValue={product?.old_price ?? ""}
+            placeholder="Для скидки"
+            className="w-full rounded-xl border border-stone-200 px-4 py-3 outline-none focus:border-rose-300 focus:ring-4 focus:ring-rose-500/15"
+          />
+          <p className="mt-1 text-xs text-stone-500">
+            Больше цены — покупатель увидит скидку
+          </p>
         </div>
         <div>
           <label className="mb-1.5 block text-sm font-medium text-stone-700">
@@ -92,17 +108,7 @@ export function ProductForm({ categories, product }: ProductFormProps) {
         </div>
       </div>
 
-      <div>
-        <label className="mb-1.5 block text-sm font-medium text-stone-700">
-          Размеры (через запятую)
-        </label>
-        <input
-          name="sizes"
-          defaultValue={product?.sizes?.join(", ") ?? ""}
-          placeholder="S, M, L, XL"
-          className="w-full rounded-xl border border-stone-200 px-4 py-3 outline-none focus:border-rose-300 focus:ring-4 focus:ring-rose-500/15"
-        />
-      </div>
+      <SizeStockEditor sizes={product?.sizes} sizeStock={product?.size_stock} />
 
       <div>
         <label className="mb-1.5 block text-sm font-medium text-stone-700">

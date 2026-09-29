@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { logoutAction } from "@/app/auth/actions";
+import { FavoritesLink } from "@/components/favorites/favorites-link";
 import { getSessionUser, getStoreForOwner } from "@/lib/auth/session";
 
 const nav = [
@@ -41,6 +42,8 @@ export async function SiteHeader() {
             </Link>
           ))}
 
+          <FavoritesLink />
+
           {user && store ? (
             <>
               <Link
@@ -62,7 +65,7 @@ export async function SiteHeader() {
             <>
               <Link
                 href="/auth/login"
-                className="whitespace-nowrap rounded-full px-2 py-2 text-[13px] font-medium sm:px-4 sm:text-sm text-stone-600 transition hover:bg-stone-100"
+                className="hidden whitespace-nowrap rounded-full sm:inline-block px-2 py-2 text-[13px] font-medium sm:px-4 sm:text-sm text-stone-600 transition hover:bg-stone-100"
               >
                 Вход
               </Link>

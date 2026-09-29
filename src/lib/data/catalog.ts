@@ -4,6 +4,8 @@ import {
   logSupabaseError,
 } from "@/lib/supabase/log-error";
 import type { PostgrestError } from "@supabase/supabase-js";
+import { PRODUCT_SELECT } from "@/lib/data/selects";
+import { isSizeAvailable } from "@/lib/utils/product";
 import type {
   Category,
   ProductDetails,
@@ -37,11 +39,6 @@ function checkSupabaseEnv(): string | null {
   return null;
 }
 
-const PRODUCT_SELECT = `
-  *,
-  stores!products_store_id_fkey ( id, name, city ),
-  categories!products_category_id_fkey ( id, name )
-`;
 
 export async function getCategoriesWithError(): Promise<DataResult<Category[]>> {
   const envError = checkSupabaseEnv();
@@ -140,8 +137,15 @@ export async function getProductsWithError(options?: {
 
   logSupabaseError("getProducts", error);
 
+  let products = (data as ProductWithRelations[]) ?? [];
+  // Размер из фильтра должен быть не просто в списке, а ещё и не закончиться
+  if (options?.size) {
+    const size = options.size;
+    products = products.filter((p) => isSizeAvailable(p, size));
+  }
+
   return {
-    data: (data as ProductWithRelations[]) ?? [],
+    data: products,
     error,
     errorMessage: formatSupabaseError(error),
   };

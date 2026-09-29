@@ -9,11 +9,32 @@ export type ProductActionState = {
   error?: string;
 };
 
-function parseSizes(raw: string): string[] {
-  return raw
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
+/** Размеры и остатки из редактора: [{ size, stock }] → список размеров и { размер: остаток } */
+function parseSizeStock(raw: string): {
+  sizes: string[];
+  sizeStock: Record<string, number>;
+} | null {
+  let rows: unknown;
+  try {
+    rows = JSON.parse(raw || "[]");
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(rows)) return null;
+
+  const sizes: string[] = [];
+  const sizeStock: Record<string, number> = {};
+  for (const row of rows) {
+    const size = String(row?.size ?? "").trim();
+    if (!size || sizes.includes(size)) continue;
+    sizes.push(size);
+    const stockRaw = String(row?.stock ?? "").trim();
+    if (stockRaw === "") continue;
+    const stock = Number(stockRaw);
+    if (!Number.isInteger(stock) || stock < 0) return null;
+    sizeStock[size] = stock;
+  }
+  return { sizes, sizeStock };
 }
 
 function parseImages(raw: string): string[] {
@@ -39,7 +60,11 @@ export async function saveProductAction(
   const description = String(formData.get("description") ?? "").trim();
   const price = Number(formData.get("price"));
   const categoryId = String(formData.get("categoryId") ?? "").trim();
-  const sizes = parseSizes(String(formData.get("sizes") ?? ""));
+  const sizeStockResult = parseSizeStock(
+    String(formData.get("sizeStock") ?? ""),
+  );
+  const oldPriceRaw = String(formData.get("oldPrice") ?? "").trim();
+  const oldPrice = oldPriceRaw === "" ? null : Number(oldPriceRaw);
   const images = parseImages(String(formData.get("images") ?? ""));
   const inStock = formData.get("inStock") === "on";
 
@@ -47,13 +72,29 @@ export async function saveProductAction(
     return { error: "Заполните название, категорию и цену" };
   }
 
+  if (!sizeStockResult) {
+    return { error: "Остаток по размеру должен быть целым числом от 0" };
+  }
+
+  if (oldPrice !== null && (Number.isNaN(oldPrice) || oldPrice < 0)) {
+    return { error: "Старая цена должна быть числом от 0" };
+  }
+
+  if (oldPrice !== null && oldPrice <= price) {
+    return {
+      error: "Старая цена должна быть больше текущей — иначе это не скидка",
+    };
+  }
+
   const payload = {
     store_id: store.id,
     name,
     description: description || null,
     price,
+    old_price: oldPrice,
     category_id: categoryId,
-    sizes,
+    sizes: sizeStockResult.sizes,
+    size_stock: sizeStockResult.sizeStock,
     images,
     in_stock: inStock,
   };
