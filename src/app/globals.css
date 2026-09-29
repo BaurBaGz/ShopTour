@@ -29,5 +29,7 @@ body {
 @media (max-width: 639px) {
   body:has([data-mobile-buy-bar]) {
     padding-bottom: 5.5rem;
+    /* уведомления — над панелью покупки */
+    --toast-bottom: 6rem;
   }
 }

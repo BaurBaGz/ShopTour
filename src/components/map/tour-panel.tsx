@@ -33,7 +33,7 @@ const toPoint = (store: MapStore) => ({
 });
 
 const smallButton =
-  "rounded-lg p-1.5 text-stone-500 transition hover:bg-stone-100 hover:text-stone-900 disabled:pointer-events-none disabled:opacity-30";
+  "flex h-11 w-11 items-center justify-center rounded-lg text-stone-500 transition hover:bg-stone-100 sm:h-8 sm:w-8 hover:text-stone-900 disabled:pointer-events-none disabled:opacity-30";
 
 export function TourPanel({
   maxHeight,

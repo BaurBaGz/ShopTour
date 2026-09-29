@@ -80,7 +80,7 @@ export function ProductPurchase({ product, contactPhone }: ProductPurchaseProps)
                   onClick={() => setSelectedSize(selected ? null : size)}
                   title={unavailable ? "Нет в наличии" : undefined}
                   className={cn(
-                    "min-w-12 rounded-xl border px-3 py-2 text-sm font-medium transition",
+                    "min-h-11 min-w-12 rounded-xl border px-3 py-2 text-sm font-medium transition",
                     selected
                       ? "border-stone-900 bg-stone-900 text-white"
                       : "border-stone-200 bg-white text-stone-800 hover:border-stone-400",

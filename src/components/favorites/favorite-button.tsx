@@ -11,7 +11,13 @@ type FavoriteButtonProps = {
   className?: string;
 };
 
-export function HeartIcon({ filled, className }: { filled: boolean; className?: string }) {
+export function HeartIcon({
+  filled,
+  className,
+}: {
+  filled: boolean;
+  className?: string;
+}) {
   return (
     <svg
       className={className}
@@ -49,7 +55,7 @@ export function FavoriteButton({
         aria-pressed={isFavorite}
         aria-label={label}
         className={cn(
-          "inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition",
+          "inline-flex min-h-11 items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition",
           isFavorite
             ? "bg-rose-50 text-rose-600 ring-1 ring-rose-200 hover:bg-rose-100"
             : "text-stone-700 ring-1 ring-stone-200 hover:bg-stone-50",
@@ -69,13 +75,22 @@ export function FavoriteButton({
       aria-pressed={isFavorite}
       aria-label={label}
       title={isFavorite ? "Убрать из избранного" : "В избранное"}
+      // Зона нажатия 44×44, видимый круг 36 — палец попадает, а карточка не перегружена
       className={cn(
-        "flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur-sm transition hover:scale-110",
-        isFavorite ? "text-rose-600" : "text-stone-500 hover:text-rose-600",
+        "group/fav flex h-11 w-11 items-center justify-center",
         className,
       )}
     >
-      <HeartIcon filled={isFavorite} className="h-5 w-5" />
+      <span
+        className={cn(
+          "flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur-sm transition group-hover/fav:scale-110",
+          isFavorite
+            ? "text-rose-600"
+            : "text-stone-500 group-hover/fav:text-rose-600",
+        )}
+      >
+        <HeartIcon filled={isFavorite} className="h-5 w-5" />
+      </span>
     </button>
   );
 }

@@ -200,8 +200,8 @@ export function StoresExplorer({
       : null;
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="flex flex-col gap-4 sm:gap-6">
+      <div className="flex items-center justify-between gap-2 sm:gap-3">
         <div
           className="inline-flex rounded-full bg-stone-100 p-1 text-sm font-medium"
           role="group"
@@ -212,27 +212,29 @@ export function StoresExplorer({
             onClick={() => setMode("all")}
             aria-pressed={mode === "all"}
             className={cn(
-              "rounded-full px-4 py-2 transition",
+              "inline-flex min-h-11 items-center rounded-full px-3 py-2 transition sm:px-4",
               mode === "all"
                 ? "bg-white text-stone-900 shadow-sm"
                 : "text-stone-500 hover:text-stone-900",
             )}
           >
-            Все магазины
+            <span className="sm:hidden">Все</span>
+            <span className="hidden sm:inline">Все магазины</span>
           </button>
           <button
             type="button"
             onClick={() => setMode("favorites")}
             aria-pressed={mode === "favorites"}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-full px-4 py-2 transition",
+              "inline-flex min-h-11 items-center gap-1.5 rounded-full px-3 py-2 transition sm:px-4",
               mode === "favorites"
                 ? "bg-white text-rose-600 shadow-sm"
                 : "text-stone-500 hover:text-stone-900",
             )}
           >
             <HeartIcon filled={mode === "favorites"} className="h-4 w-4" />
-            Избранное на карте
+            <span className="sm:hidden">Избранное</span>
+            <span className="hidden sm:inline">Избранное на карте</span>
             {favoriteCount > 0 && (
               <span className="rounded-full bg-rose-600 px-1.5 text-xs font-semibold text-white">
                 {favoriteCount}
@@ -246,7 +248,7 @@ export function StoresExplorer({
           onClick={() => setTourPanel(!tourOpen)}
           aria-expanded={tourOpen}
           className={cn(
-            "inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition",
+            "inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold transition sm:px-4",
             tourOpen
               ? "bg-stone-900 text-white hover:bg-stone-800"
               : "text-stone-800 ring-1 ring-stone-200 hover:bg-stone-50",
@@ -397,7 +399,7 @@ export function StoresExplorer({
               type="button"
               onClick={() => select(null)}
               aria-label="Закрыть каталог магазина"
-              className="absolute right-3 top-3 rounded-full p-2 text-stone-500 transition hover:bg-stone-100 hover:text-stone-900 sm:right-4 sm:top-1/2 sm:-translate-y-1/2"
+              className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-full text-stone-500 transition hover:bg-stone-100 hover:text-stone-900 sm:right-4 sm:top-1/2 sm:-translate-y-1/2"
             >
               <svg
                 className="h-5 w-5"

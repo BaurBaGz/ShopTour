@@ -11,10 +11,10 @@ export function SiteFooter() {
           </p>
         </div>
         <div className="flex gap-6 text-sm text-stone-600">
-          <Link href="/catalog" className="hover:text-stone-900">
+          <Link href="/catalog" className="inline-flex min-h-11 items-center hover:text-stone-900">
             Каталог
           </Link>
-          <Link href="/stores" className="hover:text-stone-900">
+          <Link href="/stores" className="inline-flex min-h-11 items-center hover:text-stone-900">
             Магазины на карте
           </Link>
         </div>

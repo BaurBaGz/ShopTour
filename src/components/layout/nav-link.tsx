@@ -22,7 +22,7 @@ export function NavLink({ href, label, shortLabel }: NavLinkProps) {
       href={href}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "whitespace-nowrap rounded-full px-2 py-2 text-[13px] font-medium transition sm:px-4 sm:text-sm",
+        "whitespace-nowrap rounded-full px-2 py-2 text-[13px] font-medium transition sm:px-4 sm:text-sm", "relative after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
         active
           ? "bg-stone-100 text-stone-900"
           : "text-stone-600 hover:bg-stone-100 hover:text-stone-900",

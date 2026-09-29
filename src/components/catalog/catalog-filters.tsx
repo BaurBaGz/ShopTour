@@ -33,7 +33,7 @@ type CatalogFiltersProps = {
 };
 
 const fieldClass =
-  "w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-rose-300 focus:ring-4 focus:ring-rose-500/15";
+  "min-h-11 w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-rose-300 focus:ring-4 focus:ring-rose-500/15";
 
 const labelClass = "mb-1.5 block text-xs font-medium text-stone-500";
 
@@ -153,7 +153,7 @@ export function CatalogFilters({
             aria-expanded={isPanelShown}
             aria-controls="catalog-filter-panel"
             className={cn(
-              "flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition",
+              "flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition",
               panelOpen || autoOpen
                 ? "bg-stone-900 text-white hover:bg-stone-800"
                 : "bg-white text-stone-700 ring-1 ring-stone-200 hover:bg-stone-50",
@@ -293,13 +293,13 @@ export function CatalogFilters({
           <button
             type="submit"
             disabled={isPending}
-            className="rounded-xl bg-stone-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-600 disabled:opacity-70"
+            className="min-h-11 rounded-xl bg-stone-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-600 disabled:opacity-70"
           >
             {isPending ? "Обновляем…" : "Показать товары"}
           </button>
           <Link
             href={resetHref}
-            className="rounded-xl px-4 py-2.5 text-sm font-medium text-stone-500 transition hover:bg-stone-100 hover:text-stone-900"
+            className="inline-flex min-h-11 items-center rounded-xl px-4 py-2.5 text-sm font-medium text-stone-500 transition hover:bg-stone-100 hover:text-stone-900"
           >
             Сбросить все
           </Link>

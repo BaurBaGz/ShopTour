@@ -23,7 +23,7 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
           </div>
           <Link
             href="/catalog"
-            className="hidden text-sm font-medium text-rose-600 hover:text-rose-700 sm:inline"
+            className="hidden min-h-11 items-center text-sm font-medium text-rose-700 hover:text-rose-800 sm:inline-flex"
           >
             Весь каталог →
           </Link>
@@ -38,7 +38,7 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
         <div className="mt-8 text-center sm:hidden">
           <Link
             href="/catalog"
-            className="text-sm font-medium text-rose-600 hover:text-rose-700"
+            className="inline-flex min-h-11 items-center text-sm font-medium text-rose-700 hover:text-rose-800"
           >
             Смотреть весь каталог →
           </Link>

@@ -19,12 +19,12 @@ export function ShowOnMapLink({ storeId, productId, children, className }: ShowO
       href={`/stores?${params.toString()}`}
       title="Показать на карте"
       className={cn(
-        "group inline-flex items-start gap-1 underline decoration-dotted underline-offset-4 transition hover:decoration-solid",
+        "group inline-flex min-h-11 items-center gap-1 py-1 underline decoration-dotted underline-offset-4 transition hover:decoration-solid",
         className,
       )}
     >
       <svg
-        className="mt-0.5 h-4 w-4 shrink-0"
+        className="h-4 w-4 shrink-0"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"

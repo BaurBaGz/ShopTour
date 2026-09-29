@@ -74,16 +74,16 @@ export default async function StoresMapPage({ searchParams }: StoresMapPageProps
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mb-8">
+      <div className="mb-4 sm:mb-8">
         <h1 className="text-3xl font-semibold tracking-tight text-stone-900 sm:text-4xl">
           Магазины на карте
         </h1>
-        <p className="mt-2 text-stone-500">
+        <p className="mt-2 hidden text-stone-500 sm:block">
           Выберите магазин на карте — ниже откроются его товары
         </p>
       </div>
 
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         {/* key: при переходе по чипсам форма пересоздаётся с актуальными значениями */}
         <CatalogFilters
           key={buildFilterHref("/stores", values)}

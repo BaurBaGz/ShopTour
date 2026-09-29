@@ -70,7 +70,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
         <FavoriteButton
           productId={product.id}
           productName={product.name}
-          className="absolute right-3 top-3"
+          className="absolute right-1 top-1"
         />
       </div>
 
@@ -102,7 +102,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
         {store && (
           <Link
             href={`/stores/${store.id}`}
-            className="text-xs text-stone-500 transition hover:text-rose-600"
+            className="-my-1 py-1 text-xs text-stone-500 transition hover:text-rose-600"
           >
             {store.name}
             {store.city ? ` · ${store.city}` : ""}

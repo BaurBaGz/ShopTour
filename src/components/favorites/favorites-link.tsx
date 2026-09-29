@@ -12,7 +12,7 @@ export function FavoritesLink() {
       href="/favorites"
       aria-label={count > 0 ? `Избранное: ${count}` : "Избранное"}
       title="Избранное"
-      className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-stone-600 transition hover:bg-stone-100 hover:text-rose-600"
+      className="relative -mx-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-stone-600 transition hover:bg-stone-100 hover:text-rose-600"
     >
       <HeartIcon filled={count > 0} className={count > 0 ? "h-5 w-5 text-rose-600" : "h-5 w-5"} />
       {count > 0 && (

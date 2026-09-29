@@ -186,7 +186,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 {store.phone && (
                   <a
                     href={`tel:${store.phone.replace(/\s/g, "")}`}
-                    className="rounded-full px-4 py-2.5 font-medium text-stone-700 ring-1 ring-stone-200 transition hover:bg-stone-50"
+                    className="inline-flex min-h-11 items-center rounded-full px-4 py-2.5 font-medium text-stone-700 ring-1 ring-stone-200 transition hover:bg-stone-50"
                   >
                     {store.phone}
                   </a>
@@ -196,7 +196,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                     href={buildInstagramUrl(store.instagram)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="rounded-full px-4 py-2.5 font-medium text-stone-700 ring-1 ring-stone-200 transition hover:bg-stone-50"
+                    className="inline-flex min-h-11 items-center rounded-full px-4 py-2.5 font-medium text-stone-700 ring-1 ring-stone-200 transition hover:bg-stone-50"
                   >
                     Instagram
                   </a>
@@ -205,7 +205,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
               <Link
                 href={`/stores/${store.id}`}
-                className="mt-4 inline-block text-sm font-medium text-rose-600 hover:text-rose-700"
+                className="mt-2 inline-flex min-h-11 items-center text-sm font-medium text-rose-600 hover:text-rose-700"
               >
                 Все товары магазина →
               </Link>
