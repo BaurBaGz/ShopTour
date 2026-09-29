@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { BackLink } from "@/components/ui/back-link";
 import { ProductCard } from "@/components/catalog/product-card";
 import { ProductPurchase } from "@/components/catalog/product-purchase";
+import { ShowOnMapLink } from "@/components/store/show-on-map-link";
 import { StoreAvatar } from "@/components/store/store-avatar";
 import { getProductById, getProducts } from "@/lib/data/catalog";
 import { formatPrice } from "@/lib/utils/format";
@@ -171,9 +172,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   >
                     {store.name}
                   </Link>
-                  <p className="text-sm text-stone-500">
+                  <ShowOnMapLink
+                    storeId={store.id}
+                    productId={product.id}
+                    className="text-sm text-stone-500 hover:text-rose-600"
+                  >
                     {store.city}, {store.address}
-                  </p>
+                  </ShowOnMapLink>
                 </div>
               </div>
 

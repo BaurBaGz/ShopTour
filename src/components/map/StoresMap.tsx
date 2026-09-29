@@ -302,6 +302,10 @@ export default function StoresMap({
   const routeLayerRef = useRef<LayerGroup | null>(null);
   const markersRef = useRef(new Map<string, Marker>());
   const hasFittedRef = useRef(false);
+  const fittedKeyRef = useRef("");
+  // Первый выбор, пришедший вместе с картой (из адреса страницы), — с приближением
+  // (нет выбора при первом показе — приближать нечего, дальше клики только сдвигают карту)
+  const focusedFromUrlRef = useRef(selectedId === null);
   const [ready, setReady] = useState(false);
 
   // Актуальные значения для обработчиков маркеров, которые создаются реже, чем меняются пропсы
@@ -460,23 +464,31 @@ export default function StoresMap({
       markersRef.current.set(store.id, marker);
     }
 
+    declutterLabels(map.getContainer());
+
+    // Кадр меняем, только если изменился сам набор магазинов (фильтры, режим).
+    // Пересборка из-за числа товаров или избранного не должна сдвигать карту.
+    const storesKey = stores.map((s) => s.id).join(",");
+    if (storesKey === fittedKeyRef.current) return;
+    fittedKeyRef.current = storesKey;
+
     // Первый показ — сразу, дальнейшие изменения (фильтры) — плавным перелётом
     const animate = hasFittedRef.current;
     hasFittedRef.current = true;
-    declutterLabels(map.getContainer());
 
     if (points.length > 1) {
       const options = { padding: [40, 40] as [number, number], maxZoom: 15 };
       if (animate) {
         map.flyToBounds(points, { ...options, duration: FLY_DURATION });
       } else {
-        map.fitBounds(points, options);
+        // Без анимации: иначе её окончание перебьёт приближение к магазину из ссылки
+        map.fitBounds(points, { ...options, animate: false });
       }
     } else if (points.length === 1) {
       if (animate) {
         map.flyTo(points[0], 14, { duration: FLY_DURATION });
       } else {
-        map.setView(points[0], 14);
+        map.setView(points[0], 14, { animate: false });
       }
     }
   }, [ready, stores, counts, favoritesByStore]);
@@ -529,7 +541,12 @@ export default function StoresMap({
       marker.setIcon(makeIcon(L, store, selected, extrasFor(id)));
       marker.setZIndexOffset(selected ? 1000 : 0);
       declutterLabels(mapInstanceRef.current!.getContainer());
-      if (selected) {
+      if (selected && !focusedFromUrlRef.current) {
+        // Магазин выбран ещё до показа карты (ссылка «Показать на карте») — сразу крупно
+        focusedFromUrlRef.current = true;
+        const map = mapInstanceRef.current!;
+        map.setView(marker.getLatLng(), Math.max(map.getZoom(), 15), { animate: false });
+      } else if (selected) {
         mapInstanceRef.current?.panTo(marker.getLatLng(), {
           animate: true,
           duration: 0.5,

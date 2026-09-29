@@ -33,6 +33,8 @@ type StoresExplorerProps = {
   initialMode?: MapMode;
   /** Открыть панель Shop Tour сразу (переход со страницы «Избранное») */
   openTour?: boolean;
+  /** Товар, с которого пришли по адресу магазина, — первым в списке и выделен */
+  highlightProductId?: string;
   /** Показывать на значках число подходящих товаров (включены фильтры) */
   showCounts?: boolean;
 };
@@ -44,6 +46,7 @@ export function StoresExplorer({
   initialStoreId,
   initialMode = "all",
   openTour = false,
+  highlightProductId,
   showCounts = false,
 }: StoresExplorerProps) {
   const [chosenId, setSelectedId] = useState<string | null>(
@@ -55,6 +58,7 @@ export function StoresExplorer({
     openTour ? true : null,
   );
   const panelRef = useRef<HTMLElement>(null);
+  const mapAreaRef = useRef<HTMLDivElement>(null);
 
   const favoriteIds = useFavoriteIds();
   const tourIds = useTourIds();
@@ -125,11 +129,14 @@ export function StoresExplorer({
 
   const favoriteSet = new Set(favoriteIds);
   const storeProducts = selectedStore
-    ? products.filter(
-        (p) =>
-          p.store_id === selectedStore.id &&
-          (mode === "all" || favoriteSet.has(p.id)),
-      )
+    ? products
+        .filter(
+          (p) =>
+            p.store_id === selectedStore.id &&
+            (mode === "all" || favoriteSet.has(p.id)),
+        )
+        // Товар, с которого пришли, — первым
+        .sort((a, b) => Number(b.id === highlightProductId) - Number(a.id === highlightProductId))
     : [];
 
   const tourOpen = tourPanel ?? tourStops.length > 0;
@@ -166,13 +173,18 @@ export function StoresExplorer({
     window.history.replaceState(null, "", url);
   }, [selectedId, mode]);
 
-  // После выбора показываем начало каталога магазина
+  // После выбора показываем начало каталога магазина. Если магазин пришёл из ссылки
+  // «Показать на карте» — прокручиваем к карте: видно и магазин, и начало его товаров.
+  const cameFromLinkRef = useRef(Boolean(initialStoreId));
   useEffect(() => {
     if (!selectedId) return;
+    const fromLink = cameFromLinkRef.current;
     const timer = window.setTimeout(() => {
-      panelRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
+      // Сбрасываем флаг только когда прокрутка случилась (эффект может перезапуститься)
+      cameFromLinkRef.current = false;
+      (fromLink ? mapAreaRef.current : panelRef.current)?.scrollIntoView({
+        behavior: fromLink ? "auto" : "smooth",
+        block: fromLink ? "start" : "nearest",
       });
     }, 320);
     return () => window.clearTimeout(timer);
@@ -272,8 +284,9 @@ export function StoresExplorer({
       )}
 
       <div
+        ref={mapAreaRef}
         className={cn(
-          "grid gap-6",
+          "grid scroll-mt-20 gap-6",
           // Высота карты: на телефоне — доля экрана (вокруг остаётся страница), на компьютере — фиксированная
           selectedStore
             ? "[--map-h:min(35svh,300px)] sm:[--map-h:300px]"
@@ -405,9 +418,16 @@ export function StoresExplorer({
 
           {storeProducts.length > 0 ? (
             <div className="mt-6 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
-              {storeProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
+              {storeProducts.map((product) =>
+                product.id === highlightProductId ? (
+                  <div key={product.id} className="flex flex-col gap-2">
+                    <p className="text-xs font-semibold text-rose-700">Вы смотрели этот товар</p>
+                    <ProductCard product={product} className="flex-1 ring-2 ring-rose-500" />
+                  </div>
+                ) : (
+                  <ProductCard key={product.id} product={product} />
+                ),
+              )}
             </div>
           ) : (
             <div className="mt-6 rounded-3xl border border-dashed border-stone-300 bg-white px-6 py-12 text-center text-sm text-stone-500">

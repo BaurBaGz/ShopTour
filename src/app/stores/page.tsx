@@ -6,6 +6,7 @@ import { StoresExplorer } from "@/components/map/stores-explorer";
 import {
   buildFilterChips,
   buildFilterHref,
+  isUuid,
   parsePrice,
   parseSort,
   readFilterValues,
@@ -41,6 +42,9 @@ export default async function StoresMapPage({ searchParams }: StoresMapPageProps
   // view=favorites — режим «Избранное на карте», tour=1 — сразу открыть панель Shop Tour
   const initialMode = params.view === "favorites" ? "favorites" : "all";
   const openTour = params.tour === "1";
+  // product — товар, с которого пришли по адресу магазина: покажем его первым
+  const highlightProductId =
+    typeof params.product === "string" && isUuid(params.product) ? params.product : undefined;
 
   const [allStores, products, categories, filterOptions] = await Promise.all([
     getStoresWithCoords(),
@@ -111,6 +115,7 @@ export default async function StoresMapPage({ searchParams }: StoresMapPageProps
           initialStoreId={selectedStoreId}
           initialMode={initialMode}
           openTour={openTour}
+          highlightProductId={highlightProductId}
           showCounts={hasFilters}
         />
       ) : (

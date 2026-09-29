@@ -1,4 +1,5 @@
 import type { Store } from "@/lib/data/types";
+import { ShowOnMapLink } from "@/components/store/show-on-map-link";
 import { StoreAvatar } from "@/components/store/store-avatar";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { formatProductCount } from "@/lib/utils/format";
@@ -36,9 +37,9 @@ export function StoreHero({ store, productCount }: StoreHeroProps) {
               {store.name}
             </h1>
             <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-stone-300">
-              <span>{store.city}</span>
-              <span className="hidden text-stone-600 sm:inline">·</span>
-              <span>{store.address}</span>
+              <ShowOnMapLink storeId={store.id} className="hover:text-white">
+                {store.city}, {store.address}
+              </ShowOnMapLink>
             </p>
             {store.description && (
               <p className="mt-4 max-w-2xl text-base leading-relaxed text-stone-300">
