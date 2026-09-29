@@ -51,7 +51,9 @@ export function StoresExplorer({
   );
   const [mode, setMode] = useState<MapMode>(initialMode);
   // null — «по умолчанию»: панель тура открыта, если в туре есть остановки
-  const [tourPanel, setTourPanel] = useState<boolean | null>(openTour ? true : null);
+  const [tourPanel, setTourPanel] = useState<boolean | null>(
+    openTour ? true : null,
+  );
   const panelRef = useRef<HTMLElement>(null);
 
   const favoriteIds = useFavoriteIds();
@@ -272,12 +274,16 @@ export function StoresExplorer({
       <div
         className={cn(
           "grid gap-6",
+          // Высота карты: на телефоне — доля экрана (вокруг остаётся страница), на компьютере — фиксированная
+          selectedStore
+            ? "[--map-h:min(35svh,300px)] sm:[--map-h:300px]"
+            : "[--map-h:min(55svh,600px)] sm:[--map-h:600px]",
           tourOpen && "lg:grid-cols-[minmax(0,1fr)_360px]",
         )}
       >
         <StoresMap
           stores={mapStores}
-          height={selectedStore ? COMPACT_MAP_HEIGHT : FULL_MAP_HEIGHT}
+          height="var(--map-h, 400px)"
           selectedId={selectedId}
           onSelect={select}
           counts={counts}

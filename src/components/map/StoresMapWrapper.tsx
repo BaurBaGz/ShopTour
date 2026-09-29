@@ -6,7 +6,7 @@ const StoresMap = dynamic(() => import("./StoresMap"), {
   ssr: false,
   loading: () => (
     <div
-      style={{ height: "600px" }}
+      style={{ height: "var(--map-h, 600px)" }}
       className="bg-stone-100 rounded-xl flex items-center justify-center"
     >
       <p className="text-stone-400">Загрузка карты...</p>

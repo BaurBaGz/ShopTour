@@ -33,7 +33,8 @@ type MarkerExtras = {
 
 type StoresMapProps = {
   stores: MapStore[];
-  height?: number;
+  /** Число — пиксели, строка — любое CSS-значение (например, var(--map-h)) */
+  height?: number | string;
   selectedId?: string | null;
   onSelect?: (storeId: string) => void;
   /** Число подходящих товаров на значке магазина (фильтры или избранное) */
@@ -343,12 +344,100 @@ export default function StoresMap({
       const container = mapRef.current;
       map.on("zoomend", () => declutterLabels(container));
 
+      // Кнопка «Показать все магазины» под «+ −»
+      const FitControl = L.Control.extend({
+        onAdd() {
+          const bar = L.DomUtil.create("div", "leaflet-bar");
+          const button = L.DomUtil.create("a", "", bar);
+          button.href = "#";
+          button.setAttribute("role", "button");
+          button.title = "Показать все магазины";
+          button.setAttribute("aria-label", "Показать все магазины");
+          Object.assign(button.style, {
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          });
+          // Статичная иконка «развернуть» — без пользовательских данных
+          button.innerHTML =
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>';
+          L.DomEvent.on(button, "click", (event) => {
+            L.DomEvent.preventDefault(event);
+            L.DomEvent.stopPropagation(event);
+            fitAll(true);
+          });
+          return bar;
+        },
+      });
+      new FitControl({ position: "topleft" }).addTo(map);
+
+      // Телефон: одним пальцем прокручивается страница, карта — двумя пальцами.
+      // Без перетаскивания Leaflet ставит touch-action: pan-x pan-y, и браузер сам
+      // прокручивает страницу, а щипок двумя пальцами остаётся за картой.
+      if (window.matchMedia("(pointer: coarse)").matches) {
+        map.dragging.disable();
+
+        const hint = document.createElement("div");
+        hint.textContent = "Двигайте карту двумя пальцами";
+        hint.setAttribute("aria-hidden", "true");
+        Object.assign(hint.style, {
+          position: "absolute",
+          inset: "0",
+          zIndex: "1000",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "16px",
+          textAlign: "center",
+          background: "rgba(28, 25, 23, 0.55)",
+          color: "#fff",
+          fontSize: "15px",
+          fontWeight: "600",
+          pointerEvents: "none",
+          opacity: "0",
+          transition: "opacity 200ms",
+        });
+        container.append(hint);
+
+        let hideTimer: number | undefined;
+        container.addEventListener(
+          "touchmove",
+          (event) => {
+            if (event.touches.length !== 1) {
+              hint.style.opacity = "0";
+              return;
+            }
+            hint.style.opacity = "1";
+            window.clearTimeout(hideTimer);
+            hideTimer = window.setTimeout(() => {
+              hint.style.opacity = "0";
+            }, 1200);
+          },
+          { passive: true },
+        );
+      }
+
       leafletRef.current = L;
       // Линия маршрута — под значками магазинов
       routeLayerRef.current = L.layerGroup().addTo(map);
       layerRef.current = L.layerGroup().addTo(map);
       mapInstanceRef.current = map;
       setReady(true);
+
+      function fitAll(animate: boolean) {
+        const points = [...markersRef.current.values()].map((m) => {
+          const { lat, lng } = m.getLatLng();
+          return [lat, lng] as [number, number];
+        });
+        if (points.length > 1) {
+          const options = { padding: [40, 40] as [number, number], maxZoom: 15 };
+          if (animate) map.flyToBounds(points, { ...options, duration: FLY_DURATION });
+          else map.fitBounds(points, options);
+        } else if (points.length === 1) {
+          if (animate) map.flyTo(points[0], 14, { duration: FLY_DURATION });
+          else map.setView(points[0], 14);
+        }
+      }
     });
 
     const markers = markersRef.current;
@@ -518,7 +607,8 @@ export default function StoresMap({
     <div
       ref={mapRef}
       style={{
-        height: `${height}px`,
+        height: typeof height === "number" ? `${height}px` : height,
+        position: "relative",
         width: "100%",
         borderRadius: "12px",
         transition: "height 300ms ease",
