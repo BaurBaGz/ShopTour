@@ -90,7 +90,7 @@ export default async function AdminPartnerPage({ params, searchParams }: PagePro
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="flex min-w-0 flex-col gap-6">
-          <PartnerForm action={updatePartnerAction.bind(null, store.id)} store={store} submitLabel="Сохранить" />
+          <PartnerForm action={updatePartnerAction.bind(null, store.id)} store={store} storeId={store.id} submitLabel="Сохранить" />
           <OwnerPanel storeId={store.id} ownerEmail={ownerEmail} />
         </div>
         <div className="flex min-w-0 flex-col gap-6">
@@ -107,7 +107,14 @@ export default async function AdminPartnerPage({ params, searchParams }: PagePro
       <section className="overflow-hidden rounded-2xl border border-stone-200 bg-white" aria-labelledby="products-title">
         <div className="flex items-center justify-between gap-3 border-b border-stone-100 px-5 py-4">
           <h2 id="products-title" className="text-lg font-semibold text-stone-900">Товары</h2>
-          <span className="text-sm text-stone-500">Редактирование — в разделе «Товары» (этап 3)</span>
+          <span className="flex flex-wrap gap-2">
+            <Link href={`/admin/products?store=${store.id}`} className="inline-flex min-h-11 items-center rounded-xl px-3 text-sm font-medium text-stone-700 ring-1 ring-stone-200 hover:bg-stone-50">
+              В разделе «Товары»
+            </Link>
+            <Link href={`/admin/products/new?store=${store.id}`} className="inline-flex min-h-11 items-center rounded-xl bg-stone-900 px-3 text-sm font-semibold text-white hover:bg-rose-600">
+              + Товар
+            </Link>
+          </span>
         </div>
         {products.length === 0 ? (
           <p className="px-5 py-8 text-center text-sm text-stone-500">Товаров пока нет</p>
@@ -130,7 +137,7 @@ export default async function AdminPartnerPage({ params, searchParams }: PagePro
                   return (
                     <tr key={p.id}>
                       <td className="px-5 py-3">
-                        <Link href={`/products/${p.id}`} target="_blank" className="flex items-center gap-3 hover:text-rose-700">
+                        <Link href={`/admin/products/${p.id}`} className="flex items-center gap-3 hover:text-rose-700">
                           <span className="h-12 w-10 shrink-0 overflow-hidden rounded-lg bg-stone-100">
                             {p.images?.[0] && (
                               // eslint-disable-next-line @next/next/no-img-element

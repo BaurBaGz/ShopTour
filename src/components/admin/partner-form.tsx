@@ -2,19 +2,22 @@
 
 import { useActionState } from "react";
 import type { PartnerFormState } from "@/app/admin/(panel)/partners/actions";
+import { ImagesInput } from "@/components/admin/images-input";
 import type { Store } from "@/lib/data/types";
 
 type PartnerFormProps = {
   action: (prev: PartnerFormState, formData: FormData) => Promise<PartnerFormState>;
   store?: Pick<Store, "name" | "description" | "city" | "address" | "phone" | "whatsapp" | "instagram" | "logo_url">;
   submitLabel: string;
+  /** id существующего партнёра — чтобы грузить логотип в его папку */
+  storeId?: string;
 };
 
 const field =
   "min-h-11 w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-rose-300 focus:ring-4 focus:ring-rose-500/15";
 const label = "mb-1.5 block text-sm font-medium text-stone-700";
 
-export function PartnerForm({ action, store, submitLabel }: PartnerFormProps) {
+export function PartnerForm({ action, store, submitLabel, storeId }: PartnerFormProps) {
   const [state, formAction, pending] = useActionState(action, {});
 
   return (
@@ -49,9 +52,16 @@ export function PartnerForm({ action, store, submitLabel }: PartnerFormProps) {
           <label htmlFor="p-instagram" className={label}>Instagram</label>
           <input id="p-instagram" name="instagram" defaultValue={store?.instagram ?? ""} className={field} placeholder="@shop_almaty" />
         </div>
-        <div>
-          <label htmlFor="p-logo" className={label}>Логотип (ссылка)</label>
-          <input id="p-logo" name="logo_url" type="url" defaultValue={store?.logo_url ?? ""} className={field} placeholder="Загрузка файлом — на этапе 3" />
+        <div className="sm:col-span-2">
+          <ImagesInput
+            name="logo_url"
+            label="Логотип"
+            max={1}
+            kind="stores"
+            storeId={storeId ?? null}
+            defaultValue={store?.logo_url ? [store.logo_url] : []}
+          />
+          {!storeId && <p className="mt-1 text-xs text-stone-500">Загрузить файл можно после создания — или вставьте ссылку.</p>}
         </div>
       </div>
       {state.error && (

@@ -6,6 +6,7 @@ import {
   saveProductAction,
   type ProductActionState,
 } from "@/app/(site)/dashboard/actions";
+import { ImagesInput } from "@/components/admin/images-input";
 import { SizeStockEditor } from "@/components/dashboard/size-stock-editor";
 import type { Category, Product } from "@/lib/data/types";
 import { cn } from "@/lib/utils/cn";
@@ -13,11 +14,13 @@ import { cn } from "@/lib/utils/cn";
 type ProductFormProps = {
   categories: Category[];
   product?: Product;
+  /** Магазин владельца — в его папку загружаются фото */
+  storeId: string;
 };
 
 const initialState: ProductActionState = {};
 
-export function ProductForm({ categories, product }: ProductFormProps) {
+export function ProductForm({ categories, product, storeId }: ProductFormProps) {
   const [state, formAction, pending] = useActionState(
     saveProductAction,
     initialState,
@@ -110,18 +113,7 @@ export function ProductForm({ categories, product }: ProductFormProps) {
 
       <SizeStockEditor sizes={product?.sizes} sizeStock={product?.size_stock} />
 
-      <div>
-        <label className="mb-1.5 block text-sm font-medium text-stone-700">
-          URL фото (через запятую или с новой строки)
-        </label>
-        <textarea
-          name="images"
-          rows={3}
-          defaultValue={product?.images?.join("\n") ?? ""}
-          placeholder="https://images.unsplash.com/..."
-          className="w-full rounded-xl border border-stone-200 px-4 py-3 font-mono text-sm outline-none focus:border-rose-300 focus:ring-4 focus:ring-rose-500/15"
-        />
-      </div>
+      <ImagesInput name="images" defaultValue={product?.images} storeId={storeId} />
 
       <label className="flex items-center gap-3">
         <input

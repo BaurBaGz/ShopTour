@@ -81,6 +81,8 @@ export async function getProductsWithError(options?: {
   limit?: number;
   /** По умолчанию только in_stock; для страницы магазина и кабинета — true */
   includeOutOfStock?: boolean;
+  /** Скрытые в админке товары — только для кабинета владельца */
+  includeHidden?: boolean;
 }): Promise<DataResult<ProductWithRelations[]>> {
   const envError = checkSupabaseEnv();
   if (envError) {
@@ -105,6 +107,10 @@ export async function getProductsWithError(options?: {
       .order("created_at", { ascending: false });
   } else {
     query = query.order("created_at", { ascending: false });
+  }
+
+  if (!options?.includeHidden) {
+    query = query.eq("is_hidden", false);
   }
 
   if (!options?.includeOutOfStock) {

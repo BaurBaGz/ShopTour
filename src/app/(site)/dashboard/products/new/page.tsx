@@ -31,7 +31,7 @@ export default async function NewProductPage() {
       </h1>
       <p className="mt-1 text-sm text-stone-500">{store.name}</p>
       <div className="mt-8">
-        <ProductForm categories={categories} />
+        <ProductForm categories={categories} storeId={store.id} />
       </div>
     </main>
   );

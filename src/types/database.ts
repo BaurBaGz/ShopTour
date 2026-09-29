@@ -99,6 +99,7 @@ export interface Database {
           images: string[];
           size_stock: Json;
           in_stock: boolean;
+          is_hidden: boolean;
           created_at: string;
         };
         Insert: {
@@ -113,6 +114,7 @@ export interface Database {
           images?: string[];
           size_stock?: Json;
           in_stock?: boolean;
+          is_hidden?: boolean;
           created_at?: string;
         };
         Update: {
@@ -127,6 +129,7 @@ export interface Database {
           images?: string[];
           size_stock?: Json;
           in_stock?: boolean;
+          is_hidden?: boolean;
           created_at?: string;
         };
         Relationships: [

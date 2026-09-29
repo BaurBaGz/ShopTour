@@ -28,11 +28,13 @@ export default async function AdminHomePage() {
       count: products.withoutPhoto,
       text: `${plural(products.withoutPhoto, "товар", "товара", "товаров")} без фото`,
       hint: "Карточка без фото почти не получает кликов",
+      href: "/admin/products?filter=no-photo",
     },
     {
       count: products.soldOut,
       text: `${plural(products.soldOut, "товар", "товара", "товаров")} нет в наличии`,
       hint: "Все размеры закончились или товар снят с продажи",
+      href: "/admin/products?filter=sold-out",
     },
     {
       count: stores.withoutLocation,
@@ -89,7 +91,7 @@ export default async function AdminHomePage() {
           </ul>
         )}
         <p className="mt-4 text-xs text-stone-500">
-          Товары без фото и без наличия — в разделе «Товары» (следующий этап).
+          Нажмите «Открыть», чтобы сразу перейти к нужному списку.
         </p>
       </section>
     </div>

@@ -36,7 +36,7 @@ export default async function DashboardPage() {
   }
 
   const [{ data: products, errorMessage }, categories] = await Promise.all([
-    getProductsWithError({ storeId: store.id, includeOutOfStock: true }),
+    getProductsWithError({ storeId: store.id, includeOutOfStock: true, includeHidden: true }),
     getCategories(),
   ]);
 
@@ -139,6 +139,11 @@ export default async function DashboardPage() {
                     >
                       {product.in_stock ? "В наличии" : "Нет"}
                     </span>
+                    {product.is_hidden && (
+                      <span className="mt-1 block text-xs text-amber-700">
+                        Скрыт администрацией ShopTour
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-4 sm:px-6">
                     <div className="flex flex-wrap gap-3">

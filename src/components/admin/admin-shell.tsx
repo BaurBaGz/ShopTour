@@ -32,7 +32,7 @@ type NavItem = {
 const NAV: NavItem[] = [
   { href: "/admin", label: "Главная", icon: HomeIcon },
   { href: "/admin/partners", label: "Партнёры", icon: StoreIcon },
-  { href: "/admin/products", label: "Товары", icon: TagIcon, soon: true },
+  { href: "/admin/products", label: "Товары", icon: TagIcon },
   { href: "/admin/categories", label: "Категории", icon: GridIcon },
   { href: "/admin/banners", label: "Баннеры", icon: ImageIcon, soon: true },
   { href: "/admin/analytics", label: "Аналитика", icon: ChartIcon, soon: true },
@@ -40,6 +40,8 @@ const NAV: NavItem[] = [
 ];
 
 const TITLES: [string, string][] = [
+  ["/admin/products/new", "Новый товар"],
+  ["/admin/products", "Товары"],
   ["/admin/partners/new", "Новый партнёр"],
   ["/admin/partners", "Партнёры"],
   ["/admin/categories", "Категории"],

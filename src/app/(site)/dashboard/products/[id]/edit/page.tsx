@@ -46,7 +46,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
         Редактировать товар
       </h1>
       <div className="mt-8">
-        <ProductForm categories={categories} product={product} />
+        <ProductForm categories={categories} product={product} storeId={store.id} />
       </div>
     </main>
   );
