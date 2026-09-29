@@ -67,6 +67,12 @@ export default async function DashboardPage() {
           >
             + Добавить товар
           </Link>
+          <Link
+            href="/dashboard/password"
+            className="rounded-xl border border-stone-200 px-5 py-2.5 text-sm font-medium text-stone-600 hover:bg-stone-50"
+          >
+            Сменить пароль
+          </Link>
           <form action={logoutAction}>
             <button
               type="submit"

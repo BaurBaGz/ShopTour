@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import {
   changePasswordAction,
   type PasswordState,
-} from "@/app/admin/(panel)/account/actions";
+} from "@/lib/auth/password-actions";
 
 const field =
   "min-h-11 w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-rose-300 focus:ring-4 focus:ring-rose-500/15";

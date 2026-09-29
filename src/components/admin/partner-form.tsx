@@ -1,0 +1,72 @@
+"use client";
+
+import { useActionState } from "react";
+import type { PartnerFormState } from "@/app/admin/(panel)/partners/actions";
+import type { Store } from "@/lib/data/types";
+
+type PartnerFormProps = {
+  action: (prev: PartnerFormState, formData: FormData) => Promise<PartnerFormState>;
+  store?: Pick<Store, "name" | "description" | "city" | "address" | "phone" | "whatsapp" | "instagram" | "logo_url">;
+  submitLabel: string;
+};
+
+const field =
+  "min-h-11 w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-rose-300 focus:ring-4 focus:ring-rose-500/15";
+const label = "mb-1.5 block text-sm font-medium text-stone-700";
+
+export function PartnerForm({ action, store, submitLabel }: PartnerFormProps) {
+  const [state, formAction, pending] = useActionState(action, {});
+
+  return (
+    <form action={formAction} className="rounded-2xl border border-stone-200 bg-white p-5 sm:p-6">
+      <h2 className="text-lg font-semibold text-stone-900">Информация</h2>
+      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+        <div className="sm:col-span-2">
+          <label htmlFor="p-name" className={label}>Название *</label>
+          <input id="p-name" name="name" required defaultValue={store?.name} className={field} />
+        </div>
+        <div className="sm:col-span-2">
+          <label htmlFor="p-description" className={label}>Описание</label>
+          <textarea id="p-description" name="description" rows={3} defaultValue={store?.description ?? ""} className={field} placeholder="Что продаёт, чем отличается" />
+        </div>
+        <div>
+          <label htmlFor="p-city" className={label}>Город</label>
+          <input id="p-city" name="city" defaultValue={store?.city ?? "Алматы"} className={field} />
+        </div>
+        <div>
+          <label htmlFor="p-address" className={label}>Адрес *</label>
+          <input id="p-address" name="address" required defaultValue={store?.address} className={field} placeholder="ул. Абая, 44" />
+        </div>
+        <div>
+          <label htmlFor="p-phone" className={label}>Телефон</label>
+          <input id="p-phone" name="phone" type="tel" defaultValue={store?.phone ?? ""} className={field} placeholder="+7 727 000 00 00" />
+        </div>
+        <div>
+          <label htmlFor="p-whatsapp" className={label}>WhatsApp</label>
+          <input id="p-whatsapp" name="whatsapp" type="tel" defaultValue={store?.whatsapp ?? ""} className={field} placeholder="+7 701 000 00 00" />
+        </div>
+        <div>
+          <label htmlFor="p-instagram" className={label}>Instagram</label>
+          <input id="p-instagram" name="instagram" defaultValue={store?.instagram ?? ""} className={field} placeholder="@shop_almaty" />
+        </div>
+        <div>
+          <label htmlFor="p-logo" className={label}>Логотип (ссылка)</label>
+          <input id="p-logo" name="logo_url" type="url" defaultValue={store?.logo_url ?? ""} className={field} placeholder="Загрузка файлом — на этапе 3" />
+        </div>
+      </div>
+      {state.error && (
+        <p role="alert" className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{state.error}</p>
+      )}
+      {state.success && (
+        <p role="status" className="mt-4 rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{state.success}</p>
+      )}
+      <button
+        type="submit"
+        disabled={pending}
+        className="mt-5 min-h-11 rounded-xl bg-stone-900 px-5 text-sm font-semibold text-white transition hover:bg-rose-600 disabled:opacity-60"
+      >
+        {pending ? "Сохраняем…" : submitLabel}
+      </button>
+    </form>
+  );
+}

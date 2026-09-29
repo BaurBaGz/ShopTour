@@ -18,16 +18,19 @@ export interface Database {
         Row: {
           id: string;
           name: string;
+          sort_order: number;
           created_at: string;
         };
         Insert: {
           id?: string;
           name: string;
+          sort_order?: number;
           created_at?: string;
         };
         Update: {
           id?: string;
           name?: string;
+          sort_order?: number;
           created_at?: string;
         };
         Relationships: [];
@@ -46,6 +49,7 @@ export interface Database {
           latitude: number | null;
           longitude: number | null;
           owner_id: string | null;
+          status: StoreStatus;
           created_at: string;
         };
         Insert: {
@@ -61,6 +65,7 @@ export interface Database {
           latitude?: number | null;
           longitude?: number | null;
           owner_id?: string | null;
+          status?: StoreStatus;
           created_at?: string;
         };
         Update: {
@@ -76,6 +81,7 @@ export interface Database {
           latitude?: number | null;
           longitude?: number | null;
           owner_id?: string | null;
+          status?: StoreStatus;
           created_at?: string;
         };
         Relationships: [];
@@ -177,8 +183,10 @@ export interface Database {
     };
     Enums: {
       staff_role: StaffRole;
+      store_status: StoreStatus;
     };
   };
 }
 
 export type StaffRole = "admin" | "moderator";
+export type StoreStatus = "draft" | "published" | "hidden";

@@ -31,15 +31,18 @@ type NavItem = {
 
 const NAV: NavItem[] = [
   { href: "/admin", label: "Главная", icon: HomeIcon },
-  { href: "/admin/partners", label: "Партнёры", icon: StoreIcon, soon: true },
+  { href: "/admin/partners", label: "Партнёры", icon: StoreIcon },
   { href: "/admin/products", label: "Товары", icon: TagIcon, soon: true },
-  { href: "/admin/categories", label: "Категории", icon: GridIcon, soon: true },
+  { href: "/admin/categories", label: "Категории", icon: GridIcon },
   { href: "/admin/banners", label: "Баннеры", icon: ImageIcon, soon: true },
   { href: "/admin/analytics", label: "Аналитика", icon: ChartIcon, soon: true },
   { href: "/admin/staff", label: "Сотрудники", icon: UsersIcon, adminOnly: true },
 ];
 
 const TITLES: [string, string][] = [
+  ["/admin/partners/new", "Новый партнёр"],
+  ["/admin/partners", "Партнёры"],
+  ["/admin/categories", "Категории"],
   ["/admin/staff", "Сотрудники"],
   ["/admin/account", "Мой аккаунт"],
   ["/admin", "Главная"],

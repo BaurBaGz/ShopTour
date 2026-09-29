@@ -4,7 +4,7 @@ import {
   logSupabaseError,
 } from "@/lib/supabase/log-error";
 import type { PostgrestError } from "@supabase/supabase-js";
-import { PRODUCT_SELECT } from "@/lib/data/selects";
+import { PRODUCT_SELECT, PUBLISHED_PRODUCT_SELECT } from "@/lib/data/selects";
 import { isSizeAvailable } from "@/lib/utils/product";
 import type {
   Category,
@@ -51,6 +51,7 @@ export async function getCategoriesWithError(): Promise<DataResult<Category[]>> 
   const { data, error } = await supabase
     .from("categories")
     .select("*")
+    .order("sort_order")
     .order("name");
 
   logSupabaseError("getCategories", error);
@@ -89,7 +90,14 @@ export async function getProductsWithError(options?: {
 
   const supabase = await createClient();
 
-  let query = supabase.from("products").select(PRODUCT_SELECT);
+  // Общий каталог — только опубликованные магазины (сотрудник или владелец иначе увидели бы
+  // и черновики). Страница конкретного магазина показывает его товары для предпросмотра.
+  let query = options?.storeId
+    ? supabase.from("products").select(PRODUCT_SELECT)
+    : supabase
+        .from("products")
+        .select(PUBLISHED_PRODUCT_SELECT)
+        .eq("stores.status", "published");
 
   if (options?.sort === "price_asc" || options?.sort === "price_desc") {
     query = query
@@ -216,7 +224,7 @@ export async function getStoreById(id: string): Promise<Store | null> {
 
 export async function getStoreIds(): Promise<string[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("stores").select("id");
+  const { data, error } = await supabase.from("stores").select("id").eq("status", "published");
 
   logSupabaseError("getStoreIds", error);
 
@@ -244,6 +252,7 @@ export async function getStoresWithCoords(): Promise<MapStore[]> {
     .select(
       "id, name, address, city, logo_url, phone, whatsapp, instagram, latitude, longitude",
     )
+    .eq("status", "published")
     .not("latitude", "is", null)
     .not("longitude", "is", null);
   return data ?? [];
@@ -274,7 +283,7 @@ export type CatalogFilterOptions = {
 export async function getCatalogFilterOptions(): Promise<CatalogFilterOptions> {
   const supabase = await createClient();
   const [storesResult, sizesResult] = await Promise.all([
-    supabase.from("stores").select("id, name").order("name"),
+    supabase.from("stores").select("id, name").eq("status", "published").order("name"),
     supabase.from("products").select("sizes").eq("in_stock", true),
   ]);
 

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getAdminOverview } from "@/lib/data/admin";
 import { requireStaff } from "@/lib/auth/staff";
 
@@ -37,11 +38,13 @@ export default async function AdminHomePage() {
       count: stores.withoutLocation,
       text: `${plural(stores.withoutLocation, "партнёр", "партнёра", "партнёров")} без точки на карте`,
       hint: "Их не видно на странице карты и в маршрутах",
+      href: "/admin/partners?filter=no-location",
     },
     {
       count: stores.withoutOwner,
       text: `${plural(stores.withoutOwner, "партнёр", "партнёра", "партнёров")} без владельца`,
       hint: "Магазин не может сам обновлять товары — только через админку",
+      href: "/admin/partners?filter=no-owner",
     },
   ].filter((item) => item.count > 0);
 
@@ -72,16 +75,21 @@ export default async function AdminHomePage() {
                 <span className="min-w-12 rounded-lg bg-amber-50 px-2 py-1 text-center text-sm font-semibold tabular-nums text-amber-800">
                   {item.count}
                 </span>
-                <div>
+                <div className="min-w-0 flex-1">
                   <p className="font-medium text-stone-900">{item.text}</p>
                   <p className="text-sm text-stone-500">{item.hint}</p>
                 </div>
+                {"href" in item && item.href && (
+                  <Link href={item.href} className="inline-flex min-h-11 shrink-0 items-center text-sm font-semibold text-rose-700 hover:text-rose-800">
+                    Открыть →
+                  </Link>
+                )}
               </li>
             ))}
           </ul>
         )}
         <p className="mt-4 text-xs text-stone-500">
-          Исправлять можно будет в разделах «Партнёры» и «Товары» — они на следующем этапе.
+          Товары без фото и без наличия — в разделе «Товары» (следующий этап).
         </p>
       </section>
     </div>

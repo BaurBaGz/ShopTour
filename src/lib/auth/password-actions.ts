@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getSessionUser } from "@/lib/auth/session";
 import { getStaffMember } from "@/lib/auth/staff";
 import { createClient } from "@/lib/supabase/server";
 
@@ -10,8 +11,10 @@ export async function changePasswordAction(
   _prev: PasswordState,
   formData: FormData,
 ): Promise<PasswordState> {
+  // Любой вошедший пользователь: сотрудник админки или владелец магазина
+  const user = await getSessionUser();
+  if (!user) return { error: "Войдите в аккаунт" };
   const staff = await getStaffMember();
-  if (!staff) return { error: "Нет доступа" };
 
   const password = String(formData.get("password") ?? "");
   const confirm = String(formData.get("confirm") ?? "");
@@ -22,7 +25,7 @@ export async function changePasswordAction(
   const { error } = await supabase.auth.updateUser({ password });
   if (error) return { error: error.message };
 
-  if (staff.must_change_password) {
+  if (staff?.must_change_password) {
     const { error: flagError } = await supabase
       .from("staff")
       .update({ must_change_password: false })
@@ -30,6 +33,6 @@ export async function changePasswordAction(
     if (flagError) return { error: flagError.message };
   }
 
-  revalidatePath("/admin", "layout");
+  revalidatePath("/", "layout");
   return { success: "Пароль изменён" };
 }
