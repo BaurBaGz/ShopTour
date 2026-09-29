@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { logoutAction } from "@/app/auth/actions";
+import { logoutAction } from "@/app/(site)/auth/actions";
 import { DeleteProductButton } from "@/components/dashboard/delete-product-button";
 import { getCategories, getProductsWithError } from "@/lib/data/catalog";
 import { getSessionUser, getStoreForOwner } from "@/lib/auth/session";

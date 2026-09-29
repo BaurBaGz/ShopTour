@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { logoutAction } from "@/app/auth/actions";
+import { logoutAction } from "@/app/(site)/auth/actions";
 import { FavoritesLink } from "@/components/favorites/favorites-link";
 import { NavLink } from "@/components/layout/nav-link";
 import { getSessionUser, getStoreForOwner } from "@/lib/auth/session";
+import { getStaffMember } from "@/lib/auth/staff";
 
 const nav = [
   { href: "/catalog", label: "Каталог" },
@@ -11,7 +12,9 @@ const nav = [
 
 export async function SiteHeader() {
   const user = await getSessionUser();
-  const store = user ? await getStoreForOwner(user.id) : null;
+  const [store, staff] = user
+    ? await Promise.all([getStoreForOwner(user.id), getStaffMember()])
+    : [null, null];
 
   return (
     <header className="sticky top-0 z-50 border-b border-stone-200/80 bg-white/80 backdrop-blur-md">
@@ -32,15 +35,25 @@ export async function SiteHeader() {
 
           <FavoritesLink />
 
-          {user && store ? (
+          {user ? (
             <>
-              <Link
-                href="/dashboard"
-                className="relative after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] whitespace-nowrap rounded-full px-2 py-2 text-[13px] font-medium sm:px-4 sm:text-sm text-stone-600 transition hover:bg-stone-100 hover:text-stone-900"
-              >
-                Кабинет
-              </Link>
-              <form action={logoutAction} className="hidden sm:block">
+              {staff && (
+                <Link
+                  href="/admin"
+                  className="relative after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] hidden whitespace-nowrap rounded-full px-2 py-2 text-[13px] font-medium text-stone-600 transition hover:bg-stone-100 hover:text-stone-900 sm:inline-block sm:px-4 sm:text-sm"
+                >
+                  Админка
+                </Link>
+              )}
+              {store && (
+                <Link
+                  href="/dashboard"
+                  className="relative after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] whitespace-nowrap rounded-full px-2 py-2 text-[13px] font-medium sm:px-4 sm:text-sm text-stone-600 transition hover:bg-stone-100 hover:text-stone-900"
+                >
+                  Кабинет
+                </Link>
+              )}
+              <form action={logoutAction} className={store ? "hidden sm:block" : undefined}>
                 <button
                   type="submit"
                   className="relative after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] whitespace-nowrap rounded-full px-2 py-2 text-[13px] font-medium sm:px-4 sm:text-sm text-stone-500 hover:bg-stone-100"

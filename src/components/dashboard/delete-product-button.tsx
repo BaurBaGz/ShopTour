@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { deleteProductAction } from "@/app/dashboard/actions";
+import { deleteProductAction } from "@/app/(site)/dashboard/actions";
 
 type DeleteProductButtonProps = {
   productId: string;

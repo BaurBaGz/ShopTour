@@ -21,14 +21,25 @@ export async function loginAction(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
     return { error: error.message };
   }
 
   revalidatePath("/", "layout");
-  redirect("/dashboard");
+
+  // Куда шёл человек (только адрес внутри сайта, без чужих доменов)
+  const next = String(formData.get("next") ?? "");
+  if (next.startsWith("/") && !next.startsWith("//")) redirect(next);
+
+  // Сотрудник — в админку, владелец магазина — в кабинет
+  const { data: staff } = await supabase
+    .from("staff")
+    .select("user_id")
+    .eq("user_id", data.user.id)
+    .maybeSingle();
+  redirect(staff ? "/admin" : "/dashboard");
 }
 
 export async function registerAction(

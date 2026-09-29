@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import type { AuthActionState } from "@/app/auth/actions";
+import type { AuthActionState } from "@/app/(site)/auth/actions";
 import { cn } from "@/lib/utils/cn";
 
 type Field = {
@@ -22,6 +22,8 @@ type AuthFormProps = {
     formData: FormData,
   ) => Promise<AuthActionState>;
   footer?: React.ReactNode;
+  /** Скрытые поля формы (например, next — куда вернуться после входа) */
+  hiddenFields?: Record<string, string>;
 };
 
 const initialState: AuthActionState = {};
@@ -33,6 +35,7 @@ export function AuthForm({
   submitLabel,
   action,
   footer,
+  hiddenFields,
 }: AuthFormProps) {
   const [state, formAction, pending] = useActionState(action, initialState);
 
@@ -45,6 +48,10 @@ export function AuthForm({
         <p className="mt-2 text-sm text-stone-500">{subtitle}</p>
 
         <form action={formAction} className="mt-8 space-y-4">
+          {hiddenFields &&
+            Object.entries(hiddenFields).map(([name, value]) => (
+              <input key={name} type="hidden" name={name} value={value} />
+            ))}
           {fields.map((field) => (
             <div key={field.name}>
               <label

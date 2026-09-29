@@ -5,7 +5,7 @@ import { useActionState } from "react";
 import {
   saveProductAction,
   type ProductActionState,
-} from "@/app/dashboard/actions";
+} from "@/app/(site)/dashboard/actions";
 import { SizeStockEditor } from "@/components/dashboard/size-stock-editor";
 import type { Category, Product } from "@/lib/data/types";
 import { cn } from "@/lib/utils/cn";

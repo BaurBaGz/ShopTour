@@ -138,9 +138,47 @@ export interface Database {
           },
         ];
       };
+      staff: {
+        Row: {
+          user_id: string;
+          role: StaffRole;
+          email: string;
+          name: string | null;
+          must_change_password: boolean;
+          invited_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          role: StaffRole;
+          email: string;
+          name?: string | null;
+          must_change_password?: boolean;
+          invited_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          role?: StaffRole;
+          email?: string;
+          name?: string | null;
+          must_change_password?: boolean;
+          invited_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
-    Enums: Record<string, never>;
+    Functions: {
+      current_staff_role: { Args: Record<string, never>; Returns: StaffRole | null };
+      is_staff: { Args: Record<string, never>; Returns: boolean };
+      is_admin: { Args: Record<string, never>; Returns: boolean };
+    };
+    Enums: {
+      staff_role: StaffRole;
+    };
   };
 }
+
+export type StaffRole = "admin" | "moderator";

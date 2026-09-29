@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { registerAction } from "@/app/auth/actions";
+import { registerAction } from "@/app/(site)/auth/actions";
 import { AuthForm } from "@/components/auth/auth-form";
 import { getSessionUser } from "@/lib/auth/session";
 
