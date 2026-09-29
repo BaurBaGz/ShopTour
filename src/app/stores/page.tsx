@@ -102,6 +102,7 @@ export default async function StoresMapPage({ searchParams }: StoresMapPageProps
       {stores.length > 0 ? (
         <StoresExplorer
           stores={stores}
+          allStores={allStores}
           products={productsOnMap}
           initialStoreId={selectedStoreId}
           showCounts={hasFilters}

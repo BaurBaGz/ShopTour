@@ -3,6 +3,7 @@ import "leaflet/dist/leaflet.css";
 import { useEffect, useRef, useState } from "react";
 import type { DivIcon, LayerGroup, Map as LeafletMap, Marker } from "leaflet";
 import type { MapStore } from "@/lib/data/catalog";
+import { formatPrice } from "@/lib/utils/format";
 import { getStoreColor, getStoreInitial } from "@/lib/utils/store-color";
 
 type Leaflet = typeof import("leaflet");
@@ -13,15 +14,34 @@ const LOGO_SIZE = 36;
 // Длительность плавных перелётов карты, секунды
 const FLY_DURATION = 0.8;
 const SELECTED_LOGO_SIZE = 46;
+const TOUR_COLOR = "#e11d48";
 
+/** Избранный товар для всплывающей карточки над магазином */
+export type FavoritePreview = {
+  id: string;
+  name: string;
+  price: number;
+  image: string | null;
+};
+
+type MarkerExtras = {
+  /** Число подходящих товаров (фильтры или избранное) */
+  count?: number;
+  /** Номер остановки в Shop Tour */
+  tourNumber?: number;
+};
 
 type StoresMapProps = {
   stores: MapStore[];
   height?: number;
   selectedId?: string | null;
   onSelect?: (storeId: string) => void;
-  /** Число подходящих товаров на значке магазина (когда включены фильтры) */
+  /** Число подходящих товаров на значке магазина (фильтры или избранное) */
   counts?: Record<string, number>;
+  /** Избранные товары по магазинам — карточка при наведении */
+  favoritesByStore?: Record<string, FavoritePreview[]>;
+  /** Остановки Shop Tour по порядку — номера на значках и линия маршрута */
+  tourIds?: string[];
 };
 
 // Значок-логотип собираем через DOM, чтобы данные магазина не выполнялись как HTML
@@ -29,7 +49,7 @@ function createLogoElement(
   store: MapStore,
   size: number,
   selected: boolean,
-  count: number | undefined,
+  { count, tourNumber }: MarkerExtras,
 ): HTMLElement {
   const wrapper = document.createElement("div");
   Object.assign(wrapper.style, {
@@ -124,7 +144,97 @@ function createLogoElement(
     wrapper.append(badge);
   }
 
+  if (tourNumber !== undefined) {
+    const stop = document.createElement("span");
+    stop.textContent = String(tourNumber);
+    Object.assign(stop.style, {
+      position: "absolute",
+      top: "-6px",
+      left: "-7px",
+      width: "20px",
+      height: "20px",
+      borderRadius: "9999px",
+      background: "#1c1917",
+      color: "#fff",
+      fontSize: "11px",
+      fontWeight: "700",
+      lineHeight: "16px",
+      textAlign: "center",
+      border: "2px solid #fff",
+      boxSizing: "border-box",
+    });
+    wrapper.append(stop);
+  }
+
   return wrapper;
+}
+
+// Карточка при наведении: избранные товары в этом магазине (через DOM — без HTML-вставок)
+const TOOLTIP_LIMIT = 3;
+
+function createFavoritesTooltip(store: MapStore, items: FavoritePreview[]): HTMLElement {
+  const root = document.createElement("div");
+  Object.assign(root.style, { width: "230px", whiteSpace: "normal" });
+
+  const title = document.createElement("div");
+  title.textContent = store.name;
+  Object.assign(title.style, { fontWeight: "700", fontSize: "13px", color: "#1c1917" });
+  const subtitle = document.createElement("div");
+  subtitle.textContent = "♥ Из вашего избранного";
+  Object.assign(subtitle.style, { fontSize: "11px", color: "#e11d48", marginBottom: "6px" });
+  root.append(title, subtitle);
+
+  for (const item of items.slice(0, TOOLTIP_LIMIT)) {
+    const row = document.createElement("div");
+    Object.assign(row.style, { display: "flex", gap: "8px", alignItems: "center", marginTop: "6px" });
+
+    const thumb = document.createElement("div");
+    Object.assign(thumb.style, {
+      width: "40px",
+      height: "50px",
+      flexShrink: "0",
+      borderRadius: "8px",
+      overflow: "hidden",
+      background: "#f5f5f4",
+    });
+    if (item.image) {
+      const img = document.createElement("img");
+      img.src = item.image;
+      img.alt = "";
+      Object.assign(img.style, { width: "100%", height: "100%", objectFit: "cover" });
+      thumb.append(img);
+    }
+
+    const text = document.createElement("div");
+    Object.assign(text.style, { minWidth: "0" });
+    const name = document.createElement("div");
+    name.textContent = item.name;
+    Object.assign(name.style, {
+      fontSize: "12px",
+      fontWeight: "600",
+      color: "#1c1917",
+      lineHeight: "1.3",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap",
+    });
+    const price = document.createElement("div");
+    price.textContent = formatPrice(item.price);
+    Object.assign(price.style, { fontSize: "12px", color: "#57534e" });
+    text.append(name, price);
+
+    row.append(thumb, text);
+    root.append(row);
+  }
+
+  if (items.length > TOOLTIP_LIMIT) {
+    const more = document.createElement("div");
+    more.textContent = `+ ещё ${items.length - TOOLTIP_LIMIT}`;
+    Object.assign(more.style, { fontSize: "11px", color: "#78716c", marginTop: "6px" });
+    root.append(more);
+  }
+
+  return root;
 }
 
 type Rect = { left: number; top: number; right: number; bottom: number };
@@ -164,11 +274,11 @@ function makeIcon(
   L: Leaflet,
   store: MapStore,
   selected: boolean,
-  count: number | undefined,
+  extras: MarkerExtras,
 ): DivIcon {
   const size = selected ? SELECTED_LOGO_SIZE : LOGO_SIZE;
   return L.divIcon({
-    html: createLogoElement(store, size, selected, count),
+    html: createLogoElement(store, size, selected, extras),
     className: "",
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
@@ -181,11 +291,14 @@ export default function StoresMap({
   selectedId = null,
   onSelect,
   counts,
+  favoritesByStore,
+  tourIds,
 }: StoresMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletRef = useRef<Leaflet | null>(null);
   const mapInstanceRef = useRef<LeafletMap | null>(null);
   const layerRef = useRef<LayerGroup | null>(null);
+  const routeLayerRef = useRef<LayerGroup | null>(null);
   const markersRef = useRef(new Map<string, Marker>());
   const hasFittedRef = useRef(false);
   const [ready, setReady] = useState(false);
@@ -194,10 +307,20 @@ export default function StoresMap({
   const onSelectRef = useRef(onSelect);
   const selectedIdRef = useRef(selectedId);
   const countsRef = useRef(counts);
+  const tourIdsRef = useRef(tourIds);
   useEffect(() => {
     onSelectRef.current = onSelect;
     countsRef.current = counts;
-  }, [onSelect, counts]);
+    tourIdsRef.current = tourIds;
+  }, [onSelect, counts, tourIds]);
+
+  const extrasFor = (storeId: string): MarkerExtras => {
+    const stop = tourIdsRef.current?.indexOf(storeId) ?? -1;
+    return {
+      count: countsRef.current?.[storeId],
+      tourNumber: stop === -1 ? undefined : stop + 1,
+    };
+  };
 
   // Карта создаётся один раз
   useEffect(() => {
@@ -221,6 +344,8 @@ export default function StoresMap({
       map.on("zoomend", () => declutterLabels(container));
 
       leafletRef.current = L;
+      // Линия маршрута — под значками магазинов
+      routeLayerRef.current = L.layerGroup().addTo(map);
       layerRef.current = L.layerGroup().addTo(map);
       mapInstanceRef.current = map;
       setReady(true);
@@ -233,6 +358,7 @@ export default function StoresMap({
       mapInstanceRef.current?.remove();
       mapInstanceRef.current = null;
       layerRef.current = null;
+      routeLayerRef.current = null;
     };
   }, []);
 
@@ -254,13 +380,38 @@ export default function StoresMap({
 
       const selected = store.id === selectedIdRef.current;
       const marker = L.marker(point, {
-        icon: makeIcon(L, store, selected, countsRef.current?.[store.id]),
+        icon: makeIcon(L, store, selected, extrasFor(store.id)),
         title: store.name,
         alt: store.name,
         zIndexOffset: selected ? 1000 : 0,
         keyboard: true,
       })
-        .on("click", () => onSelectRef.current?.(store.id));
+        .on("click", () => {
+          // Товары и так откроются под картой, а уменьшенная карта обрезала бы карточку.
+          // Leaflet открывает подсказку и на клик (для сенсорных экранов) — закрываем после него.
+          requestAnimationFrame(() => marker.closeTooltip());
+          onSelectRef.current?.(store.id);
+        });
+
+      const favorites = favoritesByStore?.[store.id];
+      if (favorites?.length) {
+        // У верхнего края карты карточка открывается вниз, иначе её обрежет.
+        // Обработчик до bindTooltip: Leaflet вызывает их по порядку, направление успеет смениться.
+        marker.on("mouseover", () => {
+          const tooltip = marker.getTooltip();
+          if (!tooltip) return;
+          const size = store.id === selectedIdRef.current ? SELECTED_LOGO_SIZE : LOGO_SIZE;
+          // Примерная высота карточки: заголовок + строки товаров
+          const shown = Math.min(favorites.length, TOOLTIP_LIMIT);
+          const tooltipHeight = 56 + shown * 56 + (favorites.length > shown ? 20 : 0);
+          const y = map.latLngToContainerPoint(marker.getLatLng()).y;
+          const spaceBelow = map.getSize().y - y;
+          const nearTop = y < tooltipHeight + size && spaceBelow > y;
+          tooltip.options.direction = nearTop ? "bottom" : "top";
+          tooltip.options.offset = nearTop ? [0, size / 2 + 22] : [0, -size / 2 - 4];
+        });
+        marker.bindTooltip(createFavoritesTooltip(store, favorites), { opacity: 1 });
+      }
       layer.addLayer(marker);
       markersRef.current.set(store.id, marker);
     }
@@ -284,7 +435,39 @@ export default function StoresMap({
         map.setView(points[0], 14);
       }
     }
-  }, [ready, stores, counts]);
+  }, [ready, stores, counts, favoritesByStore]);
+
+  // Shop Tour: номера на значках и линия маршрута (без перелёта карты)
+  useEffect(() => {
+    const L = leafletRef.current;
+    const map = mapInstanceRef.current;
+    const routeLayer = routeLayerRef.current;
+    if (!ready || !L || !map || !routeLayer) return;
+
+    for (const store of stores) {
+      const marker = markersRef.current.get(store.id);
+      if (!marker) continue;
+      marker.setIcon(
+        makeIcon(L, store, store.id === selectedIdRef.current, extrasFor(store.id)),
+      );
+    }
+
+    routeLayer.clearLayers();
+    const points = (tourIds ?? [])
+      .map((id) => stores.find((s) => s.id === id))
+      .filter((s): s is MapStore => Boolean(s && s.latitude !== null && s.longitude !== null))
+      .map((s) => [s.latitude!, s.longitude!] as [number, number]);
+    if (points.length > 1) {
+      L.polyline(points, {
+        color: TOUR_COLOR,
+        weight: 4,
+        opacity: 0.8,
+        dashArray: "8 8",
+        interactive: false,
+      }).addTo(routeLayer);
+    }
+    declutterLabels(map.getContainer());
+  }, [ready, stores, tourIds, favoritesByStore, counts]);
 
   // Подсветка выбранного магазина и центрирование на нём
   useEffect(() => {
@@ -299,7 +482,7 @@ export default function StoresMap({
       const store = stores.find((s) => s.id === id);
       if (!marker || !store) continue;
       const selected = id === selectedId;
-      marker.setIcon(makeIcon(L, store, selected, countsRef.current?.[id]));
+      marker.setIcon(makeIcon(L, store, selected, extrasFor(id)));
       marker.setZIndexOffset(selected ? 1000 : 0);
       declutterLabels(mapInstanceRef.current!.getContainer());
       if (selected) {
