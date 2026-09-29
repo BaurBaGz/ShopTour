@@ -36,7 +36,11 @@ function formatStoreCount(count: number): string {
 
 export default async function StoresMapPage({ searchParams }: StoresMapPageProps) {
   // store — выбранный на карте магазин, а не фильтр
-  const { store: selectedStoreId, ...values } = readFilterValues(await searchParams);
+  const params = await searchParams;
+  const { store: selectedStoreId, ...values } = readFilterValues(params);
+  // view=favorites — режим «Избранное на карте», tour=1 — сразу открыть панель Shop Tour
+  const initialMode = params.view === "favorites" ? "favorites" : "all";
+  const openTour = params.tour === "1";
 
   const [allStores, products, categories, filterOptions] = await Promise.all([
     getStoresWithCoords(),
@@ -105,6 +109,8 @@ export default async function StoresMapPage({ searchParams }: StoresMapPageProps
           allStores={allStores}
           products={productsOnMap}
           initialStoreId={selectedStoreId}
+          initialMode={initialMode}
+          openTour={openTour}
           showCounts={hasFilters}
         />
       ) : (

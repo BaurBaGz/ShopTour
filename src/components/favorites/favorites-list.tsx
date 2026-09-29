@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ProductCard } from "@/components/catalog/product-card";
+import { BuildTourButton } from "@/components/favorites/build-tour-button";
 import { PRODUCT_SELECT } from "@/lib/data/selects";
 import type { ProductWithRelations } from "@/lib/data/types";
 import { pruneFavorites, useFavoriteIds } from "@/lib/favorites";
@@ -86,7 +87,10 @@ export function FavoritesList() {
 
   return (
     <>
-      <p className="mb-4 text-sm text-stone-500">{formatProductCount(products.length)}</p>
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-stone-500">{formatProductCount(products.length)}</p>
+        <BuildTourButton storeIds={products.map((p) => p.store_id)} />
+      </div>
       <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
         {products.map((product) => (
           <ProductCard key={product.id} product={product} />

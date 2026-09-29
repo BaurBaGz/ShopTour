@@ -30,6 +30,9 @@ type StoresExplorerProps = {
   allStores: MapStore[];
   products: ProductWithRelations[];
   initialStoreId?: string;
+  initialMode?: MapMode;
+  /** Открыть панель Shop Tour сразу (переход со страницы «Избранное») */
+  openTour?: boolean;
   /** Показывать на значках число подходящих товаров (включены фильтры) */
   showCounts?: boolean;
 };
@@ -39,14 +42,16 @@ export function StoresExplorer({
   allStores,
   products,
   initialStoreId,
+  initialMode = "all",
+  openTour = false,
   showCounts = false,
 }: StoresExplorerProps) {
   const [chosenId, setSelectedId] = useState<string | null>(
     initialStoreId ?? null,
   );
-  const [mode, setMode] = useState<MapMode>("all");
+  const [mode, setMode] = useState<MapMode>(initialMode);
   // null — «по умолчанию»: панель тура открыта, если в туре есть остановки
-  const [tourPanel, setTourPanel] = useState<boolean | null>(null);
+  const [tourPanel, setTourPanel] = useState<boolean | null>(openTour ? true : null);
   const panelRef = useRef<HTMLElement>(null);
 
   const favoriteIds = useFavoriteIds();
@@ -141,7 +146,7 @@ export function StoresExplorer({
     [],
   );
 
-  // Выбранный магазин — в адресе страницы, чтобы ссылкой можно было поделиться
+  // Выбранный магазин и режим — в адресе страницы, чтобы ссылкой можно было поделиться
   useEffect(() => {
     const url = new URL(window.location.href);
     if (selectedId) {
@@ -149,8 +154,15 @@ export function StoresExplorer({
     } else {
       url.searchParams.delete("store");
     }
+    if (mode === "favorites") {
+      url.searchParams.set("view", "favorites");
+    } else {
+      url.searchParams.delete("view");
+    }
+    // tour=1 нужен только для первого открытия — дальше панелью управляет пользователь
+    url.searchParams.delete("tour");
     window.history.replaceState(null, "", url);
-  }, [selectedId]);
+  }, [selectedId, mode]);
 
   // После выбора показываем начало каталога магазина
   useEffect(() => {
