@@ -26,12 +26,12 @@ type MapMode = "all" | "favorites";
 type StoresExplorerProps = {
   /** Магазины, подходящие под фильтры */
   stores: MapStore[];
-  /** Все магазины с координатами — остановки Shop Tour видны при любых фильтрах */
+  /** Все магазины с координатами — остановки маршрута видны при любых фильтрах */
   allStores: MapStore[];
   products: ProductWithRelations[];
   initialStoreId?: string;
   initialMode?: MapMode;
-  /** Открыть панель Shop Tour сразу (переход со страницы «Избранное») */
+  /** Открыть панель маршрута сразу (переход со страницы «Избранное») */
   openTour?: boolean;
   /** Товар, с которого пришли по адресу магазина, — первым в списке и выделен */
   highlightProductId?: string;
@@ -201,7 +201,7 @@ export function StoresExplorer({
 
   return (
     <div className="flex flex-col gap-4 sm:gap-6">
-      <div className="flex items-center justify-between gap-2 sm:gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
         <div
           className="inline-flex rounded-full bg-stone-100 p-1 text-sm font-medium"
           role="group"
@@ -268,7 +268,7 @@ export function StoresExplorer({
               d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
             />
           </svg>
-          Shop Tour
+          Маршрут
           {tourStops.length > 0 && (
             <span className="rounded-full bg-rose-600 px-1.5 text-xs font-semibold text-white">
               {tourStops.length}
@@ -288,7 +288,8 @@ export function StoresExplorer({
       <div
         ref={mapAreaRef}
         className={cn(
-          "grid scroll-mt-20 gap-6",
+          // minmax(0, 1fr): колонка не шире экрана, даже если внутри длинные адреса без переносов
+          "grid scroll-mt-20 grid-cols-[minmax(0,1fr)] gap-6",
           // Высота карты: на телефоне — доля экрана (вокруг остаётся страница), на компьютере — фиксированная
           selectedStore
             ? "[--map-h:min(35svh,300px)] sm:[--map-h:300px]"
@@ -350,7 +351,7 @@ export function StoresExplorer({
                     className="rounded-full bg-stone-900 px-4 py-2 font-semibold text-white transition hover:bg-stone-700"
                     title="Убрать из маршрута"
                   >
-                    ✓ В Shop Tour · остановка {stopNumber}
+                    ✓ В маршруте · остановка {stopNumber}
                   </button>
                 ) : (
                   <button
@@ -362,7 +363,7 @@ export function StoresExplorer({
                     disabled={tourIds.length >= MAX_TOUR_STOPS}
                     className="rounded-full px-4 py-2 font-semibold text-stone-900 ring-1 ring-stone-300 transition hover:bg-stone-50 disabled:opacity-40"
                   >
-                    + В Shop Tour
+                    + В маршрут
                   </button>
                 )}
                 {whatsappHref && (

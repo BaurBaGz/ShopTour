@@ -18,7 +18,7 @@ function storesWord(count: number): string {
   return "магазинам";
 }
 
-/** Собирает Shop Tour по магазинам с избранным и открывает карту с маршрутом */
+/** Собирает маршрут по магазинам с избранным и открывает карту с ним */
 export function BuildTourButton({ storeIds }: BuildTourButtonProps) {
   const router = useRouter();
   const tourIds = useTourIds();
@@ -77,12 +77,12 @@ export function BuildTourButton({ storeIds }: BuildTourButtonProps) {
           ? "Строим маршрут…"
           : status === "confirm"
             ? "Да, заменить маршрут"
-            : "Построить Shop Tour"}
+            : "Построить маршрут"}
       </button>
 
       {status === "confirm" ? (
         <p className="text-xs text-stone-500">
-          В Shop Tour уже {tourIds.length} ост. — новый маршрут заменит его.{" "}
+          В маршруте уже {tourIds.length} ост. — новый заменит его.{" "}
           <button
             type="button"
             onClick={() => setStatus("idle")}

@@ -54,19 +54,19 @@ export function TourPanel({
 
   return (
     <section
-      aria-label="Shop Tour"
+      aria-label="Маршрут"
       style={{ "--tour-max-h": `${maxHeight}px` } as React.CSSProperties}
       className="flex flex-col rounded-3xl border border-stone-200/80 bg-white p-5 lg:max-h-[var(--tour-max-h)] lg:overflow-y-auto"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-stone-900">Shop Tour</h2>
-          <p className="text-sm text-stone-500">Ваш маршрут по магазинам</p>
+          <h2 className="text-lg font-semibold text-stone-900">Маршрут</h2>
+          <p className="text-sm text-stone-500">Магазины по порядку обхода</p>
         </div>
         <button
           type="button"
           onClick={onClose}
-          aria-label="Скрыть Shop Tour"
+          aria-label="Скрыть маршрут"
           className="rounded-full p-2 text-stone-500 transition hover:bg-stone-100 hover:text-stone-900"
         >
           <svg
@@ -90,7 +90,7 @@ export function TourPanel({
         <div className="mt-4 rounded-2xl bg-stone-50 p-4 text-sm text-stone-600">
           <p>
             Выберите магазин на карте и нажмите{" "}
-            <span className="font-medium text-stone-900">«+ В Shop Tour»</span>{" "}
+            <span className="font-medium text-stone-900">«+ В маршрут»</span>{" "}
             — он станет остановкой маршрута.
           </p>
           {favoriteStores.length > 0 && (

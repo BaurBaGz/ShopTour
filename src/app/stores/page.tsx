@@ -39,7 +39,7 @@ export default async function StoresMapPage({ searchParams }: StoresMapPageProps
   // store — выбранный на карте магазин, а не фильтр
   const params = await searchParams;
   const { store: selectedStoreId, ...values } = readFilterValues(params);
-  // view=favorites — режим «Избранное на карте», tour=1 — сразу открыть панель Shop Tour
+  // view=favorites — режим «Избранное на карте», tour=1 — сразу открыть панель маршрута
   const initialMode = params.view === "favorites" ? "favorites" : "all";
   const openTour = params.tour === "1";
   // product — товар, с которого пришли по адресу магазина: покажем его первым

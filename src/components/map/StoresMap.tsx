@@ -27,7 +27,7 @@ export type FavoritePreview = {
 type MarkerExtras = {
   /** Число подходящих товаров (фильтры или избранное) */
   count?: number;
-  /** Номер остановки в Shop Tour */
+  /** Номер остановки в маршруте */
   tourNumber?: number;
 };
 
@@ -41,7 +41,7 @@ type StoresMapProps = {
   counts?: Record<string, number>;
   /** Избранные товары по магазинам — карточка при наведении */
   favoritesByStore?: Record<string, FavoritePreview[]>;
-  /** Остановки Shop Tour по порядку — номера на значках и линия маршрута */
+  /** Остановки маршрута по порядку — номера на значках и линия */
   tourIds?: string[];
 };
 
@@ -493,7 +493,7 @@ export default function StoresMap({
     }
   }, [ready, stores, counts, favoritesByStore]);
 
-  // Shop Tour: номера на значках и линия маршрута (без перелёта карты)
+  // Маршрут: номера на значках и линия (без перелёта карты)
   useEffect(() => {
     const L = leafletRef.current;
     const map = mapInstanceRef.current;

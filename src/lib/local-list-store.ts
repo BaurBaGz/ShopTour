@@ -1,6 +1,6 @@
 "use client";
 
-// Список id в localStorage с подпиской для React (избранное, Shop Tour).
+// Список id в localStorage с подпиской для React (избранное, маршрут).
 // Все компоненты обновляются вместе, в том числе между вкладками браузера.
 import { useSyncExternalStore } from "react";
 
