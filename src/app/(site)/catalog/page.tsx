@@ -13,6 +13,7 @@ import {
   readFilterValues,
 } from "@/lib/catalog-filters";
 import {
+  getActiveBanners,
   getCatalogFilterOptions,
   getCategoriesWithError,
   getProductsWithError,
@@ -34,7 +35,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   const minPrice = parsePrice(values.min);
   const maxPrice = parsePrice(values.max);
 
-  const [categoriesResult, productsResult, filterOptions] = await Promise.all([
+  const [categoriesResult, productsResult, filterOptions, banners] = await Promise.all([
     getCategoriesWithError(),
     getProductsWithError({
       categoryId: values.category,
@@ -46,6 +47,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
       sort,
     }),
     getCatalogFilterOptions(),
+    getActiveBanners(),
   ]);
 
   const categories = categoriesResult.data;
@@ -71,9 +73,9 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
       )}
 
       {/* Идея сервиса — пока человек ещё ничего не ищет; с фильтрами баннеры не отодвигают результаты */}
-      {chips.length === 0 && (
+      {chips.length === 0 && banners.length > 0 && (
         <div className="mb-6">
-          <PromoCarousel />
+          <PromoCarousel banners={banners} />
         </div>
       )}
 

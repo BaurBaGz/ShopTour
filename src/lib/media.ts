@@ -24,11 +24,11 @@ async function compressImage(file: File): Promise<Blob> {
 /**
  * Загрузка фото магазина или товара в хранилище Supabase (бакет media).
  * Путь products/<storeId>/… или stores/<storeId>/… — правила хранилища пускают
- * сотрудников и владельца этого магазина.
+ * сотрудников и владельца этого магазина; banners/site/… — только сотрудников.
  */
 export async function uploadStoreImage(
   storeId: string,
-  kind: "products" | "stores",
+  kind: "products" | "stores" | "banners",
   file: File,
 ): Promise<string> {
   if (!file.type.startsWith("image/")) throw new Error(`«${file.name}» — не изображение`);

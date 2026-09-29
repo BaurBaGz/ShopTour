@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { uploadStoreImage } from "@/lib/media";
 import { cn } from "@/lib/utils/cn";
 
@@ -10,15 +10,31 @@ type ImagesInputProps = {
   defaultValue?: string[];
   /** Магазин, в папку которого грузим; без него загрузка недоступна */
   storeId: string | null;
-  kind?: "products" | "stores";
+  kind?: "products" | "stores" | "banners";
   /** 1 — одно фото (логотип) */
   max?: number;
   label?: string;
+  /** Сообщить наружу о новом списке фото (например, для превью) */
+  onChange?: (urls: string[]) => void;
 };
 
 /** Фото товара или логотип: загрузка файлами, порядок, обложка, удаление, ссылка вручную */
-export function ImagesInput({ name, defaultValue = [], storeId, kind = "products", max = 8, label = "Фото" }: ImagesInputProps) {
+export function ImagesInput({ name, defaultValue = [], storeId, kind = "products", max = 8, label = "Фото", onChange }: ImagesInputProps) {
   const [images, setImages] = useState<string[]>(defaultValue.filter(Boolean));
+
+  // Сообщаем наружу после отрисовки (не во время неё) и не при первом показе
+  const onChangeRef = useRef(onChange);
+  const firstRender = useRef(true);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    onChangeRef.current?.(images);
+  }, [images]);
   const [uploading, setUploading] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [urlDraft, setUrlDraft] = useState("");

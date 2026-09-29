@@ -34,12 +34,14 @@ const NAV: NavItem[] = [
   { href: "/admin/partners", label: "Партнёры", icon: StoreIcon },
   { href: "/admin/products", label: "Товары", icon: TagIcon },
   { href: "/admin/categories", label: "Категории", icon: GridIcon },
-  { href: "/admin/banners", label: "Баннеры", icon: ImageIcon, soon: true },
+  { href: "/admin/banners", label: "Баннеры", icon: ImageIcon },
   { href: "/admin/analytics", label: "Аналитика", icon: ChartIcon, soon: true },
   { href: "/admin/staff", label: "Сотрудники", icon: UsersIcon, adminOnly: true },
 ];
 
 const TITLES: [string, string][] = [
+  ["/admin/banners/new", "Новый баннер"],
+  ["/admin/banners", "Баннеры"],
   ["/admin/products/new", "Новый товар"],
   ["/admin/products", "Товары"],
   ["/admin/partners/new", "Новый партнёр"],

@@ -177,6 +177,54 @@ export interface Database {
         };
         Relationships: [];
       };
+      banners: {
+        Row: {
+          id: string;
+          kind: BannerKind;
+          title: string;
+          accent: string | null;
+          body: string | null;
+          cta_label: string | null;
+          cta_href: string | null;
+          image_url: string | null;
+          theme: BannerTheme;
+          is_active: boolean;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          kind?: BannerKind;
+          title: string;
+          accent?: string | null;
+          body?: string | null;
+          cta_label?: string | null;
+          cta_href?: string | null;
+          image_url?: string | null;
+          theme?: BannerTheme;
+          is_active?: boolean;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          kind?: BannerKind;
+          title?: string;
+          accent?: string | null;
+          body?: string | null;
+          cta_label?: string | null;
+          cta_href?: string | null;
+          image_url?: string | null;
+          theme?: BannerTheme;
+          is_active?: boolean;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -187,9 +235,13 @@ export interface Database {
     Enums: {
       staff_role: StaffRole;
       store_status: StoreStatus;
+      banner_kind: BannerKind;
+      banner_theme: BannerTheme;
     };
   };
 }
 
 export type StaffRole = "admin" | "moderator";
 export type StoreStatus = "draft" | "published" | "hidden";
+export type BannerKind = "text" | "steps";
+export type BannerTheme = "rose" | "dark" | "light";

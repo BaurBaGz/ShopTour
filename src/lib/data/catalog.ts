@@ -306,3 +306,16 @@ export async function getCatalogFilterOptions(): Promise<CatalogFilterOptions> {
     sizes: [...sizes].sort(compareSizes),
   };
 }
+
+/** Включённые баннеры для карусели над каталогом, по порядку */
+export async function getActiveBanners() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("banners")
+    .select("id, kind, title, accent, body, cta_label, cta_href, image_url, theme")
+    .eq("is_active", true)
+    .order("sort_order")
+    .order("created_at");
+  logSupabaseError("getActiveBanners", error);
+  return data ?? [];
+}
