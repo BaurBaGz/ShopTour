@@ -128,7 +128,7 @@ export default async function DashboardPage() {
                       className={
                         product.in_stock
                           ? "text-emerald-600"
-                          : "text-stone-400"
+                          : "text-stone-500"
                       }
                     >
                       {product.in_stock ? "В наличии" : "Нет"}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { FavoriteButton } from "@/components/favorites/favorite-button";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils/cn";
@@ -14,6 +14,7 @@ type ProductPurchaseProps = {
     id: string;
     name: string;
     price: number;
+    old_price?: number | null;
     sizes: string[];
     size_stock: Json;
     in_stock: boolean;
@@ -40,17 +41,27 @@ export function ProductPurchase({ product, contactPhone }: ProductPurchaseProps)
     ? `Здравствуйте! Пишу с ShopTour. Интересует «${product.name}», размер ${selectedSize}, за ${formatPrice(product.price)}. Он ещё в наличии?`
     : `Здравствуйте! Пишу с ShopTour. Интересует «${product.name}» за ${formatPrice(product.price)}. Он ещё в наличии?`;
   const whatsappHref = contactPhone ? buildWhatsAppUrl(contactPhone, message) : null;
+  const needsSize = sizes.length > 0 && !selectedSize && availableSizes.length > 1;
+  const sizesRef = useRef<HTMLDivElement>(null);
+
+  // Кнопка в нижней панели без выбранного размера ведёт к размерам
+  const goToSizes = () => {
+    sizesRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    sizesRef.current?.querySelector<HTMLButtonElement>("button:not(:disabled)")?.focus({
+      preventScroll: true,
+    });
+  };
 
   return (
     <div className="flex flex-col gap-5">
       {sizes.length > 0 && (
-        <div>
+        <div ref={sizesRef} className="scroll-mt-24">
           <div className="mb-2 flex items-baseline justify-between gap-3">
             <h2 className="text-sm font-medium text-stone-500">
               Размер{selectedSize ? `: ${selectedSize}` : ""}
             </h2>
             {!selectedSize && availableSizes.length > 1 && (
-              <span className="text-xs text-stone-400">Выберите размер</span>
+              <span className="text-xs text-stone-500">Выберите размер</span>
             )}
           </div>
 
@@ -87,7 +98,7 @@ export function ProductPurchase({ product, contactPhone }: ProductPurchaseProps)
             className={cn(
               "mt-3 min-h-5 text-sm",
               selectedStock !== undefined && selectedStock <= 2
-                ? "font-medium text-rose-600"
+                ? "font-medium text-rose-700"
                 : "text-stone-500",
             )}
             aria-live="polite"
@@ -107,13 +118,56 @@ export function ProductPurchase({ product, contactPhone }: ProductPurchaseProps)
             href={whatsappHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-full bg-[#25D366] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#20bd5a]"
+            className="hidden items-center gap-2 rounded-full bg-[#15803D] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#166534] sm:inline-flex"
           >
             <WhatsAppIcon className="h-5 w-5" />
             {selectedSize ? `Спросить про размер ${selectedSize}` : "Спросить в WhatsApp"}
           </a>
         )}
         <FavoriteButton productId={product.id} productName={product.name} variant="full" />
+      </div>
+
+      {/* Телефон: цена и главное действие всегда под пальцем */}
+      <div
+        data-mobile-buy-bar
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white/95 px-4 pt-3 backdrop-blur-md sm:hidden"
+        style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }}
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-lg font-bold leading-tight text-stone-900">
+              {formatPrice(product.price)}
+            </p>
+            {product.old_price && product.old_price > product.price ? (
+              <p className="text-xs text-stone-500 line-through">{formatPrice(product.old_price)}</p>
+            ) : selectedSize ? (
+              <p className="text-xs text-stone-500">Размер {selectedSize}</p>
+            ) : null}
+          </div>
+          {soldOut ? (
+            <span className="rounded-full bg-stone-100 px-4 py-3 text-sm font-medium text-stone-500">
+              Нет в наличии
+            </span>
+          ) : needsSize ? (
+            <button
+              type="button"
+              onClick={goToSizes}
+              className="min-h-11 rounded-full bg-stone-900 px-5 text-sm font-semibold text-white"
+            >
+              Выбрать размер
+            </button>
+          ) : whatsappHref ? (
+            <a
+              href={whatsappHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#15803D] px-5 text-sm font-semibold text-white"
+            >
+              <WhatsAppIcon className="h-5 w-5" />
+              {selectedSize ? `Спросить про ${selectedSize}` : "Спросить в WhatsApp"}
+            </a>
+          ) : null}
+        </div>
       </div>
     </div>
   );

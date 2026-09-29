@@ -77,7 +77,7 @@ export function SizeStockEditor({ sizes = [], sizeStock = {} }: SizeStockEditorP
               type="button"
               onClick={() => removeRow(row.key)}
               aria-label={`Удалить размер ${row.size || ""}`.trim()}
-              className="shrink-0 rounded-full p-2 text-stone-400 transition hover:bg-stone-100 hover:text-stone-900"
+              className="shrink-0 rounded-full p-2 text-stone-500 transition hover:bg-stone-100 hover:text-stone-900"
             >
               ✕
             </button>

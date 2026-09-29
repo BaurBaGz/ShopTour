@@ -24,3 +24,10 @@ body {
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
+/* Телефон: место под закреплённой панелью покупки, чтобы она не закрывала низ страницы */
+@media (max-width: 639px) {
+  body:has([data-mobile-buy-bar]) {
+    padding-bottom: 5.5rem;
+  }
+}

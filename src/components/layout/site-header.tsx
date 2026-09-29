@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { logoutAction } from "@/app/auth/actions";
 import { FavoritesLink } from "@/components/favorites/favorites-link";
+import { NavLink } from "@/components/layout/nav-link";
 import { getSessionUser, getStoreForOwner } from "@/lib/auth/session";
 
 const nav = [
@@ -26,20 +27,7 @@ export async function SiteHeader() {
 
         <nav className="flex items-center gap-0.5 sm:gap-2">
           {nav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="whitespace-nowrap rounded-full px-2 py-2 text-[13px] font-medium sm:px-4 sm:text-sm text-stone-600 transition hover:bg-stone-100 hover:text-stone-900"
-            >
-              {item.shortLabel ? (
-                <>
-                  <span className="sm:hidden">{item.shortLabel}</span>
-                  <span className="hidden sm:inline">{item.label}</span>
-                </>
-              ) : (
-                item.label
-              )}
-            </Link>
+            <NavLink key={item.href} {...item} />
           ))}
 
           <FavoritesLink />

@@ -52,7 +52,7 @@ export function StoreHero({ store, productCount }: StoreHeroProps) {
                   href={whatsappHref}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-full bg-[#25D366] px-5 py-2.5 font-semibold text-white shadow-lg shadow-emerald-900/20 transition hover:bg-[#20bd5a]"
+                  className="inline-flex items-center gap-2 rounded-full bg-[#15803D] px-5 py-2.5 font-semibold text-white shadow-lg shadow-emerald-900/20 transition hover:bg-[#166534]"
                 >
                   <WhatsAppIcon className="h-5 w-5" />
                   Написать в WhatsApp
@@ -76,7 +76,7 @@ export function StoreHero({ store, productCount }: StoreHeroProps) {
                   Instagram
                 </a>
               )}
-              <span className="rounded-full bg-rose-600/80 px-4 py-2 font-medium">
+              <span className="self-center px-1 text-stone-300">
                 {formatProductCount(productCount)}
               </span>
             </div>

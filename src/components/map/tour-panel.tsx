@@ -33,7 +33,7 @@ const toPoint = (store: MapStore) => ({
 });
 
 const smallButton =
-  "rounded-lg p-1.5 text-stone-400 transition hover:bg-stone-100 hover:text-stone-900 disabled:pointer-events-none disabled:opacity-30";
+  "rounded-lg p-1.5 text-stone-500 transition hover:bg-stone-100 hover:text-stone-900 disabled:pointer-events-none disabled:opacity-30";
 
 export function TourPanel({
   maxHeight,
@@ -67,7 +67,7 @@ export function TourPanel({
           type="button"
           onClick={onClose}
           aria-label="Скрыть Shop Tour"
-          className="rounded-full p-2 text-stone-400 transition hover:bg-stone-100 hover:text-stone-900"
+          className="rounded-full p-2 text-stone-500 transition hover:bg-stone-100 hover:text-stone-900"
         >
           <svg
             className="h-5 w-5"
@@ -105,7 +105,7 @@ export function TourPanel({
             {stops.map((store, index) => (
               <li key={store.id}>
                 {index > 0 && (
-                  <p className="py-1 pl-12 text-xs text-stone-400">
+                  <p className="py-1 pl-12 text-xs text-stone-500">
                     ↓ {formatDistance(legs[index - 1])} ·{" "}
                     {formatDuration(walkingMinutes(legs[index - 1]))}
                   </p>
@@ -193,7 +193,7 @@ export function TourPanel({
             )}
           </p>
           {stops.length > 1 && (
-            <p className="text-xs text-stone-400">
+            <p className="text-xs text-stone-500">
               Расстояние по прямой, по улицам будет чуть больше
             </p>
           )}
@@ -220,7 +220,7 @@ export function TourPanel({
             >
               Открыть в Яндекс Картах
             </a>
-            <p className="text-center text-xs text-stone-400">
+            <p className="text-center text-xs text-stone-500">
               Google начнёт маршрут от вашего местоположения
             </p>
           </div>

@@ -38,7 +38,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             />
           ) : (
-            <div className="flex h-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-stone-100 to-stone-200 text-stone-400">
+            <div className="flex h-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-stone-100 to-stone-200 text-stone-500">
               <svg
                 className="h-10 w-10"
                 fill="none"
@@ -93,7 +93,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
             {formatPrice(product.price)}
           </span>
           {discount && product.old_price && (
-            <span className="text-xs text-stone-400 line-through">
+            <span className="text-xs text-stone-500 line-through">
               {formatPrice(product.old_price)}
             </span>
           )}
@@ -110,7 +110,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
         )}
 
         {product.sizes?.length > 0 && (
-          <p className="mt-auto text-xs text-stone-400">
+          <p className="mt-auto text-xs text-stone-500">
             {availableSizes.length > 0
               ? `Размеры: ${availableSizes.join(", ")}`
               : "Нет в наличии"}

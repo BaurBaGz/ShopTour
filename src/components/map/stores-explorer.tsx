@@ -355,7 +355,7 @@ export function StoresExplorer({
                     href={whatsappHref}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-full bg-[#25D366] px-4 py-2 font-semibold text-white transition hover:bg-[#20bd5a]"
+                    className="inline-flex items-center gap-2 rounded-full bg-[#15803D] px-4 py-2 font-semibold text-white transition hover:bg-[#166534]"
                   >
                     <WhatsAppIcon className="h-4 w-4" />
                     WhatsApp
@@ -384,7 +384,7 @@ export function StoresExplorer({
               type="button"
               onClick={() => select(null)}
               aria-label="Закрыть каталог магазина"
-              className="absolute right-3 top-3 rounded-full p-2 text-stone-400 transition hover:bg-stone-100 hover:text-stone-900 sm:right-4 sm:top-1/2 sm:-translate-y-1/2"
+              className="absolute right-3 top-3 rounded-full p-2 text-stone-500 transition hover:bg-stone-100 hover:text-stone-900 sm:right-4 sm:top-1/2 sm:-translate-y-1/2"
             >
               <svg
                 className="h-5 w-5"

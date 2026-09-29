@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BackLink } from "@/components/ui/back-link";
 import { ProductCard } from "@/components/catalog/product-card";
 import { ProductPurchase } from "@/components/catalog/product-purchase";
 import { StoreAvatar } from "@/components/store/store-avatar";
@@ -54,22 +55,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-      <Link
-        href="/catalog"
-        className="inline-flex items-center gap-1 text-sm font-medium text-stone-500 transition hover:text-stone-900"
-      >
-        <svg
-          className="h-4 w-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-          aria-hidden
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-        </svg>
-        Назад в каталог
-      </Link>
+      <BackLink fallbackHref="/catalog" fallbackLabel="в каталог" />
 
       <div className="mt-6 grid gap-8 lg:grid-cols-2 lg:gap-12">
         <div className="flex flex-col gap-4">
@@ -84,7 +70,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 sizes="(max-width: 1024px) 100vw, 50vw"
               />
             ) : (
-              <div className="flex h-full items-center justify-center text-sm text-stone-400">
+              <div className="flex h-full items-center justify-center text-sm text-stone-500">
                 Нет фото
               </div>
             )}
@@ -135,7 +121,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </p>
               {discount && product.old_price && (
                 <>
-                  <p className="text-lg text-stone-400 line-through">
+                  <p className="text-lg text-stone-500 line-through">
                     {formatPrice(product.old_price)}
                   </p>
                   <span className="rounded-full bg-rose-600 px-2.5 py-1 text-xs font-bold text-white">
@@ -154,7 +140,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </span>
             </div>
             {discount && product.old_price && (
-              <p className="mt-1 text-sm text-rose-600">
+              <p className="mt-1 text-sm text-rose-700">
                 Экономия {formatPrice(product.old_price - product.price)}
               </p>
             )}

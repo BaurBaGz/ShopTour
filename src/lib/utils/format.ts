@@ -1,9 +1,8 @@
+// Intl для KZT пишет «KZT», а в Казахстане привычнее знак «₸»
+const priceFormat = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 });
+
 export function formatPrice(price: number): string {
-  return new Intl.NumberFormat("ru-RU", {
-    style: "currency",
-    currency: "KZT",
-    maximumFractionDigits: 0,
-  }).format(price);
+  return `${priceFormat.format(price)}\u00a0₸`;
 }
 
 export function formatProductCount(count: number): string {

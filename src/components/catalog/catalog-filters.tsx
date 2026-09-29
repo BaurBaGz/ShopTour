@@ -1,14 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useRef, useState, useSyncExternalStore, useTransition } from "react";
 import type { CatalogFilterValues, FilterKey } from "@/lib/catalog-filters";
 import type { CatalogFilterOptions } from "@/lib/data/catalog";
 import type { Category } from "@/lib/data/types";
 import { cn } from "@/lib/utils/cn";
 
 const DESKTOP_QUERY = "(min-width: 640px)";
+
+// Раскрыта ли панель — переживает смену фильтров: форма пересоздаётся (key),
+// а страница не перезагружается, поэтому модульная переменная сохраняется
+const rememberedPanel = new Map<string, boolean>();
 
 function subscribeDesktop(onChange: () => void) {
   const media = window.matchMedia(DESKTOP_QUERY);
@@ -42,7 +46,9 @@ export function CatalogFilters({
   preserveKeys = [],
 }: CatalogFiltersProps) {
   const formRef = useRef<HTMLFormElement>(null);
+  const router = useRouter();
   const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
 
   // Сколько фильтров из панели выбрано (поиск и сортировка — отдельно)
   const panelCount = [
@@ -54,7 +60,13 @@ export function CatalogFilters({
 
   // null — «как по умолчанию»: с выбранными фильтрами панель раскрыта на компьютере
   // и свёрнута на телефоне (там она закрывает весь экран). Решает CSS, без мигания.
-  const [panelOpen, setPanelOpen] = useState<boolean | null>(null);
+  const [panelOpen, setPanelOpenState] = useState<boolean | null>(
+    () => rememberedPanel.get(basePath) ?? null,
+  );
+  const setPanelOpen = (open: boolean) => {
+    rememberedPanel.set(basePath, open);
+    setPanelOpenState(open);
+  };
   const autoOpen = panelCount > 0;
 
   const isDesktop = useSyncExternalStore(
@@ -66,29 +78,23 @@ export function CatalogFilters({
 
   const togglePanel = () => setPanelOpen(!isPanelShown);
 
-  // Пустые поля не отправляем, чтобы адрес оставался коротким
+  // Фильтры применяются без перезагрузки страницы: адрес меняется через роутер,
+  // панель и прокрутка остаются на месте. Пустые поля в адрес не пишем.
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    const form = event.currentTarget;
+    event.preventDefault();
+    const params = new URLSearchParams();
+    for (const [key, value] of new FormData(event.currentTarget)) {
+      if (typeof value === "string" && value.trim()) params.set(key, value.trim());
+    }
     // Значения берём из текущего адреса: на карте он меняется без перезагрузки
     for (const key of preserveKeys) {
       const value = searchParams.get(key);
-      if (!value || form.elements.namedItem(key)) continue;
-      const input = document.createElement("input");
-      input.type = "hidden";
-      input.name = key;
-      input.value = value;
-      form.append(input);
+      if (value && !params.has(key)) params.set(key, value);
     }
-    for (const element of Array.from(form.elements)) {
-      if (
-        (element instanceof HTMLInputElement ||
-          element instanceof HTMLSelectElement) &&
-        element.name &&
-        !element.value
-      ) {
-        element.disabled = true;
-      }
-    }
+    const qs = params.toString();
+    startTransition(() => {
+      router.replace(qs ? `${basePath}?${qs}` : basePath, { scroll: false });
+    });
   };
 
   const submitOnChange = () => formRef.current?.requestSubmit();
@@ -109,6 +115,7 @@ export function CatalogFilters({
       action={basePath}
       method="get"
       onSubmit={handleSubmit}
+      aria-busy={isPending}
       className="flex flex-col gap-3"
     >
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -266,7 +273,7 @@ export function CatalogFilters({
                 aria-label="Цена от"
                 className={fieldClass}
               />
-              <span className="text-stone-400">—</span>
+              <span className="text-stone-500">—</span>
               <input
                 name="max"
                 type="number"
@@ -285,9 +292,10 @@ export function CatalogFilters({
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <button
             type="submit"
-            className="rounded-xl bg-stone-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-600"
+            disabled={isPending}
+            className="rounded-xl bg-stone-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-600 disabled:opacity-70"
           >
-            Показать товары
+            {isPending ? "Обновляем…" : "Показать товары"}
           </button>
           <Link
             href={resetHref}

@@ -40,11 +40,12 @@ export function ActiveFilterChips({ chips, keepOnReset }: ActiveFilterChipsProps
         <Link
           key={chip.label}
           href={hrefWithout(chip.keys)}
+          scroll={false}
           className="group inline-flex items-center gap-1.5 rounded-full bg-white py-1.5 pl-3 pr-2 text-sm text-stone-700 ring-1 ring-stone-200 transition hover:ring-stone-300"
           aria-label={`Убрать фильтр: ${chip.label}`}
         >
           {chip.label}
-          <span className="text-stone-400 group-hover:text-rose-600" aria-hidden>
+          <span className="text-stone-500 group-hover:text-rose-600" aria-hidden>
             ✕
           </span>
         </Link>
@@ -52,6 +53,7 @@ export function ActiveFilterChips({ chips, keepOnReset }: ActiveFilterChipsProps
       {chips.length > 1 && (
         <Link
           href={resetHref}
+          scroll={false}
           className="px-2 text-sm font-medium text-stone-500 hover:text-stone-900"
         >
           Сбросить все

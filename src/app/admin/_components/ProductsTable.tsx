@@ -160,7 +160,7 @@ export default function ProductsTable({ initialProducts }: { initialProducts: Pr
           <div className="bg-white rounded-2xl max-w-md w-full border shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             <div className="px-6 py-4 border-b bg-stone-50 flex justify-between items-center">
               <h3 className="font-semibold text-stone-900">Редактирование товара</h3>
-              <button onClick={() => setEditingProduct(null)} className="text-stone-400 hover:text-stone-600 text-xl">&times;</button>
+              <button onClick={() => setEditingProduct(null)} className="text-stone-500 hover:text-stone-600 text-xl">&times;</button>
             </div>
             
             <form onSubmit={handleSaveEdit} className="p-6 space-y-4">
@@ -184,7 +184,7 @@ export default function ProductsTable({ initialProducts }: { initialProducts: Pr
                     >
                       {isUploading ? "Загрузка..." : "Выбрать новое фото"}
                     </label>
-                    <p className="text-[11px] text-stone-400 mt-1">PNG, JPG до 5MB</p>
+                    <p className="text-[11px] text-stone-500 mt-1">PNG, JPG до 5MB</p>
                   </div>
                 </div>
               </div>
@@ -251,7 +251,7 @@ function ProductImage({ src, alt }: { src: string | undefined; alt: string }) {
 
   if (!src || error) {
     return (
-      <div className="w-12 h-12 bg-stone-100 rounded-lg flex items-center justify-center text-stone-400 text-[10px] font-medium border border-stone-200 shrink-0">
+      <div className="w-12 h-12 bg-stone-100 rounded-lg flex items-center justify-center text-stone-500 text-[10px] font-medium border border-stone-200 shrink-0">
         Нет фото
       </div>
     );
