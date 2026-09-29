@@ -371,51 +371,6 @@ export default function StoresMap({
       });
       new FitControl({ position: "topleft" }).addTo(map);
 
-      // Телефон: одним пальцем прокручивается страница, карта — двумя пальцами.
-      // Без перетаскивания Leaflet ставит touch-action: pan-x pan-y, и браузер сам
-      // прокручивает страницу, а щипок двумя пальцами остаётся за картой.
-      if (window.matchMedia("(pointer: coarse)").matches) {
-        map.dragging.disable();
-
-        const hint = document.createElement("div");
-        hint.textContent = "Двигайте карту двумя пальцами";
-        hint.setAttribute("aria-hidden", "true");
-        Object.assign(hint.style, {
-          position: "absolute",
-          inset: "0",
-          zIndex: "1000",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "16px",
-          textAlign: "center",
-          background: "rgba(28, 25, 23, 0.55)",
-          color: "#fff",
-          fontSize: "15px",
-          fontWeight: "600",
-          pointerEvents: "none",
-          opacity: "0",
-          transition: "opacity 200ms",
-        });
-        container.append(hint);
-
-        let hideTimer: number | undefined;
-        container.addEventListener(
-          "touchmove",
-          (event) => {
-            if (event.touches.length !== 1) {
-              hint.style.opacity = "0";
-              return;
-            }
-            hint.style.opacity = "1";
-            window.clearTimeout(hideTimer);
-            hideTimer = window.setTimeout(() => {
-              hint.style.opacity = "0";
-            }, 1200);
-          },
-          { passive: true },
-        );
-      }
 
       leafletRef.current = L;
       // Линия маршрута — под значками магазинов
