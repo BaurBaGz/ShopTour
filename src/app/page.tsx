@@ -1,16 +1,6 @@
-import { FeaturedProducts } from "@/components/home/featured-products";
-import { HeroSearch } from "@/components/home/hero-search";
-import { HowItWorks } from "@/components/home/how-it-works";
-import { getProducts } from "@/lib/data/catalog";
+import { redirect } from "next/navigation";
 
-export default async function HomePage() {
-  const products = await getProducts({ limit: 8 });
-
-  return (
-    <main>
-      <HeroSearch />
-      <HowItWorks />
-      <FeaturedProducts products={products} />
-    </main>
-  );
+// Сразу каталог: идея сервиса рассказана в баннерах над ним, без лишнего шага
+export default function HomePage() {
+  redirect("/catalog");
 }

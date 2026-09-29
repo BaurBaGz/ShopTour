@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ActiveFilterChips } from "@/components/catalog/active-filter-chips";
 import { CatalogFilters } from "@/components/catalog/catalog-filters";
 import { ProductCard } from "@/components/catalog/product-card";
+import { PromoCarousel } from "@/components/catalog/promo-carousel";
 import { SupabaseErrorBanner } from "@/components/catalog/supabase-error-banner";
 import {
   buildFilterChips,
@@ -58,15 +59,22 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="text-3xl font-semibold tracking-tight text-stone-900 sm:text-4xl">
           Каталог
         </h1>
-        <p className="mt-2 text-stone-500">Все товары от магазинов города</p>
+        <p className="mt-2 hidden text-stone-500 sm:block">Все товары от магазинов города</p>
       </div>
 
       {loadError && (
         <SupabaseErrorBanner message={loadError} context="getProducts" />
+      )}
+
+      {/* Идея сервиса — пока человек ещё ничего не ищет; с фильтрами баннеры не отодвигают результаты */}
+      {chips.length === 0 && (
+        <div className="mb-6">
+          <PromoCarousel />
+        </div>
       )}
 
       <div className="mb-6">
