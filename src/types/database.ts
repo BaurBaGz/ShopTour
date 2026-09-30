@@ -332,6 +332,8 @@ export interface Database {
           linked_at: string | null;
           link_code: string | null;
           link_code_expires_at: string | null;
+          daily_summary: boolean;
+          last_summary_at: string | null;
         };
         Insert: {
           store_id: string;
@@ -340,6 +342,8 @@ export interface Database {
           linked_at?: string | null;
           link_code?: string | null;
           link_code_expires_at?: string | null;
+          daily_summary?: boolean;
+          last_summary_at?: string | null;
         };
         Update: {
           telegram_chat_id?: number | null;
@@ -347,6 +351,8 @@ export interface Database {
           linked_at?: string | null;
           link_code?: string | null;
           link_code_expires_at?: string | null;
+          daily_summary?: boolean;
+          last_summary_at?: string | null;
         };
         Relationships: [];
       };

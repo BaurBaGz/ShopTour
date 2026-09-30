@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import {
   createTelegramLinkAction,
   respondReservationAction,
+  setDailySummaryAction,
   unlinkTelegramAction,
 } from "@/app/(site)/dashboard/actions";
 import { showToast } from "@/lib/toast";
@@ -38,7 +39,7 @@ const timeFormat = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "sh
 
 type Props = {
   reservations: DashboardReservation[];
-  telegram: { configured: boolean; connectedAs: string | null };
+  telegram: { configured: boolean; connectedAs: string | null; dailySummary: boolean };
 };
 
 /** Брони покупателей и подключение Telegram-уведомлений */
@@ -46,6 +47,18 @@ export function ReservationsPanel({ reservations: initial, telegram }: Props) {
   const router = useRouter();
   const [items, setItems] = useState(initial);
   const [linkUrl, setLinkUrl] = useState<string | null>(null);
+  const [summary, setSummary] = useState(telegram.dailySummary);
+
+  const toggleSummary = (enabled: boolean) => {
+    setSummary(enabled);
+    startTransition(async () => {
+      const result = await setDailySummaryAction(enabled);
+      if (result.error) {
+        setSummary(!enabled);
+        showToast({ message: result.error });
+      }
+    });
+  };
   const [pending, startTransition] = useTransition();
 
   const respond = (r: DashboardReservation, status: ReservationStatus) => {
@@ -102,6 +115,18 @@ export function ReservationsPanel({ reservations: initial, telegram }: Props) {
               <button type="button" onClick={disconnect} disabled={pending} className="min-h-11 text-sm font-medium text-sky-800 hover:text-sky-950">
                 Отключить
               </button>
+              <label className="flex min-h-11 w-full items-center gap-3 border-t border-sky-200 pt-2 text-sky-900">
+                <input
+                  type="checkbox"
+                  checked={summary}
+                  onChange={(e) => toggleSummary(e.target.checked)}
+                  className="h-5 w-5 rounded border-sky-300 text-sky-600 focus:ring-sky-500"
+                />
+                <span>
+                  <span className="font-medium">Утренняя сводка</span> — около 9:00: сколько людей смотрели магазин вчера, брони,
+                  советы
+                </span>
+              </label>
             </div>
           ) : (
             <div className="flex flex-col gap-2">

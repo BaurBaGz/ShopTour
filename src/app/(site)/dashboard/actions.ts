@@ -272,3 +272,12 @@ export async function updateOwnLocationAction(latitude: number | null, longitude
   revalidatePath("/stores");
   return { error: null };
 }
+
+/** Включить/выключить утреннюю сводку в Telegram */
+export async function setDailySummaryAction(enabled: boolean): Promise<QuickResult> {
+  const storeId = await ownerStoreId();
+  if (!storeId) return { error: "Войдите в аккаунт магазина" };
+  const { error } = await createAdminClient().from("store_notifications").update({ daily_summary: enabled }).eq("store_id", storeId);
+  if (error) return { error: error.message };
+  return {};
+}

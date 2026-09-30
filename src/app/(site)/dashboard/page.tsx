@@ -41,7 +41,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       .gte("created_at", monthAgo)
       .order("created_at", { ascending: false })
       .limit(100),
-    supabase.from("store_notifications").select("telegram_chat_id, telegram_name").eq("store_id", store.id).maybeSingle(),
+    supabase.from("store_notifications").select("telegram_chat_id, telegram_name, daily_summary").eq("store_id", store.id).maybeSingle(),
   ]);
 
   // Сначала ждут ответа, затем отложенные, затем закрытые — новые выше
@@ -53,6 +53,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const telegram = {
     configured: telegramConfigured(),
     connectedAs: notifyResult.data?.telegram_chat_id ? (notifyResult.data.telegram_name ?? "подключено") : null,
+    dailySummary: notifyResult.data?.daily_summary ?? true,
   };
 
   const categoryMap = Object.fromEntries(categories.map((c) => [c.id, c.name]));
