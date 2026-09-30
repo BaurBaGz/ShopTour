@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import type { AuthActionState } from "@/app/(site)/auth/actions";
 import { cn } from "@/lib/utils/cn";
+import { submitKeepingValues } from "@/lib/form-submit";
 
 type Field = {
   name: string;
@@ -47,7 +48,7 @@ export function AuthForm({
         </h1>
         <p className="mt-2 text-sm text-stone-500">{subtitle}</p>
 
-        <form action={formAction} className="mt-8 space-y-4">
+        <form onSubmit={submitKeepingValues(formAction)} className="mt-8 space-y-4">
           {hiddenFields &&
             Object.entries(hiddenFields).map(([name, value]) => (
               <input key={name} type="hidden" name={name} value={value} />

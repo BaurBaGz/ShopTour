@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { updateSlugAction, type SlugState } from "@/app/(site)/dashboard/actions";
 import { showToast } from "@/lib/toast";
+import { submitKeepingValues } from "@/lib/form-submit";
 
 /** Ссылка на витрину магазина для шапки Instagram: скопировать, открыть, сменить адрес */
 export function StorefrontCard({ slug, published }: { slug: string; published: boolean }) {
@@ -67,7 +68,7 @@ export function StorefrontCard({ slug, published }: { slug: string; published: b
       )}
 
       {editing ? (
-        <form action={action} className="mt-4 flex flex-col gap-2">
+        <form onSubmit={submitKeepingValues(action)} className="mt-4 flex flex-col gap-2">
           <label htmlFor="slug" className="text-sm font-medium text-stone-700">
             Адрес витрины
           </label>

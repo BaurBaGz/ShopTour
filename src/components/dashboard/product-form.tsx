@@ -10,6 +10,7 @@ import { ImagesInput } from "@/components/admin/images-input";
 import { SizeStockEditor } from "@/components/dashboard/size-stock-editor";
 import type { Category, Product } from "@/lib/data/types";
 import { cn } from "@/lib/utils/cn";
+import { submitKeepingValues } from "@/lib/form-submit";
 
 type ProductFormProps = {
   categories: Category[];
@@ -53,7 +54,7 @@ export function ProductForm({ categories, product, storeId }: ProductFormProps) 
   const hasExtras = Boolean(product?.old_price || product?.description || product?.in_stock === false);
 
   return (
-    <form action={formAction} onSubmit={rememberCategory} className="space-y-6 rounded-3xl border border-stone-200 bg-white p-5 shadow-sm sm:p-8">
+    <form onSubmit={submitKeepingValues(formAction, rememberCategory)} className="space-y-6 rounded-3xl border border-stone-200 bg-white p-5 shadow-sm sm:p-8">
       {product && <input type="hidden" name="productId" value={product.id} />}
 
       <ImagesInput name="images" defaultValue={product?.images} storeId={storeId} />

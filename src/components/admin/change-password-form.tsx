@@ -1,11 +1,12 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import {
   changePasswordAction,
   resetPasswordAction,
   type PasswordState,
 } from "@/lib/auth/password-actions";
+import { submitKeepingValues } from "@/lib/form-submit";
 
 const field =
   "min-h-11 w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-rose-300 focus:ring-4 focus:ring-rose-500/15";
@@ -22,9 +23,14 @@ export function ChangePasswordForm({ forced = false, reset = false }: ChangePass
     reset ? resetPasswordAction : changePasswordAction,
     {},
   );
+  const formRef = useRef<HTMLFormElement>(null);
+  // Пароль сохранён — поля больше не нужны
+  useEffect(() => {
+    if (state.success) formRef.current?.reset();
+  }, [state]);
 
   return (
-    <form action={action} className="rounded-2xl border border-stone-200 bg-white p-6">
+    <form ref={formRef} onSubmit={submitKeepingValues(action)} className="rounded-2xl border border-stone-200 bg-white p-6">
       <h2 className="text-lg font-semibold text-stone-900">
         {forced || reset ? "Придумайте новый пароль" : "Сменить пароль"}
       </h2>

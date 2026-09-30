@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import { ReserveSheet } from "@/components/catalog/reserve-sheet";
 import { FavoriteButton } from "@/components/favorites/favorite-button";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils/cn";
@@ -43,6 +44,10 @@ export function ProductPurchase({ product, contactPhone }: ProductPurchaseProps)
   const whatsappHref = contactPhone ? buildWhatsAppUrl(contactPhone, message) : null;
   const needsSize = sizes.length > 0 && !selectedSize && availableSizes.length > 1;
   const sizesRef = useRef<HTMLDivElement>(null);
+  const [reserving, setReserving] = useState(false);
+  const closeReserve = useCallback(() => setReserving(false), []);
+  // Бронь: размер нужен, если он есть у товара
+  const openReserve = () => (needsSize ? goToSizes() : setReserving(true));
 
   // Кнопка в нижней панели без выбранного размера ведёт к размерам
   const goToSizes = () => {
@@ -113,6 +118,15 @@ export function ProductPurchase({ product, contactPhone }: ProductPurchaseProps)
       )}
 
       <div className="flex flex-wrap gap-3">
+        {!soldOut && (
+          <button
+            type="button"
+            onClick={openReserve}
+            className="hidden min-h-11 items-center rounded-full bg-rose-600 px-5 text-sm font-semibold text-white transition hover:bg-rose-700 sm:inline-flex"
+          >
+            {selectedSize ? `Отложить размер ${selectedSize}` : needsSize ? "Выбрать размер и отложить" : "Отложить в магазине"}
+          </button>
+        )}
         {whatsappHref && !soldOut && (
           <a
             href={whatsappHref}
@@ -156,19 +170,32 @@ export function ProductPurchase({ product, contactPhone }: ProductPurchaseProps)
             >
               Выбрать размер
             </button>
-          ) : whatsappHref ? (
-            <a
-              href={whatsappHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#15803D] px-5 text-sm font-semibold text-white"
-            >
-              <WhatsAppIcon className="h-5 w-5" />
-              {selectedSize ? `Спросить про ${selectedSize}` : "Спросить в WhatsApp"}
-            </a>
-          ) : null}
+          ) : (
+            <div className="flex items-center gap-2">
+              {whatsappHref && (
+                <a
+                  href={whatsappHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={selectedSize ? `Спросить про размер ${selectedSize} в WhatsApp` : "Спросить в WhatsApp"}
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-[#15803D] text-white"
+                >
+                  <WhatsAppIcon className="h-5 w-5" />
+                </a>
+              )}
+              <button
+                type="button"
+                onClick={openReserve}
+                className="min-h-11 rounded-full bg-rose-600 px-5 text-sm font-semibold text-white"
+              >
+                {selectedSize ? `Отложить ${selectedSize}` : "Отложить"}
+              </button>
+            </div>
+          )}
         </div>
       </div>
+
+      {reserving && <ReserveSheet product={product} size={selectedSize} onClose={closeReserve} />}
     </div>
   );
 }

@@ -1,9 +1,14 @@
 "use server";
 
+import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireStoreOwner } from "@/lib/auth/session";
+import { canMove, refreshTelegramMessage } from "@/lib/reservations";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { botUsername, telegramConfigured } from "@/lib/telegram";
+import type { ReservationStatus } from "@/types/database";
 import { parseProductForm } from "@/lib/utils/product-form";
 
 export type ProductActionState = {
@@ -161,4 +166,57 @@ export async function updateSlugAction(_prev: SlugState, formData: FormData): Pr
   revalidateStore(store.id, store.slug);
   revalidatePath(`/s/${slug}`);
   return { success: "Адрес витрины изменён. Не забудьте обновить ссылку в Instagram." };
+}
+
+/** Ответ магазина на бронь из кабинета (то же, что кнопки в Telegram) */
+export async function respondReservationAction(id: string, status: ReservationStatus): Promise<QuickResult> {
+  const storeId = await ownerStoreId();
+  if (!storeId) return { error: "Войдите в аккаунт магазина" };
+  const supabase = await createClient();
+  const { data: current } = await supabase
+    .from("reservations")
+    .select("status")
+    .eq("id", id)
+    .eq("store_id", storeId)
+    .maybeSingle();
+  if (!current) return { error: "Бронь не найдена" };
+  if (!canMove(current.status, status)) return { error: "Бронь уже в другом статусе — обновите страницу" };
+
+  const { data: updated, error } = await supabase
+    .from("reservations")
+    .update({ status, answered_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("store_id", storeId)
+    .select("*")
+    .single();
+  if (error || !updated) return { error: error?.message ?? "Не сохранилось" };
+  await refreshTelegramMessage(updated);
+  revalidatePath("/dashboard");
+  revalidatePath(`/reservations/${id}`);
+  return {};
+}
+
+/** Ссылка «Подключить Telegram»: одноразовый код на 30 минут */
+export async function createTelegramLinkAction(): Promise<{ url?: string; error?: string }> {
+  const storeId = await ownerStoreId();
+  if (!storeId) return { error: "Войдите в аккаунт магазина" };
+  if (!telegramConfigured()) return { error: "Telegram пока не настроен" };
+  const code = randomBytes(12).toString("base64url");
+  const { error } = await createAdminClient()
+    .from("store_notifications")
+    .upsert({ store_id: storeId, link_code: code, link_code_expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString() });
+  if (error) return { error: error.message };
+  return { url: `https://t.me/${botUsername()}?start=${code}` };
+}
+
+export async function unlinkTelegramAction(): Promise<QuickResult> {
+  const storeId = await ownerStoreId();
+  if (!storeId) return { error: "Войдите в аккаунт магазина" };
+  const { error } = await createAdminClient()
+    .from("store_notifications")
+    .update({ telegram_chat_id: null, telegram_name: null, linked_at: null, link_code: null, link_code_expires_at: null })
+    .eq("store_id", storeId);
+  if (error) return { error: error.message };
+  revalidatePath("/dashboard");
+  return {};
 }

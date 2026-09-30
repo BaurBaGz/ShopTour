@@ -4,10 +4,14 @@ import { redirect } from "next/navigation";
 import { logoutAction } from "@/app/(site)/auth/actions";
 import { DailyChart, PeriodTabs, StatCards, TopProductsTable } from "@/components/analytics/analytics-blocks";
 import { ProductsManager, type ManagedProduct } from "@/components/dashboard/products-manager";
+import { ReservationsPanel, type DashboardReservation } from "@/components/dashboard/reservations-panel";
 import { StorefrontCard } from "@/components/dashboard/storefront-card";
 import { getCategories, getProductsWithError } from "@/lib/data/catalog";
 import { getSessionUser, getStoreForOwner } from "@/lib/auth/session";
 import { getStoreAnalytics, parsePeriod } from "@/lib/data/analytics";
+import { formatPhone, VISIT_LABELS } from "@/lib/reservations";
+import { createClient } from "@/lib/supabase/server";
+import { telegramConfigured } from "@/lib/telegram";
 
 export const metadata: Metadata = {
   title: "Личный кабинет — ShopTour",
@@ -24,11 +28,32 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   if (!store) redirect("/account");
 
   const period = parsePeriod((await searchParams).period);
-  const [{ data: products, errorMessage }, categories, stats] = await Promise.all([
+  const supabase = await createClient();
+  const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const [{ data: products, errorMessage }, categories, stats, reservationsResult, notifyResult] = await Promise.all([
     getProductsWithError({ storeId: store.id, includeOutOfStock: true, includeHidden: true }),
     getCategories(),
     getStoreAnalytics(store.id, period),
+    supabase
+      .from("reservations")
+      .select("id, product_name, size, price, customer_name, customer_phone, visit, comment, status, created_at")
+      .eq("store_id", store.id)
+      .gte("created_at", monthAgo)
+      .order("created_at", { ascending: false })
+      .limit(100),
+    supabase.from("store_notifications").select("telegram_chat_id, telegram_name").eq("store_id", store.id).maybeSingle(),
   ]);
+
+  // Сначала ждут ответа, затем отложенные, затем закрытые — новые выше
+  const order = { new: 0, confirmed: 1, declined: 2, completed: 2, no_show: 2 } as const;
+  type Row = Omit<DashboardReservation, "phone_label" | "visit_label"> & { visit: keyof typeof VISIT_LABELS };
+  const reservations: DashboardReservation[] = ((reservationsResult.data ?? []) as Row[])
+    .map((r) => ({ ...r, phone_label: formatPhone(r.customer_phone), visit_label: VISIT_LABELS[r.visit] }))
+    .sort((a, b) => order[a.status] - order[b.status]);
+  const telegram = {
+    configured: telegramConfigured(),
+    connectedAs: notifyResult.data?.telegram_chat_id ? (notifyResult.data.telegram_name ?? "подключено") : null,
+  };
 
   const categoryMap = Object.fromEntries(categories.map((c) => [c.id, c.name]));
   const managed: ManagedProduct[] = products.map((p) => ({
@@ -93,6 +118,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           <p className="mt-1">Покупатели его сейчас не видят. Чтобы вернуть магазин на сайт, свяжитесь с командой ShopTour.</p>
         </div>
       )}
+
+      <ReservationsPanel reservations={reservations} telegram={telegram} />
 
       <StorefrontCard slug={store.slug} published={store.status === "published"} />
 

@@ -6,6 +6,7 @@ import { ImagesInput } from "@/components/admin/images-input";
 import { BannerSlide, type BannerData } from "@/components/catalog/banner-slide";
 import { cn } from "@/lib/utils/cn";
 import type { BannerTheme } from "@/types/database";
+import { submitKeepingValues } from "@/lib/form-submit";
 
 type BannerEditorProps = {
   action: (prev: BannerState, formData: FormData) => Promise<BannerState>;
@@ -39,7 +40,7 @@ export function BannerEditor({ action, banner, canDelete, submitLabel }: BannerE
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
       <form
-        action={formAction}
+        onSubmit={submitKeepingValues(formAction)}
         className="flex flex-col gap-4 rounded-2xl border border-stone-200 bg-white p-5 sm:p-6"
       >
         {isSteps && (

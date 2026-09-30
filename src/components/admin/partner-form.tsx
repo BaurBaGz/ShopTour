@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import type { PartnerFormState } from "@/app/admin/(panel)/partners/actions";
 import { ImagesInput } from "@/components/admin/images-input";
 import type { Store } from "@/lib/data/types";
+import { submitKeepingValues } from "@/lib/form-submit";
 
 type PartnerFormProps = {
   action: (prev: PartnerFormState, formData: FormData) => Promise<PartnerFormState>;
@@ -21,7 +22,7 @@ export function PartnerForm({ action, store, submitLabel, storeId }: PartnerForm
   const [state, formAction, pending] = useActionState(action, {});
 
   return (
-    <form action={formAction} className="rounded-2xl border border-stone-200 bg-white p-5 sm:p-6">
+    <form onSubmit={submitKeepingValues(formAction)} className="rounded-2xl border border-stone-200 bg-white p-5 sm:p-6">
       <h2 className="text-lg font-semibold text-stone-900">Информация</h2>
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">

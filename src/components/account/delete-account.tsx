@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { deleteAccountAction, type DeleteAccountState } from "@/app/(site)/account/actions";
+import { submitKeepingValues } from "@/lib/form-submit";
 
 const CONFIRM_WORD = "УДАЛИТЬ";
 
@@ -19,7 +20,7 @@ export function DeleteAccount() {
           ▾
         </span>
       </summary>
-      <form action={action} className="flex flex-col gap-3 px-5 pb-5 text-sm">
+      <form onSubmit={submitKeepingValues(action)} className="flex flex-col gap-3 px-5 pb-5 text-sm">
         <p className="text-stone-600">
           Аккаунт удалится навсегда вместе с избранным, сохранёнными маршрутами и историей просмотров. Восстановить их
           будет нельзя.

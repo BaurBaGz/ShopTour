@@ -282,6 +282,74 @@ export interface Database {
         };
         Relationships: [];
       };
+      reservations: {
+        Row: {
+          id: string;
+          store_id: string;
+          product_id: string | null;
+          product_name: string;
+          size: string | null;
+          price: number;
+          customer_name: string;
+          customer_phone: string;
+          visit: ReservationVisit;
+          comment: string | null;
+          user_id: string | null;
+          status: ReservationStatus;
+          telegram_message_id: number | null;
+          created_at: string;
+          answered_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          store_id: string;
+          product_id?: string | null;
+          product_name: string;
+          size?: string | null;
+          price: number;
+          customer_name: string;
+          customer_phone: string;
+          visit: ReservationVisit;
+          comment?: string | null;
+          user_id?: string | null;
+          status?: ReservationStatus;
+          telegram_message_id?: number | null;
+          created_at?: string;
+          answered_at?: string | null;
+        };
+        Update: {
+          status?: ReservationStatus;
+          telegram_message_id?: number | null;
+          answered_at?: string | null;
+        };
+        Relationships: [];
+      };
+      store_notifications: {
+        Row: {
+          store_id: string;
+          telegram_chat_id: number | null;
+          telegram_name: string | null;
+          linked_at: string | null;
+          link_code: string | null;
+          link_code_expires_at: string | null;
+        };
+        Insert: {
+          store_id: string;
+          telegram_chat_id?: number | null;
+          telegram_name?: string | null;
+          linked_at?: string | null;
+          link_code?: string | null;
+          link_code_expires_at?: string | null;
+        };
+        Update: {
+          telegram_chat_id?: number | null;
+          telegram_name?: string | null;
+          linked_at?: string | null;
+          link_code?: string | null;
+          link_code_expires_at?: string | null;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -329,6 +397,7 @@ export interface Database {
       banner_kind: BannerKind;
       banner_theme: BannerTheme;
       analytics_event_type: AnalyticsEventType;
+      reservation_status: ReservationStatus;
     };
   };
 }
@@ -346,3 +415,5 @@ export type AnalyticsEventType =
   | "banner_view"
   | "banner_click";
 export type UserListKind = "favorites" | "tour" | "recent";
+export type ReservationStatus = "new" | "confirmed" | "declined" | "completed" | "no_show";
+export type ReservationVisit = "today" | "tomorrow";

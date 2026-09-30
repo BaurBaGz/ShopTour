@@ -5,6 +5,7 @@ import type { AdminProductState } from "@/app/admin/(panel)/products/actions";
 import { ImagesInput } from "@/components/admin/images-input";
 import { SizeStockEditor } from "@/components/dashboard/size-stock-editor";
 import type { Product } from "@/lib/data/types";
+import { submitKeepingValues } from "@/lib/form-submit";
 
 type Option = { id: string; name: string };
 
@@ -27,7 +28,7 @@ export function AdminProductForm({ action, product, stores, categories, defaultS
   const [storeId, setStoreId] = useState(product?.store_id ?? defaultStoreId ?? "");
 
   return (
-    <form action={formAction} className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+    <form onSubmit={submitKeepingValues(formAction)} className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <div className="flex min-w-0 flex-col gap-6">
         <section className="rounded-2xl border border-stone-200 bg-white p-5 sm:p-6">
           <h2 className="text-lg font-semibold text-stone-900">Основное</h2>

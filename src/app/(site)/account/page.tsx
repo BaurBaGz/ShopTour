@@ -8,7 +8,10 @@ import { AccountSummary, SavedTours, type SavedTour } from "@/components/account
 import { ChangePasswordForm } from "@/components/admin/change-password-form";
 import { getSessionUser, getStoreForOwner } from "@/lib/auth/session";
 import { getStaffMember } from "@/lib/auth/staff";
+import { STATUS_LABELS } from "@/lib/reservations";
 import { createClient } from "@/lib/supabase/server";
+import { formatPrice } from "@/lib/utils/format";
+import type { ReservationStatus } from "@/types/database";
 
 export const metadata: Metadata = {
   title: "Мой аккаунт — ShopTour",
@@ -22,11 +25,25 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
   if (!user) redirect("/auth/login?next=/account");
 
   const supabase = await createClient();
-  const [staff, store, toursResult] = await Promise.all([
+  const [staff, store, toursResult, reservationsResult] = await Promise.all([
     getStaffMember(),
     getStoreForOwner(user.id),
     supabase.from("saved_tours").select("id, name, store_ids, created_at").order("created_at", { ascending: false }),
+    supabase
+      .from("reservations")
+      .select("id, product_name, size, price, status, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(20),
   ]);
+  const myReservations = (reservationsResult.data ?? []) as {
+    id: string;
+    product_name: string;
+    size: string | null;
+    price: number;
+    status: ReservationStatus;
+    created_at: string;
+  }[];
   if (toursResult.error) console.error("[account] tours:", toursResult.error.message);
   const rows = (toursResult.data ?? []) as { id: string; name: string; store_ids: string[]; created_at: string }[];
 
@@ -83,6 +100,40 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
       )}
 
       <AccountSummary />
+
+      {myReservations.length > 0 && (
+        <section aria-labelledby="my-reservations" className="flex flex-col gap-3">
+          <h2 id="my-reservations" className="text-xl font-semibold tracking-tight text-stone-900">
+            Мои брони
+          </h2>
+          <ul className="divide-y divide-stone-100 rounded-2xl border border-stone-200 bg-white">
+            {myReservations.map((r) => (
+              <li key={r.id}>
+                <Link href={`/reservations/${r.id}`} className="flex min-h-14 items-center justify-between gap-3 px-4 py-3 hover:bg-stone-50">
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium text-stone-900">
+                      {r.product_name}
+                      {r.size ? `, ${r.size}` : ""}
+                    </span>
+                    <span className="text-sm text-stone-500">{formatPrice(r.price)}</span>
+                  </span>
+                  <span
+                    className={
+                      r.status === "confirmed"
+                        ? "shrink-0 text-sm font-medium text-emerald-700"
+                        : r.status === "new"
+                          ? "shrink-0 text-sm font-medium text-amber-700"
+                          : "shrink-0 text-sm text-stone-500"
+                    }
+                  >
+                    {STATUS_LABELS[r.status]}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section id="tours" aria-labelledby="tours-title" className="scroll-mt-20">
         <h2 id="tours-title" className="text-xl font-semibold tracking-tight text-stone-900">
