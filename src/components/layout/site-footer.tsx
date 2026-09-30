@@ -10,12 +10,15 @@ export function SiteFooter() {
             Одежда от магазинов вашего города
           </p>
         </div>
-        <div className="flex gap-6 text-sm text-stone-600">
+        <div className="flex flex-wrap gap-x-6 text-sm text-stone-600">
           <Link href="/catalog" className="inline-flex min-h-11 items-center hover:text-stone-900">
             Каталог
           </Link>
           <Link href="/stores" className="inline-flex min-h-11 items-center hover:text-stone-900">
             Магазины на карте
+          </Link>
+          <Link href="/auth/register" className="inline-flex min-h-11 items-center hover:text-stone-900">
+            Для магазинов
           </Link>
         </div>
       </div>

@@ -1,8 +1,10 @@
 import { isAuthSessionMissingError } from "@supabase/supabase-js";
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { Store } from "@/lib/data/types";
 
-export async function getSessionUser() {
+/** Текущий пользователь; кэш на один запрос — шапка, страница и layout спрашивают вместе */
+export const getSessionUser = cache(async () => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -15,7 +17,7 @@ export async function getSessionUser() {
   }
 
   return error ? null : user;
-}
+});
 
 export async function getStoreForOwner(userId: string): Promise<Store | null> {
   const supabase = await createClient();

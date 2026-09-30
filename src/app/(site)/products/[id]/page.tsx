@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { RecordRecent } from "@/components/account/record-recent";
 import { TrackView } from "@/components/analytics/track-view";
 import { BackLink } from "@/components/ui/back-link";
 import { ProductCard } from "@/components/catalog/product-card";
@@ -58,6 +59,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   return (
     <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
       <TrackView type="product_view" productId={product.id} />
+      <RecordRecent productId={product.id} />
       <BackLink fallbackHref="/catalog" fallbackLabel="в каталог" />
 
       <div className="mt-6 grid gap-8 lg:grid-cols-2 lg:gap-12">

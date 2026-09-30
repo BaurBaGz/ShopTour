@@ -1,5 +1,6 @@
 "use client";
 
+import { SaveTourButton } from "@/components/account/save-tour-button";
 import type { MapStore } from "@/lib/data/catalog";
 import { MAX_TOUR_STOPS, tour } from "@/lib/tour";
 import { cn } from "@/lib/utils/cn";
@@ -228,6 +229,7 @@ export function TourPanel({
       )}
 
       <div className="mt-4 flex flex-wrap gap-2 border-t border-stone-100 pt-4 text-sm">
+        {stops.length > 0 && <SaveTourButton storeIds={stops.map((s) => s.id)} />}
         {stops.length > 2 && (
           <button
             type="button"

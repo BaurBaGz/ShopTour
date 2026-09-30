@@ -10,6 +10,8 @@ export type LocalListStore = {
   useIds: () => string[];
   get: () => string[];
   set: (ids: string[]) => void;
+  /** Подписка на изменения (для синхронизации с аккаунтом) */
+  subscribe: (listener: () => void) => () => void;
 };
 
 export function createLocalListStore(storageKey: string): LocalListStore {
@@ -57,5 +59,5 @@ export function createLocalListStore(storageKey: string): LocalListStore {
   // На сервере список всегда пустой
   const useIds = () => useSyncExternalStore(subscribe, get, () => EMPTY);
 
-  return { useIds, get, set };
+  return { useIds, get, set, subscribe };
 }

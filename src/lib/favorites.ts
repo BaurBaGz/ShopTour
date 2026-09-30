@@ -8,6 +8,9 @@ import { showToast } from "@/lib/toast";
 
 const store = createLocalListStore("shoptour:favorites");
 
+/** Сам список — для синхронизации с аккаунтом */
+export const favoritesList = store;
+
 /** Список id избранных товаров (новые — первыми). На сервере — пустой. */
 export const useFavoriteIds = store.useIds;
 

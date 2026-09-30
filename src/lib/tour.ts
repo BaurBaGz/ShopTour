@@ -8,6 +8,9 @@ export const MAX_TOUR_STOPS = 10;
 
 const store = createLocalListStore("shoptour:tour");
 
+/** Сам список — для синхронизации с аккаунтом */
+export const tourList = store;
+
 export const useTourIds = store.useIds;
 
 export const tour = {

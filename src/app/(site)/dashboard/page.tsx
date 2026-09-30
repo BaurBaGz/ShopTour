@@ -20,24 +20,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   if (!user) redirect("/auth/login");
 
   const store = await getStoreForOwner(user.id);
-  if (!store) {
-    return (
-      <main className="mx-auto max-w-lg px-4 py-20 text-center">
-        <h1 className="text-xl font-semibold text-stone-900">
-          Магазин не привязан
-        </h1>
-        <p className="mt-2 text-stone-500">
-          Зарегистрируйте магазин или обратитесь в поддержку.
-        </p>
-        <Link
-          href="/auth/register"
-          className="mt-6 inline-block rounded-xl bg-rose-600 px-6 py-3 text-sm font-semibold text-white"
-        >
-          Регистрация
-        </Link>
-      </main>
-    );
-  }
+  // Без магазина — это покупатель: у него свой аккаунт
+  if (!store) redirect("/account");
 
   const period = parsePeriod((await searchParams).period);
   const [{ data: products, errorMessage }, categories, stats] = await Promise.all([

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { logoutAction } from "@/app/(site)/auth/actions";
 import { FavoritesLink } from "@/components/favorites/favorites-link";
 import { NavLink } from "@/components/layout/nav-link";
 import { getSessionUser, getStoreForOwner } from "@/lib/auth/session";
@@ -53,26 +52,29 @@ export async function SiteHeader() {
                   Кабинет
                 </Link>
               )}
-              <form action={logoutAction} className={store ? "hidden sm:block" : undefined}>
-                <button
-                  type="submit"
-                  className="relative after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] whitespace-nowrap rounded-full px-2 py-2 text-[13px] font-medium sm:px-4 sm:text-sm text-stone-500 hover:bg-stone-100"
-                >
-                  Выйти
-                </button>
-              </form>
+              <Link
+                href="/account"
+                aria-label="Мой аккаунт"
+                title="Мой аккаунт"
+                className="flex h-11 w-11 items-center justify-center rounded-full text-stone-600 transition hover:bg-stone-100 hover:text-stone-900"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+                  <circle cx="12" cy="8" r="4" />
+                  <path strokeLinecap="round" d="M4.5 20c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5" />
+                </svg>
+              </Link>
             </>
           ) : (
             <>
               <Link
                 href="/auth/login"
-                className="relative after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] hidden whitespace-nowrap rounded-full sm:inline-block px-2 py-2 text-[13px] font-medium sm:px-4 sm:text-sm text-stone-600 transition hover:bg-stone-100"
+                className="relative after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] whitespace-nowrap rounded-full bg-stone-900 px-3 py-2 text-[13px] font-medium text-white transition hover:bg-rose-600 sm:bg-transparent sm:px-4 sm:text-sm sm:text-stone-600 sm:hover:bg-stone-100 sm:hover:text-stone-900"
               >
-                Вход
+                Войти
               </Link>
               <Link
                 href="/auth/register"
-                className="relative after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] whitespace-nowrap rounded-full bg-stone-900 px-2.5 py-2 text-[13px] font-medium sm:px-4 sm:text-sm text-white transition hover:bg-rose-600"
+                className="relative after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] hidden whitespace-nowrap rounded-full bg-stone-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-600 sm:inline-block"
               >
                 Для магазинов
               </Link>

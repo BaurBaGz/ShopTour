@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { accountHome, safeNext } from "@/lib/auth/home";
 import { createClient } from "@/lib/supabase/server";
 
 export type AuthActionState = {
@@ -25,22 +26,49 @@ export async function loginAction(
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
+    if (error.code === "invalid_credentials") return { error: "Неверный email или пароль" };
     return { error: error.message };
   }
 
   revalidatePath("/", "layout");
 
-  // Куда шёл человек (только адрес внутри сайта, без чужих доменов)
-  const next = String(formData.get("next") ?? "");
-  if (next.startsWith("/") && !next.startsWith("//")) redirect(next);
+  // Куда шёл человек (только адрес внутри сайта), иначе — по роли
+  redirect(safeNext(formData.get("next")) || (await accountHome(data.user.id)));
+}
 
-  // Сотрудник — в админку, владелец магазина — в кабинет
-  const { data: staff } = await supabase
-    .from("staff")
-    .select("user_id")
-    .eq("user_id", data.user.id)
-    .maybeSingle();
-  redirect(staff ? "/admin" : "/dashboard");
+/** Регистрация покупателя: избранное и маршруты на всех устройствах */
+export async function signupAction(
+  _prev: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const name = String(formData.get("name") ?? "").trim().slice(0, 60);
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const password = String(formData.get("password") ?? "");
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "Введите email" };
+  if (password.length < 8) return { error: "Пароль должен быть не короче 8 символов" };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: name ? { name } : undefined },
+  });
+
+  if (error) {
+    if (error.code === "user_already_exists" || /already registered/i.test(error.message)) {
+      return { error: "С этим email уже есть аккаунт. Войдите или восстановите пароль." };
+    }
+    if (error.code === "weak_password") return { error: "Слишком простой пароль — придумайте сложнее" };
+    return { error: error.message };
+  }
+
+  if (!data.session) {
+    return { success: "Проверьте почту — мы отправили ссылку для подтверждения. После этого войдите." };
+  }
+
+  revalidatePath("/", "layout");
+  redirect(safeNext(formData.get("next")) || "/account");
 }
 
 export async function registerAction(
@@ -103,7 +131,8 @@ export async function registerAction(
 
 export async function logoutAction() {
   const supabase = await createClient();
-  await supabase.auth.signOut();
+  // Только это устройство: на телефоне аккаунт остаётся открытым
+  await supabase.auth.signOut({ scope: "local" });
   revalidatePath("/", "layout");
   redirect("/");
 }

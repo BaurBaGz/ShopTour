@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { accountHome } from "@/lib/auth/home";
 import { getSessionUser } from "@/lib/auth/session";
 import { getStaffMember } from "@/lib/auth/staff";
 import { createClient } from "@/lib/supabase/server";
@@ -54,5 +55,6 @@ export async function resetPasswordAction(
 ): Promise<PasswordState> {
   const error = await applyNewPassword(formData);
   if (error) return { error };
-  redirect((await getStaffMember()) ? "/admin" : "/dashboard");
+  const user = await getSessionUser();
+  redirect(user ? await accountHome(user.id) : "/auth/login");
 }

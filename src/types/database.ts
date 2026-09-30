@@ -253,6 +253,32 @@ export interface Database {
         Update: Record<string, never>;
         Relationships: [];
       };
+      user_lists: {
+        Row: { user_id: string; kind: UserListKind; ids: string[]; updated_at: string };
+        Insert: { user_id: string; kind: UserListKind; ids?: string[]; updated_at?: string };
+        Update: { user_id?: string; kind?: UserListKind; ids?: string[]; updated_at?: string };
+        Relationships: [];
+      };
+      saved_tours: {
+        Row: { id: string; user_id: string; name: string; store_ids: string[]; created_at: string; updated_at: string };
+        Insert: {
+          id?: string;
+          user_id?: string;
+          name: string;
+          store_ids: string[];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          name?: string;
+          store_ids?: string[];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -316,3 +342,4 @@ export type AnalyticsEventType =
   | "search"
   | "banner_view"
   | "banner_click";
+export type UserListKind = "favorites" | "tour" | "recent";
