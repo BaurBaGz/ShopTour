@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { accountHome, safeNext } from "@/lib/auth/home";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export type AuthActionState = {
@@ -27,6 +28,17 @@ export async function loginAction(
 
   if (error) {
     if (error.code === "invalid_credentials") return { error: "Неверный email или пароль" };
+    if (error.code === "email_not_confirmed") {
+      // Письмо могло потеряться — отправляем ещё раз (не чаще раза в минуту, это ограничивает Supabase)
+      await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: { emailRedirectTo: `${await requestOrigin()}/auth/confirm` },
+      });
+      return {
+        error: `Email ещё не подтверждён. Мы отправили письмо на ${email} — нажмите ссылку в нём. Проверьте и папку «Спам».`,
+      };
+    }
     return { error: error.message };
   }
 
@@ -52,19 +64,17 @@ export async function signupAction(
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: name ? { name } : undefined },
+    options: {
+      data: name ? { name } : undefined,
+      emailRedirectTo: `${await requestOrigin()}/auth/confirm`,
+    },
   });
 
-  if (error) {
-    if (error.code === "user_already_exists" || /already registered/i.test(error.message)) {
-      return { error: "С этим email уже есть аккаунт. Войдите или восстановите пароль." };
-    }
-    if (error.code === "weak_password") return { error: "Слишком простой пароль — придумайте сложнее" };
-    return { error: error.message };
-  }
+  const problem = signUpProblem(error, data.user);
+  if (problem) return { error: problem };
 
   if (!data.session) {
-    return { success: "Проверьте почту — мы отправили ссылку для подтверждения. После этого войдите." };
+    return { success: confirmEmailMessage(email) };
   }
 
   revalidatePath("/", "layout");
@@ -97,21 +107,14 @@ export async function registerAction(
   const { data: authData, error: signUpError } = await supabase.auth.signUp({
     email,
     password,
+    options: { emailRedirectTo: `${await requestOrigin()}/auth/confirm` },
   });
 
-  if (signUpError) {
-    return { error: signUpError.message };
-  }
+  const problem = signUpProblem(signUpError, authData.user);
+  if (problem) return { error: problem };
+  const user = authData.user!;
 
-  const user = authData.user;
-  if (!user) {
-    return {
-      success:
-        "Проверьте почту — мы отправили ссылку для подтверждения. После этого войдите в аккаунт.",
-    };
-  }
-
-  const { error: storeError } = await supabase.from("stores").insert({
+  const store = {
     owner_id: user.id,
     name: storeName,
     description: description || null,
@@ -119,7 +122,21 @@ export async function registerAction(
     city,
     phone: phone || null,
     whatsapp: whatsapp || null,
-  });
+  };
+
+  if (!authData.session) {
+    // Нужно подтвердить email: входа ещё нет, поэтому магазин создаёт сервер — сразу черновиком.
+    // Повторная отправка формы не создаёт второй магазин.
+    const admin = createAdminClient();
+    const { data: existing } = await admin.from("stores").select("id").eq("owner_id", user.id).maybeSingle();
+    if (!existing) {
+      const { error: storeError } = await admin.from("stores").insert({ ...store, status: "draft" });
+      if (storeError) return { error: `Магазин не создан: ${storeError.message}` };
+    }
+    return { success: confirmEmailMessage(email) };
+  }
+
+  const { error: storeError } = await supabase.from("stores").insert(store);
 
   if (storeError) {
     return { error: `Магазин не создан: ${storeError.message}` };
@@ -127,6 +144,33 @@ export async function registerAction(
 
   revalidatePath("/", "layout");
   redirect("/dashboard");
+}
+
+/** Понятная ошибка регистрации или null */
+function signUpProblem(
+  error: { code?: string; status?: number; message: string } | null,
+  user: { identities?: unknown[] } | null,
+): string | null {
+  if (error) {
+    if (error.code === "user_already_exists" || /already registered/i.test(error.message)) {
+      return "С этим email уже есть аккаунт. Войдите или восстановите пароль.";
+    }
+    if (error.code === "weak_password") return "Слишком простой пароль — придумайте сложнее";
+    if (error.status === 429 || /rate limit|seconds/i.test(error.message)) {
+      return "Слишком много попыток. Подождите минуту и попробуйте снова.";
+    }
+    return error.message;
+  }
+  if (!user) return "Не удалось зарегистрироваться. Попробуйте ещё раз.";
+  // При включённом подтверждении Supabase не сообщает, что email занят, — только пустым списком identities
+  if (Array.isArray(user.identities) && user.identities.length === 0) {
+    return "С этим email уже есть аккаунт. Войдите или восстановите пароль.";
+  }
+  return null;
+}
+
+function confirmEmailMessage(email: string) {
+  return `Почти готово! Мы отправили письмо на ${email}. Нажмите ссылку в нём, чтобы подтвердить email, — после этого вы сразу войдёте. Проверьте и папку «Спам».`;
 }
 
 export async function logoutAction() {
@@ -156,7 +200,7 @@ export async function forgotPasswordAction(
 
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${await requestOrigin()}/auth/confirm`,
+    redirectTo: `${await requestOrigin()}/auth/confirm?next=reset`,
   });
 
   if (error) {

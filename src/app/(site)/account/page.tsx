@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { logoutAction } from "@/app/(site)/auth/actions";
 import { RecentProducts } from "@/components/account/recent-products";
+import { DeleteAccount } from "@/components/account/delete-account";
 import { AccountSummary, SavedTours, type SavedTour } from "@/components/account/saved-tours";
 import { ChangePasswordForm } from "@/components/admin/change-password-form";
 import { getSessionUser, getStoreForOwner } from "@/lib/auth/session";
@@ -13,7 +14,10 @@ export const metadata: Metadata = {
   title: "Мой аккаунт — ShopTour",
 };
 
-export default async function AccountPage() {
+type AccountPageProps = { searchParams: Promise<{ welcome?: string }> };
+
+export default async function AccountPage({ searchParams }: AccountPageProps) {
+  const { welcome } = await searchParams;
   const user = await getSessionUser();
   if (!user) redirect("/auth/login?next=/account");
 
@@ -72,6 +76,12 @@ export default async function AccountPage() {
         </div>
       </div>
 
+      {welcome && (
+        <p role="status" className="-mt-4 rounded-2xl bg-emerald-50 px-5 py-4 text-sm text-emerald-900">
+          Email подтверждён — добро пожаловать в ShopTour! Всё, что вы отмечаете, теперь сохраняется в аккаунте.
+        </p>
+      )}
+
       <AccountSummary />
 
       <section id="tours" aria-labelledby="tours-title" className="scroll-mt-20">
@@ -94,6 +104,9 @@ export default async function AccountPage() {
           <ChangePasswordForm />
         </div>
       </details>
+
+      {/* Сотрудникам и магазинам удаление недоступно — сайт объяснит почему */}
+      {!staff && !store && <DeleteAccount />}
     </main>
   );
 }

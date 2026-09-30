@@ -1,12 +1,15 @@
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
+import { accountHome } from "@/lib/auth/home";
 import { createClient } from "@/lib/supabase/server";
 
+const EMAIL_TYPES: EmailOtpType[] = ["signup", "email", "recovery"];
+
 /**
- * Ссылка из письма «Забыли пароль?». Проверяет одноразовый код, входит в аккаунт
- * и ведёт на страницу нового пароля.
- * token_hash — наш шаблон письма (работает на любом устройстве);
- * code — стандартный шаблон Supabase (только в том же браузере, где просили письмо).
+ * Ссылки из писем: подтверждение email при регистрации и «Забыли пароль?».
+ * Проверяет одноразовый код, входит в аккаунт и ведёт дальше.
+ * token_hash — наши шаблоны писем (работают на любом устройстве);
+ * code — стандартные шаблоны Supabase (только в том же браузере, где регистрировались).
  */
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
@@ -15,17 +18,25 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code");
 
   const supabase = await createClient();
-  let ok = false;
+  let userId: string | null = null;
+  // next=reset — ссылку запросили через «Забыли пароль?» (стандартный шаблон присылает только code)
+  const recovery = type === "recovery" || searchParams.get("next") === "reset";
 
-  if (tokenHash && type === "recovery") {
-    const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
+  if (tokenHash && type && EMAIL_TYPES.includes(type)) {
+    const { data, error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
     if (error) console.error("[auth] verifyOtp:", error.message);
-    ok = !error;
+    userId = data.user?.id ?? null;
   } else if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) console.error("[auth] exchangeCode:", error.message);
-    ok = !error;
+    userId = data.user?.id ?? null;
   }
 
-  return NextResponse.redirect(new URL(ok ? "/auth/reset" : "/auth/forgot?expired=1", origin));
+  if (!userId) {
+    const expired = recovery ? "/auth/forgot?expired=1" : "/auth/login?confirm=expired";
+    return NextResponse.redirect(new URL(expired, origin));
+  }
+
+  const next = recovery ? "/auth/reset" : `${await accountHome(userId)}?welcome=1`;
+  return NextResponse.redirect(new URL(next, origin));
 }

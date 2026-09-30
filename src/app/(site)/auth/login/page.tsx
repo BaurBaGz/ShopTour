@@ -11,11 +11,12 @@ export const metadata: Metadata = {
 };
 
 type LoginPageProps = {
-  searchParams: Promise<{ next?: string | string[] }>;
+  searchParams: Promise<{ next?: string | string[]; confirm?: string }>;
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const next = safeNext((await searchParams).next);
+  const params = await searchParams;
+  const next = safeNext(params.next);
 
   const user = await getSessionUser();
   if (user) redirect(next || (await accountHome(user.id)));
@@ -25,6 +26,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   return (
     <main className="px-4 py-16 sm:py-20">
+      {params.confirm === "expired" && (
+        <p role="alert" className="mx-auto mb-4 max-w-md rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Ссылка подтверждения устарела или уже использована. Попробуйте войти — если email ещё не подтверждён, мы
+          отправим новое письмо.
+        </p>
+      )}
       <AuthForm
         title={toAdmin ? "Вход в админку" : "Вход в ShopTour"}
         subtitle={
