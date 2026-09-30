@@ -1,46 +1,24 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BannerSlide, type BannerData } from "@/components/catalog/banner-slide";
 import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils/cn";
 
-const HIDDEN_KEY = "shoptour:promo-hidden";
-const hiddenListeners = new Set<() => void>();
-
-// «Скрыть баннеры» запоминается в браузере; при недоступном хранилище — просто показываем
-function readHidden(): string | null {
-  try {
-    return window.localStorage.getItem(HIDDEN_KEY);
-  } catch {
-    return null;
-  }
-}
-
-function subscribeHidden(listener: () => void) {
-  hiddenListeners.add(listener);
-  return () => {
-    hiddenListeners.delete(listener);
-  };
-}
-
-function hidePromo(signature: string) {
-  try {
-    window.localStorage.setItem(HIDDEN_KEY, signature);
-  } catch {
-    // Хранилище недоступно — скрываем до перезагрузки
-  }
-  hiddenListeners.forEach((listener) => listener());
-}
+// Раньше баннеры можно было скрыть — теперь их видят все. Старую отметку «скрыто» стираем.
+const LEGACY_HIDDEN_KEY = "shoptour:promo-hidden";
 
 /** Баннеры над каталогом: идея сервиса и как им пользоваться. Листаются пальцем и точками. */
 export function PromoCarousel({ banners }: { banners: BannerData[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
-  // «Скрыть» действует, пока баннеры не поменялись: новую акцию увидят и те, кто скрывал
-  const signature = banners.map((b) => b.id).join(",");
-  const hiddenSignature = useSyncExternalStore(subscribeHidden, readHidden, () => null);
-  const hidden = hiddenSignature === signature;
+  useEffect(() => {
+    try {
+      window.localStorage.removeItem(LEGACY_HIDDEN_KEY);
+    } catch {
+      // хранилище недоступно — и отметки нет
+    }
+  }, []);
   const slideCount = banners.length;
 
   // Текущий баннер — тот, чей левый край ближе всего к началу ленты (с учётом отступа)
@@ -55,17 +33,16 @@ export function PromoCarousel({ banners }: { banners: BannerData[] }) {
     };
     track.addEventListener("scroll", onScroll, { passive: true });
     return () => track.removeEventListener("scroll", onScroll);
-  }, [hidden]);
+  }, []);
 
   // Показ баннера считаем, когда он стал текущим, — один раз за открытие страницы
   const viewedRef = useRef(new Set<string>());
-  const activeId = !hidden ? banners[active]?.id : undefined;
+  const activeId = banners[active]?.id;
   useEffect(() => {
-    // Первый проход после загрузки ещё не знает, что посетитель скрыл баннеры, — смотрим сами
-    if (!activeId || viewedRef.current.has(activeId) || readHidden() === signature) return;
+    if (!activeId || viewedRef.current.has(activeId)) return;
     viewedRef.current.add(activeId);
     track({ type: "banner_view", bannerId: activeId });
-  }, [activeId, signature]);
+  }, [activeId]);
 
   // scrollIntoView учитывает scroll-padding ленты и не двигает страницу по вертикали
   const goTo = (index: number) => {
@@ -73,7 +50,7 @@ export function PromoCarousel({ banners }: { banners: BannerData[] }) {
     slide?.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
   };
 
-  if (hidden || slideCount === 0) return null;
+  if (slideCount === 0) return null;
 
   return (
     <section aria-roledescription="карусель" aria-label="Как работает ShopTour" className="relative">
@@ -98,9 +75,10 @@ export function PromoCarousel({ banners }: { banners: BannerData[] }) {
         ))}
       </div>
 
-      <div className="mt-3 flex items-center justify-between gap-3">
+      {slideCount > 1 && (
+      <div className="mt-2 flex items-center gap-3">
         <div className="flex items-center gap-1">
-          {slideCount > 1 && Array.from({ length: slideCount }, (_, i) => (
+          {Array.from({ length: slideCount }, (_, i) => (
             <button
               key={i}
               type="button"
@@ -118,14 +96,8 @@ export function PromoCarousel({ banners }: { banners: BannerData[] }) {
             </button>
           ))}
         </div>
-        <button
-          type="button"
-          onClick={() => hidePromo(signature)}
-          className="inline-flex min-h-11 items-center rounded-full px-3 text-sm font-medium text-stone-500 transition hover:bg-stone-100 hover:text-stone-900"
-        >
-          Скрыть ✕
-        </button>
       </div>
+      )}
     </section>
   );
 }
