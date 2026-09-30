@@ -13,10 +13,12 @@ type LocationPickerProps = {
   longitude: number | null;
   /** Строка для поиска по адресу: «Алматы, ул. Абая, 44» */
   address: string;
+  /** Как сохранить точку. По умолчанию — действие админки; кабинет магазина передаёт своё. */
+  onSave?: (latitude: number | null, longitude: number | null) => Promise<{ error?: string | null }>;
 };
 
 /** Точка магазина: клик по карте или перетаскивание метки, либо поиск по адресу */
-export function LocationPicker({ storeId, latitude, longitude, address }: LocationPickerProps) {
+export function LocationPicker({ storeId, latitude, longitude, address, onSave }: LocationPickerProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<LeafletMap | null>(null);
   const marker = useRef<Marker | null>(null);
@@ -104,7 +106,9 @@ export function LocationPicker({ storeId, latitude, longitude, address }: Locati
 
   const save = (next: [number, number] | null) =>
     startTransition(async () => {
-      const result = await updatePartnerLocationAction(storeId, next?.[0] ?? null, next?.[1] ?? null);
+      const lat = next?.[0] ?? null;
+      const lng = next?.[1] ?? null;
+      const result = onSave ? await onSave(lat, lng) : await updatePartnerLocationAction(storeId, lat, lng);
       if (result.error) {
         setMessage({ kind: "error", text: result.error });
         return;

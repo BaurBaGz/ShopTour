@@ -87,6 +87,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             + Добавить товар
           </Link>
           <Link
+            href="/dashboard/settings"
+            className="inline-flex min-h-11 items-center rounded-xl border border-stone-200 px-4 text-sm font-medium text-stone-600 hover:bg-stone-50"
+          >
+            Профиль магазина
+          </Link>
+          <Link
             href="/dashboard/password"
             className="inline-flex min-h-11 items-center rounded-xl border border-stone-200 px-4 text-sm font-medium text-stone-600 hover:bg-stone-50"
           >
@@ -117,6 +123,16 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           <p className="font-semibold text-stone-900">Магазин временно скрыт</p>
           <p className="mt-1">Покупатели его сейчас не видят. Чтобы вернуть магазин на сайт, свяжитесь с командой ShopTour.</p>
         </div>
+      )}
+
+      {store.latitude === null && (
+        <Link
+          href="/dashboard/settings"
+          className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900 transition hover:bg-amber-100"
+        >
+          <span className="font-semibold">Поставьте точку на карте →</span> без неё покупатели не найдут вас в «Рядом со
+          мной» и в маршрутах.
+        </Link>
       )}
 
       <ReservationsPanel reservations={reservations} telegram={telegram} />

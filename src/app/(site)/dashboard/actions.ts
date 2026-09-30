@@ -220,3 +220,55 @@ export async function unlinkTelegramAction(): Promise<QuickResult> {
   revalidatePath("/dashboard");
   return {};
 }
+
+export type StoreProfileState = { error?: string; success?: string };
+
+/** Владелец сам меняет информацию о магазине (статус и адрес витрины — отдельно) */
+export async function updateOwnStoreAction(_prev: StoreProfileState, formData: FormData): Promise<StoreProfileState> {
+  let store;
+  try {
+    ({ store } = await requireStoreOwner());
+  } catch {
+    return { error: "Войдите в аккаунт магазина" };
+  }
+  const text = (key: string, max: number) => String(formData.get(key) ?? "").trim().slice(0, max);
+  const logo = text("logo_url", 500);
+  const info = {
+    name: text("name", 80),
+    description: text("description", 1000) || null,
+    city: text("city", 60) || "Алматы",
+    address: text("address", 200),
+    phone: text("phone", 30) || null,
+    whatsapp: text("whatsapp", 30) || null,
+    instagram: text("instagram", 100).replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/\/$/, "") || null,
+    logo_url: /^https:\/\//.test(logo) ? logo : null,
+  };
+  if (!info.name || !info.address) return { error: "Заполните название и адрес" };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("stores").update(info).eq("id", store.id);
+  if (error) return { error: error.message };
+  revalidateStore(store.id, store.slug);
+  revalidatePath("/stores");
+  return { success: "Сохранено — покупатели уже видят новую информацию" };
+}
+
+/** Точка магазина на карте — без неё магазина нет в «Рядом» и в маршрутах */
+export async function updateOwnLocationAction(latitude: number | null, longitude: number | null) {
+  let store;
+  try {
+    ({ store } = await requireStoreOwner());
+  } catch {
+    return { error: "Войдите в аккаунт магазина" };
+  }
+  const valid = (v: number | null, min: number, max: number) => v === null || (Number.isFinite(v) && v >= min && v <= max);
+  if ((latitude === null) !== (longitude === null) || !valid(latitude, 35, 60) || !valid(longitude, 40, 95)) {
+    return { error: "Точка должна быть в Казахстане" };
+  }
+  const supabase = await createClient();
+  const { error } = await supabase.from("stores").update({ latitude, longitude }).eq("id", store.id);
+  if (error) return { error: error.message };
+  revalidateStore(store.id, store.slug);
+  revalidatePath("/stores");
+  return { error: null };
+}
