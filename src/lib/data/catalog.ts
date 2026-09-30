@@ -8,6 +8,7 @@ import { PRODUCT_SELECT, PUBLISHED_PRODUCT_SELECT } from "@/lib/data/selects";
 import { distanceToStore, maxKmForWalk } from "@/lib/near";
 import { isSizeAvailable } from "@/lib/utils/product";
 import type { Point } from "@/lib/utils/route";
+import type { ProductAudience } from "@/types/database";
 import type {
   Category,
   ProductDetails,
@@ -89,6 +90,8 @@ export async function getProductsWithError(options?: {
   near?: Point | null;
   /** Только магазины в пределах стольких минут пешком */
   walkMinutes?: number | null;
+  /** Раздел «Для кого»: товары этих аудиторий */
+  audiences?: ProductAudience[] | null;
 }): Promise<DataResult<ProductWithRelations[]>> {
   const envError = checkSupabaseEnv();
   if (envError) {
@@ -125,6 +128,10 @@ export async function getProductsWithError(options?: {
 
   if (options?.categoryId) {
     query = query.eq("category_id", options.categoryId);
+  }
+
+  if (options?.audiences?.length) {
+    query = query.in("audience", options.audiences);
   }
 
   if (options?.storeId) {
@@ -371,4 +378,18 @@ export async function searchStores(q: string, limit = 5): Promise<FoundStore[]> 
   const { data, error } = await supabase.rpc("search_stores" as never, { q: term, max_results: limit } as never);
   logSupabaseError("searchStores", error);
   return (data as FoundStore[] | null) ?? [];
+}
+
+/** Категории, в которых есть товары раздела: в «Мужчинам» не показываем пустые «Платья» */
+export async function getCategoryIdsForAudiences(audiences: ProductAudience[]): Promise<Set<string>> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("products")
+    .select("category_id, stores!products_store_id_fkey!inner ( status )")
+    .eq("stores.status", "published")
+    .eq("is_hidden", false)
+    .eq("in_stock", true)
+    .in("audience", audiences);
+  logSupabaseError("getCategoryIdsForAudiences", error);
+  return new Set(((data ?? []) as { category_id: string }[]).map((r) => r.category_id));
 }

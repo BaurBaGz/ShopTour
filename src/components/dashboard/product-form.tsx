@@ -7,6 +7,7 @@ import {
   type ProductActionState,
 } from "@/app/(site)/dashboard/actions";
 import { ImagesInput } from "@/components/admin/images-input";
+import { AudienceField } from "@/components/dashboard/audience-field";
 import { SizeStockEditor } from "@/components/dashboard/size-stock-editor";
 import type { Category, Product } from "@/lib/data/types";
 import { cn } from "@/lib/utils/cn";
@@ -106,6 +107,8 @@ export function ProductForm({ categories, product, storeId }: ProductFormProps) 
           </select>
         </div>
       </div>
+
+      <AudienceField defaultValue={product?.audience} />
 
       <SizeStockEditor sizes={product?.sizes} sizeStock={product?.size_stock} />
 

@@ -125,6 +125,7 @@ export function CatalogFilters({
       className="flex flex-col gap-3"
     >
       {/* «Рядом» меняет адрес сам; здесь — чтобы остальные фильтры его не сбрасывали */}
+      {values.for && <input type="hidden" name="for" value={values.for} />}
       {values.near && <input type="hidden" name="near" value={values.near} />}
       {values.near && values.walk && <input type="hidden" name="walk" value={values.walk} />}
       {values.near && values.place && <input type="hidden" name="place" value={values.place} />}

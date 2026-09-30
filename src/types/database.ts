@@ -103,6 +103,7 @@ export interface Database {
           size_stock: Json;
           in_stock: boolean;
           is_hidden: boolean;
+          audience: ProductAudience;
           created_at: string;
         };
         Insert: {
@@ -118,6 +119,7 @@ export interface Database {
           size_stock?: Json;
           in_stock?: boolean;
           is_hidden?: boolean;
+          audience?: ProductAudience;
           created_at?: string;
         };
         Update: {
@@ -133,6 +135,7 @@ export interface Database {
           size_stock?: Json;
           in_stock?: boolean;
           is_hidden?: boolean;
+          audience?: ProductAudience;
           created_at?: string;
         };
         Relationships: [
@@ -417,6 +420,7 @@ export interface Database {
       banner_theme: BannerTheme;
       analytics_event_type: AnalyticsEventType;
       reservation_status: ReservationStatus;
+      product_audience: ProductAudience;
     };
   };
 }
@@ -436,3 +440,4 @@ export type AnalyticsEventType =
 export type UserListKind = "favorites" | "tour" | "recent";
 export type ReservationStatus = "new" | "confirmed" | "declined" | "completed" | "no_show";
 export type ReservationVisit = "today" | "tomorrow";
+export type ProductAudience = "women" | "men" | "unisex" | "girls" | "boys" | "kids";

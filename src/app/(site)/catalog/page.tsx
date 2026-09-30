@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { TrackView } from "@/components/analytics/track-view";
 import { ActiveFilterChips } from "@/components/catalog/active-filter-chips";
 import { CatalogFilters } from "@/components/catalog/catalog-filters";
 import { FoundStores } from "@/components/catalog/found-stores";
+import { SectionTabs } from "@/components/catalog/section-tabs";
+import { isKidsSection, parseSection, SECTION_AUDIENCES, SECTION_COOKIE } from "@/lib/audience";
 import { ProductCard } from "@/components/catalog/product-card";
 import { PromoCarousel } from "@/components/catalog/promo-carousel";
 import { SupabaseErrorBanner } from "@/components/catalog/supabase-error-banner";
@@ -17,6 +20,7 @@ import {
 import {
   getActiveBanners,
   getCatalogFilterOptions,
+  getCategoryIdsForAudiences,
   getCategoriesWithError,
   getProductsWithError,
   searchStores,
@@ -39,8 +43,12 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   const minPrice = parsePrice(values.min);
   const maxPrice = parsePrice(values.max);
   const near = parseNear(values.near);
+  // Раздел «Для кого»: из адреса, иначе — запомненный выбор покупателя
+  const section =
+    values.for === "all" ? null : (parseSection(values.for) ?? parseSection((await cookies()).get(SECTION_COOKIE)?.value));
+  const audiences = section ? SECTION_AUDIENCES[section] : null;
 
-  const [categoriesResult, productsResult, filterOptions, banners, foundStores] = await Promise.all([
+  const [categoriesResult, productsResult, filterOptions, banners, foundStores, sectionCategoryIds] = await Promise.all([
     getCategoriesWithError(),
     getProductsWithError({
       categoryId: values.category,
@@ -52,13 +60,18 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
       sort,
       near,
       walkMinutes: parseWalk(values.walk),
+      audiences,
     }),
     getCatalogFilterOptions(),
     getActiveBanners(),
     values.q ? searchStores(values.q) : Promise.resolve([]),
+    audiences ? getCategoryIdsForAudiences(audiences) : Promise.resolve(null),
   ]);
 
-  const categories = categoriesResult.data;
+  // В разделе — только категории, где есть его товары (выбранную оставляем, чтобы чипса не пропала)
+  const categories = sectionCategoryIds
+    ? categoriesResult.data.filter((c) => sectionCategoryIds.has(c.id) || c.id === values.category)
+    : categoriesResult.data;
   const products = productsResult.data;
   const loadError = productsResult.errorMessage ?? categoriesResult.errorMessage;
 
@@ -68,12 +81,11 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   });
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-semibold tracking-tight text-stone-900 sm:text-4xl">
+    <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <div className="mb-4">
+        <h1 className="text-2xl font-semibold tracking-tight text-stone-900 sm:text-3xl">
           Каталог
         </h1>
-        <p className="mt-2 hidden text-stone-500 sm:block">Все товары от магазинов города</p>
       </div>
 
       {values.q?.trim() && !loadError && (
@@ -86,12 +98,16 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
 
       {/* Идея сервиса — пока человек ещё ничего не ищет; с фильтрами баннеры не отодвигают результаты */}
       {chips.length === 0 && banners.length > 0 && (
-        <div className="mb-6">
+        <div className="mb-4">
           <PromoCarousel banners={banners} />
         </div>
       )}
 
-      <div className="mb-6">
+      <div className="mb-4">
+        <SectionTabs current={section} />
+      </div>
+
+      <div className="mb-5">
         {/* key: при переходе по чипсам форма пересоздаётся с актуальными значениями */}
         <CatalogFilters
           key={buildFilterHref("/catalog", values)}
@@ -104,7 +120,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
 
       {chips.length > 0 && (
         <div className="mb-6">
-          <ActiveFilterChips chips={chips} keepOnReset={["sort"]} />
+          <ActiveFilterChips chips={chips} keepOnReset={["sort", "for"]} />
         </div>
       )}
 
@@ -123,10 +139,14 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
         </>
       ) : (
         <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-stone-300 bg-white px-6 py-20 text-center">
-          <p className="text-lg font-medium text-stone-800">Товары не найдены</p>
+          <p className="text-lg font-medium text-stone-800">
+            {isKidsSection(section) && chips.length === 0 ? "Детский раздел скоро наполнится" : "Товары не найдены"}
+          </p>
           <p className="mt-2 max-w-sm text-sm text-stone-500">
             {loadError
               ? "Исправьте ошибку выше — данные в базе есть, но запрос не доходит до Supabase."
+              : isKidsSection(section) && chips.length === 0
+                ? "В детском разделе пока нет товаров — магазины детской одежды скоро появятся."
               : near && values.walk
                 ? `В пределах ${values.walk} минут пешком пока нет магазинов с такими товарами. Увеличьте расстояние в «Рядом» или выберите «Любое расстояние».`
                 : chips.length > 0

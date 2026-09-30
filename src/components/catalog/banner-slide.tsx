@@ -70,15 +70,16 @@ export function BannerSlide({ banner, onNext, onCtaClick, className }: BannerSli
 
   if (banner.kind === "steps") {
     return (
-      <div className={cn("flex h-full flex-col rounded-3xl p-6 sm:p-8", theme.box, className)}>
-        <p className={cn("text-xl font-semibold tracking-tight sm:text-2xl", theme.title)}>{banner.title}</p>
+      <div className={cn("flex h-full flex-col rounded-3xl p-4 sm:p-6", theme.box, className)}>
+        <p className={cn("text-lg font-semibold tracking-tight sm:text-xl", theme.title)}>{banner.title}</p>
         {banner.body && <p className={cn("mt-1 text-sm", theme.body)}>{banner.body}</p>}
-        <ol className="mt-4 grid flex-1 gap-3 sm:grid-cols-3 sm:gap-6">
+        {/* Три шага в ряд и на телефоне — иначе этот слайд вытягивает всю карусель */}
+        <ol className="mt-3 grid flex-1 grid-cols-3 gap-3 sm:gap-6">
           {STEPS.map((step, i) => (
-            <li key={step.title} className="flex gap-3 sm:flex-col sm:gap-2">
+            <li key={step.title} className="flex flex-col items-start gap-1.5">
               <span
                 className={cn(
-                  "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold",
+                  "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold sm:h-7 sm:w-7",
                   banner.theme === "dark" ? "bg-white text-stone-900" : "bg-stone-900 text-white",
                 )}
                 aria-hidden
@@ -86,10 +87,10 @@ export function BannerSlide({ banner, onNext, onCtaClick, className }: BannerSli
                 {i + 1}
               </span>
               <div className="min-w-0">
-                <p className={cn("font-semibold", theme.title)}>{step.title}</p>
-                <p className={cn("mt-0.5 hidden text-sm leading-relaxed sm:block", theme.body)}>{step.text}</p>
+                <p className={cn("text-sm font-semibold leading-snug sm:text-base", theme.title)}>{step.title}</p>
+                <p className={cn("mt-0.5 hidden text-sm leading-snug lg:block", theme.body)}>{step.text}</p>
                 {step.href && (
-                  <Link href={step.href} onClick={onCtaClick} className={cn("inline-flex min-h-11 items-center text-sm font-semibold sm:min-h-0 sm:pt-1", theme.cta)}>
+                  <Link href={step.href} onClick={onCtaClick} className={cn("inline-flex min-h-9 items-center text-xs font-semibold sm:min-h-0 sm:text-sm", theme.cta)}>
                     {step.cta} →
                   </Link>
                 )}
@@ -104,15 +105,15 @@ export function BannerSlide({ banner, onNext, onCtaClick, className }: BannerSli
   const cta =
     banner.cta_label && banner.cta_href ? (
       banner.cta_href === "#next" ? (
-        <button type="button" onClick={() => { onCtaClick?.(); onNext?.(); }} className={cn("mt-4 inline-flex min-h-11 items-center self-start text-sm font-semibold", theme.cta)}>
+        <button type="button" onClick={() => { onCtaClick?.(); onNext?.(); }} className={cn("mt-2 inline-flex min-h-10 items-center self-start text-sm font-semibold", theme.cta)}>
           {banner.cta_label} →
         </button>
       ) : /^https?:\/\//.test(banner.cta_href) ? (
-        <a href={banner.cta_href} target="_blank" rel="noopener noreferrer" onClick={onCtaClick} className={cn("mt-4 inline-flex min-h-11 items-center self-start text-sm font-semibold", theme.cta)}>
+        <a href={banner.cta_href} target="_blank" rel="noopener noreferrer" onClick={onCtaClick} className={cn("mt-2 inline-flex min-h-10 items-center self-start text-sm font-semibold", theme.cta)}>
           {banner.cta_label} →
         </a>
       ) : (
-        <Link href={banner.cta_href} onClick={onCtaClick} className={cn("mt-4 inline-flex min-h-11 items-center self-start text-sm font-semibold", theme.cta)}>
+        <Link href={banner.cta_href} onClick={onCtaClick} className={cn("mt-2 inline-flex min-h-10 items-center self-start text-sm font-semibold", theme.cta)}>
           {banner.cta_label} →
         </Link>
       )
@@ -120,18 +121,18 @@ export function BannerSlide({ banner, onNext, onCtaClick, className }: BannerSli
 
   return (
     <div className={cn("flex h-full overflow-hidden rounded-3xl", theme.box, className)}>
-      <div className="flex min-w-0 flex-1 flex-col justify-center p-6 sm:p-8">
-        <p className={cn("text-2xl font-semibold leading-tight tracking-tight sm:text-3xl", theme.title)}>
+      <div className="flex min-w-0 flex-1 flex-col justify-center p-4 sm:p-6">
+        <p className={cn("text-xl font-semibold leading-tight tracking-tight sm:text-2xl", theme.title)}>
           {banner.title}
           {banner.accent && <span className={cn("block", theme.accent)}>{banner.accent}</span>}
         </p>
-        {banner.body && <p className={cn("mt-3 max-w-xl text-sm leading-relaxed sm:text-base", theme.body)}>{banner.body}</p>}
+        {banner.body && <p className={cn("mt-2 line-clamp-2 max-w-xl text-sm leading-snug", theme.body)}>{banner.body}</p>}
         {cta}
       </div>
       {banner.image_url && (
         // Фото справа: на телефоне узкой полосой, на компьютере — крупно
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={banner.image_url} alt="" className="w-[34%] shrink-0 object-cover sm:w-[40%]" />
+        <img src={banner.image_url} alt="" className="w-[30%] shrink-0 object-cover sm:w-[32%]" />
       )}
     </div>
   );

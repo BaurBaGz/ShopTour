@@ -1,11 +1,13 @@
 // Общие фильтры товаров для каталога (/catalog) и карты магазинов (/stores).
 // Без серверных импортов — используется и на сервере, и в клиентских компонентах.
 import type { ProductSort } from "@/lib/data/catalog";
+import { parseSection } from "@/lib/audience";
 import { parseNear, parseWalk } from "@/lib/near";
 import { formatPrice } from "@/lib/utils/format";
 
 // near — точка покупателя «широта,долгота», walk — минут пешком, place — подпись точки (адрес)
-export const FILTER_KEYS = ["q", "category", "store", "size", "min", "max", "sort", "near", "walk", "place"] as const;
+// for — раздел «Для кого» (women/men/kids/girls/boys или all — «все», перебивает запомненный)
+export const FILTER_KEYS = ["q", "category", "store", "size", "min", "max", "sort", "near", "walk", "place", "for"] as const;
 
 export type FilterKey = (typeof FILTER_KEYS)[number];
 export type CatalogFilterValues = Partial<Record<FilterKey, string>>;
@@ -42,6 +44,7 @@ export function readFilterValues(
   }
   if (values.walk && !parseWalk(values.walk)) delete values.walk;
   if (values.place) values.place = values.place.slice(0, 80);
+  if (values.for && values.for !== "all" && !parseSection(values.for)) delete values.for;
   return values;
 }
 

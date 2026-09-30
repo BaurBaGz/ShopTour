@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Json, StoreStatus } from "@/types/database";
+import type { Json, ProductAudience, StoreStatus } from "@/types/database";
 
 export type AdminProductRow = {
   id: string;
@@ -11,6 +11,7 @@ export type AdminProductRow = {
   size_stock: Json;
   in_stock: boolean;
   is_hidden: boolean;
+  audience: ProductAudience;
   created_at: string;
   store: { id: string; name: string; status: StoreStatus } | null;
   category: { id: string; name: string } | null;
@@ -22,7 +23,7 @@ export async function getAdminProducts(): Promise<AdminProductRow[]> {
   const { data, error } = await supabase
     .from("products")
     .select(
-      "id, name, price, old_price, images, sizes, size_stock, in_stock, is_hidden, created_at, store:stores!products_store_id_fkey ( id, name, status ), category:categories!products_category_id_fkey ( id, name )",
+      "id, name, price, old_price, images, sizes, size_stock, in_stock, is_hidden, audience, created_at, store:stores!products_store_id_fkey ( id, name, status ), category:categories!products_category_id_fkey ( id, name )",
     )
     .order("created_at", { ascending: false });
   if (error) console.error("[admin] products:", error.message);

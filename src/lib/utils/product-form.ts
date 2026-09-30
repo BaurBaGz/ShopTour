@@ -1,4 +1,6 @@
 // Разбор формы товара — общий для кабинета магазина и админки
+import { parseAudience } from "@/lib/audience";
+import type { ProductAudience } from "@/types/database";
 
 /** Размеры и остатки из редактора: [{ size, stock }] → список размеров и { размер: остаток } */
 export function parseSizeStock(raw: string): {
@@ -46,6 +48,7 @@ export type ProductFields = {
   size_stock: Record<string, number>;
   images: string[];
   in_stock: boolean;
+  audience: ProductAudience;
 };
 
 /** Поля товара из формы с проверками; ошибка — понятным текстом для формы */
@@ -61,6 +64,8 @@ export function parseProductForm(formData: FormData): { fields: ProductFields } 
   if (!name || !categoryId || Number.isNaN(price) || price < 0) {
     return { error: "Заполните название, категорию и цену" };
   }
+  const audience = parseAudience(formData.get("audience"));
+  if (!audience) return { error: "Выберите, для кого товар: женское, мужское, унисекс или детское" };
   if (!sizeStock) return { error: "Остаток по размеру должен быть целым числом от 0" };
   if (oldPrice !== null && (Number.isNaN(oldPrice) || oldPrice < 0)) {
     return { error: "Старая цена должна быть числом от 0" };
@@ -78,6 +83,7 @@ export function parseProductForm(formData: FormData): { fields: ProductFields } 
       category_id: categoryId,
       sizes: sizeStock.sizes,
       size_stock: sizeStock.sizeStock,
+      audience,
       images: parseImages(String(formData.get("images") ?? "")),
       in_stock: formData.get("inStock") === "on",
     },

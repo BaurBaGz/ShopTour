@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getStaffForAction } from "@/lib/auth/staff";
+import { parseAudience } from "@/lib/audience";
 import { isUuid } from "@/lib/catalog-filters";
 import { createClient } from "@/lib/supabase/server";
 import { parseProductForm } from "@/lib/utils/product-form";
@@ -104,4 +105,19 @@ export async function bulkProductsAction(ids: string[], op: BulkOp, percent?: nu
   }
   revalidateProducts(valid);
   return { error: null, count };
+}
+
+/** Массово: для кого товары (разделы каталога «Женщинам / Мужчинам / Детям») */
+export async function bulkAudienceAction(ids: string[], audience: string) {
+  const { staff, error } = await getStaffForAction();
+  if (!staff) return { error, count: 0 };
+  const value = parseAudience(audience);
+  if (!value) return { error: "Неизвестный раздел", count: 0 };
+  const valid = ids.filter(isUuid);
+  if (valid.length === 0) return { error: "Ничего не выбрано", count: 0 };
+  const supabase = await createClient();
+  const { data, error: e } = await supabase.from("products").update({ audience: value }).in("id", valid).select("id");
+  if (e) return { error: e.message, count: 0 };
+  revalidateProducts(valid);
+  return { error: null, count: data?.length ?? 0 };
 }

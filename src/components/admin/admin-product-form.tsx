@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import type { AdminProductState } from "@/app/admin/(panel)/products/actions";
 import { ImagesInput } from "@/components/admin/images-input";
+import { AudienceField } from "@/components/dashboard/audience-field";
 import { SizeStockEditor } from "@/components/dashboard/size-stock-editor";
 import type { Product } from "@/lib/data/types";
 import { submitKeepingValues } from "@/lib/form-submit";
@@ -74,6 +75,8 @@ export function AdminProductForm({ action, product, stores, categories, defaultS
         </section>
 
         <section className="rounded-2xl border border-stone-200 bg-white p-5 sm:p-6">
+          <AudienceField defaultValue={product?.audience} />
+
           <SizeStockEditor sizes={product?.sizes} sizeStock={product?.size_stock} />
         </section>
       </div>

@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import {
+  bulkAudienceAction,
   bulkProductsAction,
   updateProductPriceAction,
   type BulkOp,
 } from "@/app/admin/(panel)/products/actions";
 import type { AdminProductRow } from "@/lib/data/admin-products";
+import { AUDIENCE_OPTIONS } from "@/lib/audience";
 import { cn } from "@/lib/utils/cn";
 import { formatPrice, formatProductCount } from "@/lib/utils/format";
 import { getAvailableSizes, getDiscountPercent } from "@/lib/utils/product";
@@ -43,6 +45,7 @@ export function ProductsTable({ rows, stores, categories, initialFilter, initial
   const [filter, setFilter] = useState<ProductFilter>(initialFilter);
   const [storeId, setStoreId] = useState(initialStore ?? "");
   const [categoryId, setCategoryId] = useState("");
+  const [audience, setAudience] = useState("");
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [percent, setPercent] = useState("20");
@@ -56,9 +59,10 @@ export function ProductsTable({ rows, stores, categories, initialFilter, initial
         (p) =>
           (!storeId || p.store?.id === storeId) &&
           (!categoryId || p.category?.id === categoryId) &&
+          (!audience || p.audience === audience) &&
           (!query.trim() || p.name.toLowerCase().includes(query.trim().toLowerCase())),
       ),
-    [rows, storeId, categoryId, query],
+    [rows, storeId, categoryId, audience, query],
   );
   const counts = useMemo(
     () => Object.fromEntries(FILTERS.map((f) => [f.id, base.filter(f.test).length])) as Record<ProductFilter, number>,
@@ -146,6 +150,12 @@ export function ProductsTable({ rows, stores, categories, initialFilter, initial
             <option key={c.id} value={c.id}>{c.name}</option>
           ))}
         </select>
+        <select value={audience} onChange={(e) => setAudience(e.target.value)} aria-label="Для кого" className={select}>
+          <option value="">Для всех</option>
+          {AUDIENCE_OPTIONS.map((o) => (
+            <option key={o.id} value={o.id}>{o.label}</option>
+          ))}
+        </select>
       </div>
 
       {message && (
@@ -190,6 +200,26 @@ export function ProductsTable({ rows, stores, categories, initialFilter, initial
         >
           <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2">
             <span className="mr-2 text-sm font-semibold text-stone-900">Отмечено: {selectedVisible.length}</span>
+            <select
+              aria-label="Для кого — для отмеченных"
+              value=""
+              disabled={pending}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (!value) return;
+                startTransition(async () => {
+                  const result = await bulkAudienceAction(selectedVisible.map((p) => p.id), value);
+                  const label = AUDIENCE_OPTIONS.find((o) => o.id === value)?.label ?? value;
+                  setMessage(result.error ? { kind: "error", text: result.error } : { kind: "ok", text: `${formatProductCount(result.count)}: «${label}»` });
+                });
+              }}
+              className="min-h-11 rounded-xl bg-white px-3 text-sm font-medium ring-1 ring-stone-200"
+            >
+              <option value="">Для кого…</option>
+              {AUDIENCE_OPTIONS.map((o) => (
+                <option key={o.id} value={o.id}>{o.label}</option>
+              ))}
+            </select>
             <button type="button" disabled={pending} onClick={() => runBulk("hide")} className="min-h-11 rounded-xl px-4 text-sm font-medium ring-1 ring-stone-200 hover:bg-stone-50">Скрыть</button>
             <button type="button" disabled={pending} onClick={() => runBulk("show")} className="min-h-11 rounded-xl px-4 text-sm font-medium ring-1 ring-stone-200 hover:bg-stone-50">Показать</button>
             <span className="inline-flex items-center gap-1 rounded-xl ring-1 ring-stone-200">
@@ -268,7 +298,10 @@ function ProductRow({ product: p, checked, onToggle }: { product: AdminProductRo
           </span>
         </Link>
       </td>
-      <td className="px-3 py-2 text-stone-600">{p.category?.name ?? "—"}</td>
+      <td className="px-3 py-2 text-stone-600">
+        {p.category?.name ?? "—"}
+        <span className="block text-xs text-stone-400">{AUDIENCE_OPTIONS.find((o) => o.id === p.audience)?.label}</span>
+      </td>
       <td className="px-3 py-2">
         {editing ? (
           <form
