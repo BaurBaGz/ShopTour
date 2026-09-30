@@ -59,11 +59,13 @@ type BannerSlideProps = {
   banner: BannerData;
   /** Для ссылки «#next» — пролистать к следующему баннеру */
   onNext?: () => void;
+  /** Нажатие на кнопку или ссылку баннера — для статистики */
+  onCtaClick?: () => void;
   className?: string;
 };
 
 /** Содержимое одного баннера. Размер задаёт родитель (карусель или превью в админке). */
-export function BannerSlide({ banner, onNext, className }: BannerSlideProps) {
+export function BannerSlide({ banner, onNext, onCtaClick, className }: BannerSlideProps) {
   const theme = THEMES[banner.theme];
 
   if (banner.kind === "steps") {
@@ -87,7 +89,7 @@ export function BannerSlide({ banner, onNext, className }: BannerSlideProps) {
                 <p className={cn("font-semibold", theme.title)}>{step.title}</p>
                 <p className={cn("mt-0.5 hidden text-sm leading-relaxed sm:block", theme.body)}>{step.text}</p>
                 {step.href && (
-                  <Link href={step.href} className={cn("inline-flex min-h-11 items-center text-sm font-semibold sm:min-h-0 sm:pt-1", theme.cta)}>
+                  <Link href={step.href} onClick={onCtaClick} className={cn("inline-flex min-h-11 items-center text-sm font-semibold sm:min-h-0 sm:pt-1", theme.cta)}>
                     {step.cta} →
                   </Link>
                 )}
@@ -102,15 +104,15 @@ export function BannerSlide({ banner, onNext, className }: BannerSlideProps) {
   const cta =
     banner.cta_label && banner.cta_href ? (
       banner.cta_href === "#next" ? (
-        <button type="button" onClick={onNext} className={cn("mt-4 inline-flex min-h-11 items-center self-start text-sm font-semibold", theme.cta)}>
+        <button type="button" onClick={() => { onCtaClick?.(); onNext?.(); }} className={cn("mt-4 inline-flex min-h-11 items-center self-start text-sm font-semibold", theme.cta)}>
           {banner.cta_label} →
         </button>
       ) : /^https?:\/\//.test(banner.cta_href) ? (
-        <a href={banner.cta_href} target="_blank" rel="noopener noreferrer" className={cn("mt-4 inline-flex min-h-11 items-center self-start text-sm font-semibold", theme.cta)}>
+        <a href={banner.cta_href} target="_blank" rel="noopener noreferrer" onClick={onCtaClick} className={cn("mt-4 inline-flex min-h-11 items-center self-start text-sm font-semibold", theme.cta)}>
           {banner.cta_label} →
         </a>
       ) : (
-        <Link href={banner.cta_href} className={cn("mt-4 inline-flex min-h-11 items-center self-start text-sm font-semibold", theme.cta)}>
+        <Link href={banner.cta_href} onClick={onCtaClick} className={cn("mt-4 inline-flex min-h-11 items-center self-start text-sm font-semibold", theme.cta)}>
           {banner.cta_label} →
         </Link>
       )

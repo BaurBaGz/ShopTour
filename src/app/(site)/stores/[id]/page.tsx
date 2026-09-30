@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { TrackView } from "@/components/analytics/track-view";
 import { BackLink } from "@/components/ui/back-link";
 import { ProductCard } from "@/components/catalog/product-card";
 import { StoreHero } from "@/components/store/store-hero";
@@ -40,6 +41,7 @@ export default async function StorePage({ params }: StorePageProps) {
 
   return (
     <main>
+      <TrackView type="store_view" storeId={store.id} />
       <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
         <BackLink fallbackHref="/catalog" fallbackLabel="в каталог" />
       </div>

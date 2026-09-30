@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { BannerSlide, type BannerData } from "@/components/catalog/banner-slide";
+import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils/cn";
 
 const HIDDEN_KEY = "shoptour:promo-hidden";
@@ -56,6 +57,16 @@ export function PromoCarousel({ banners }: { banners: BannerData[] }) {
     return () => track.removeEventListener("scroll", onScroll);
   }, [hidden]);
 
+  // Показ баннера считаем, когда он стал текущим, — один раз за открытие страницы
+  const viewedRef = useRef(new Set<string>());
+  const activeId = !hidden ? banners[active]?.id : undefined;
+  useEffect(() => {
+    // Первый проход после загрузки ещё не знает, что посетитель скрыл баннеры, — смотрим сами
+    if (!activeId || viewedRef.current.has(activeId) || readHidden() === signature) return;
+    viewedRef.current.add(activeId);
+    track({ type: "banner_view", bannerId: activeId });
+  }, [activeId, signature]);
+
   // scrollIntoView учитывает scroll-padding ленты и не двигает страницу по вертикали
   const goTo = (index: number) => {
     const slide = trackRef.current?.children[index] as HTMLElement | undefined;
@@ -78,7 +89,11 @@ export function PromoCarousel({ banners }: { banners: BannerData[] }) {
             aria-label={`${index + 1} из ${slideCount}`}
             className={cn("shrink-0 snap-start", slideCount > 1 ? "w-[88%] sm:w-[92%]" : "w-full")}
           >
-            <BannerSlide banner={banner} onNext={() => goTo((index + 1) % slideCount)} />
+            <BannerSlide
+              banner={banner}
+              onNext={() => goTo((index + 1) % slideCount)}
+              onCtaClick={() => track({ type: "banner_click", bannerId: banner.id })}
+            />
           </div>
         ))}
       </div>

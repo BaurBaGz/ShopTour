@@ -225,18 +225,81 @@ export interface Database {
         };
         Relationships: [];
       };
+      analytics_events: {
+        Row: {
+          id: number;
+          created_at: string;
+          type: AnalyticsEventType;
+          visitor_id: string;
+          path: string | null;
+          product_id: string | null;
+          store_id: string | null;
+          banner_id: string | null;
+          query: string | null;
+          results: number | null;
+        };
+        Insert: {
+          id?: never;
+          created_at?: string;
+          type: AnalyticsEventType;
+          visitor_id: string;
+          path?: string | null;
+          product_id?: string | null;
+          store_id?: string | null;
+          banner_id?: string | null;
+          query?: string | null;
+          results?: number | null;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
       current_staff_role: { Args: Record<string, never>; Returns: StaffRole | null };
       is_staff: { Args: Record<string, never>; Returns: boolean };
       is_admin: { Args: Record<string, never>; Returns: boolean };
+      analytics_daily: {
+        Args: { p_from: string; p_store?: string | null };
+        Returns: {
+          day: string;
+          visitors: number;
+          page_views: number;
+          product_views: number;
+          store_views: number;
+          favorites: number;
+        }[];
+      };
+      analytics_visitors: { Args: { p_from: string; p_store?: string | null }; Returns: number };
+      analytics_top_products: {
+        Args: { p_from: string; p_store?: string | null; p_limit?: number };
+        Returns: { product_id: string; views: number; visitors: number; favorites: number }[];
+      };
+      analytics_top_stores: {
+        Args: { p_from: string; p_limit?: number };
+        Returns: {
+          store_id: string;
+          store_views: number;
+          product_views: number;
+          favorites: number;
+          visitors: number;
+        }[];
+      };
+      analytics_searches: {
+        Args: { p_from: string; p_limit?: number };
+        Returns: { query: string; searches: number; visitors: number; zero: number }[];
+      };
+      analytics_banners: {
+        Args: { p_from: string };
+        Returns: { banner_id: string; views: number; clicks: number }[];
+      };
     };
     Enums: {
       staff_role: StaffRole;
       store_status: StoreStatus;
       banner_kind: BannerKind;
       banner_theme: BannerTheme;
+      analytics_event_type: AnalyticsEventType;
     };
   };
 }
@@ -245,3 +308,11 @@ export type StaffRole = "admin" | "moderator";
 export type StoreStatus = "draft" | "published" | "hidden";
 export type BannerKind = "text" | "steps";
 export type BannerTheme = "rose" | "dark" | "light";
+export type AnalyticsEventType =
+  | "page_view"
+  | "product_view"
+  | "store_view"
+  | "favorite_add"
+  | "search"
+  | "banner_view"
+  | "banner_click";

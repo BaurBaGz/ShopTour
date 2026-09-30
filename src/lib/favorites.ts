@@ -2,6 +2,7 @@
 
 // Избранное хранится в браузере (localStorage) — покупателям не нужен аккаунт.
 import { useCallback } from "react";
+import { track } from "@/lib/analytics";
 import { createLocalListStore } from "@/lib/local-list-store";
 import { showToast } from "@/lib/toast";
 
@@ -33,6 +34,7 @@ export function useFavorite(productId: string) {
       });
     } else {
       store.set([productId, ...current]);
+      track({ type: "favorite_add", productId });
       showToast({
         message: "Добавлено в избранное",
         action: { label: "Смотреть", href: "/favorites" },

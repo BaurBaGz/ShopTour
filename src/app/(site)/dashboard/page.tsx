@@ -2,16 +2,20 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { logoutAction } from "@/app/(site)/auth/actions";
+import { DailyChart, PeriodTabs, StatCards, TopProductsTable } from "@/components/analytics/analytics-blocks";
 import { DeleteProductButton } from "@/components/dashboard/delete-product-button";
 import { getCategories, getProductsWithError } from "@/lib/data/catalog";
 import { getSessionUser, getStoreForOwner } from "@/lib/auth/session";
+import { getStoreAnalytics, parsePeriod } from "@/lib/data/analytics";
 import { formatPrice } from "@/lib/utils/format";
 
 export const metadata: Metadata = {
   title: "Личный кабинет — ShopTour",
 };
 
-export default async function DashboardPage() {
+type DashboardPageProps = { searchParams: Promise<{ period?: string }> };
+
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const user = await getSessionUser();
   if (!user) redirect("/auth/login");
 
@@ -35,9 +39,11 @@ export default async function DashboardPage() {
     );
   }
 
-  const [{ data: products, errorMessage }, categories] = await Promise.all([
+  const period = parsePeriod((await searchParams).period);
+  const [{ data: products, errorMessage }, categories, stats] = await Promise.all([
     getProductsWithError({ storeId: store.id, includeOutOfStock: true, includeHidden: true }),
     getCategories(),
+    getStoreAnalytics(store.id, period),
   ]);
 
   const categoryMap = Object.fromEntries(categories.map((c) => [c.id, c.name]));
@@ -83,6 +89,37 @@ export default async function DashboardPage() {
           </form>
         </div>
       </div>
+
+      <section aria-labelledby="stats-title" className="mb-10 flex flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 id="stats-title" className="text-xl font-semibold tracking-tight text-stone-900">
+              Статистика
+            </h2>
+            <p className="mt-1 text-sm text-stone-500">
+              Сколько покупателей смотрят ваш магазин на ShopTour. Ваши собственные просмотры не считаются.
+            </p>
+          </div>
+          <PeriodTabs current={period} hrefFor={(d) => `/dashboard?period=${d}`} />
+        </div>
+        <StatCards
+          cards={[
+            { label: "Посетители", value: stats.totals.visitors, note: "смотрели магазин или товары" },
+            { label: "Просмотры товаров", value: stats.totals.productViews },
+            { label: "Страница магазина", value: stats.totals.storeViews, note: "открытий" },
+            { label: "В избранное", value: stats.totals.favorites, note: "добавили ваши товары" },
+          ]}
+        />
+        <DailyChart daily={stats.daily} metric="productViews" title="Просмотры по дням" />
+        <TopProductsTable
+          products={stats.topProducts}
+          title="Популярные товары"
+          hrefFor={(id) => `/products/${id}`}
+          showStore={false}
+        />
+      </section>
+
+      <h2 className="mb-4 text-xl font-semibold tracking-tight text-stone-900">Товары</h2>
 
       {errorMessage && (
         <p className="mb-6 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">

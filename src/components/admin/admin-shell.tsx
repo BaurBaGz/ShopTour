@@ -35,11 +35,12 @@ const NAV: NavItem[] = [
   { href: "/admin/products", label: "Товары", icon: TagIcon },
   { href: "/admin/categories", label: "Категории", icon: GridIcon },
   { href: "/admin/banners", label: "Баннеры", icon: ImageIcon },
-  { href: "/admin/analytics", label: "Аналитика", icon: ChartIcon, soon: true },
+  { href: "/admin/analytics", label: "Аналитика", icon: ChartIcon },
   { href: "/admin/staff", label: "Сотрудники", icon: UsersIcon, adminOnly: true },
 ];
 
 const TITLES: [string, string][] = [
+  ["/admin/analytics", "Аналитика"],
   ["/admin/banners/new", "Новый баннер"],
   ["/admin/banners", "Баннеры"],
   ["/admin/products/new", "Новый товар"],

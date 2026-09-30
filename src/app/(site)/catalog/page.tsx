@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { TrackView } from "@/components/analytics/track-view";
 import { ActiveFilterChips } from "@/components/catalog/active-filter-chips";
 import { CatalogFilters } from "@/components/catalog/catalog-filters";
 import { ProductCard } from "@/components/catalog/product-card";
@@ -67,6 +68,10 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
         </h1>
         <p className="mt-2 hidden text-stone-500 sm:block">Все товары от магазинов города</p>
       </div>
+
+      {values.q?.trim() && !loadError && (
+        <TrackView type="search" query={values.q} results={products.length} />
+      )}
 
       {loadError && (
         <SupabaseErrorBanner message={loadError} context="getProducts" />
