@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { RecordRecent } from "@/components/account/record-recent";
 import { TrackView } from "@/components/analytics/track-view";
 import { BackLink } from "@/components/ui/back-link";
+import { DistanceFromMe } from "@/components/catalog/distance-from-me";
 import { ProductCard } from "@/components/catalog/product-card";
 import { ProductPurchase } from "@/components/catalog/product-purchase";
 import { ShowOnMapLink } from "@/components/store/show-on-map-link";
@@ -183,6 +184,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   >
                     {store.city}, {store.address}
                   </ShowOnMapLink>
+                  <DistanceFromMe store={store} className="mt-0.5" />
                 </div>
               </div>
 

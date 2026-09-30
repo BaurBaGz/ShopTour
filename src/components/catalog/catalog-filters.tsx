@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useRef, useState, useSyncExternalStore, useTransition } from "react";
 import type { CatalogFilterValues, FilterKey } from "@/lib/catalog-filters";
+import { NearMeButton, NearMePanel } from "@/components/catalog/near-me";
 import type { CatalogFilterOptions } from "@/lib/data/catalog";
 import type { Category } from "@/lib/data/types";
 import { cn } from "@/lib/utils/cn";
@@ -30,6 +31,8 @@ type CatalogFiltersProps = {
   showStoreFilter?: boolean;
   /** Параметры адреса, которые форма не трогает (например, выбранный на карте магазин) */
   preserveKeys?: FilterKey[];
+  /** Кнопка «Рядом со мной» (в каталоге) */
+  showNear?: boolean;
 };
 
 const fieldClass =
@@ -44,7 +47,9 @@ export function CatalogFilters({
   basePath = "/catalog",
   showStoreFilter = true,
   preserveKeys = [],
+  showNear = false,
 }: CatalogFiltersProps) {
+  const [nearOpen, setNearOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -110,6 +115,7 @@ export function CatalogFilters({
   })();
 
   return (
+    <div className="flex flex-col gap-3">
     <form
       ref={formRef}
       action={basePath}
@@ -118,6 +124,10 @@ export function CatalogFilters({
       aria-busy={isPending}
       className="flex flex-col gap-3"
     >
+      {/* «Рядом» меняет адрес сам; здесь — чтобы остальные фильтры его не сбрасывали */}
+      {values.near && <input type="hidden" name="near" value={values.near} />}
+      {values.near && values.walk && <input type="hidden" name="walk" value={values.walk} />}
+      {values.near && values.place && <input type="hidden" name="place" value={values.place} />}
       <div className="flex flex-col gap-3 sm:flex-row">
         <label className="sr-only" htmlFor="catalog-search">
           Поиск по каталогу
@@ -142,10 +152,15 @@ export function CatalogFilters({
             onChange={submitOnChange}
             className={cn(fieldClass, "flex-1 sm:w-48 sm:flex-none")}
           >
-            <option value="">Сначала новые</option>
-            <option value="price_asc">Сначала дешевле</option>
-            <option value="price_desc">Сначала дороже</option>
+            {/* Коротко: на телефоне в одной строке с «Рядом» и «Фильтрами» */}
+            <option value="">{values.near ? "Ближе" : "Новинки"}</option>
+            <option value="price_asc">Дешевле</option>
+            <option value="price_desc">Дороже</option>
           </select>
+
+          {showNear && (
+            <NearMeButton active={Boolean(values.near)} open={nearOpen} onClick={() => setNearOpen(!nearOpen)} />
+          )}
 
           <button
             type="button"
@@ -306,5 +321,15 @@ export function CatalogFilters({
         </div>
       </div>
     </form>
+    {/* Вне формы: внутри панели своя форма поиска адреса */}
+    {showNear && nearOpen && (
+      <NearMePanel
+        active={Boolean(values.near)}
+        walk={values.walk}
+        place={values.place}
+        onClose={() => setNearOpen(false)}
+      />
+    )}
+    </div>
   );
 }

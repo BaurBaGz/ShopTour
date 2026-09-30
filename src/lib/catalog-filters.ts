@@ -1,9 +1,11 @@
 // Общие фильтры товаров для каталога (/catalog) и карты магазинов (/stores).
 // Без серверных импортов — используется и на сервере, и в клиентских компонентах.
 import type { ProductSort } from "@/lib/data/catalog";
+import { parseNear, parseWalk } from "@/lib/near";
 import { formatPrice } from "@/lib/utils/format";
 
-export const FILTER_KEYS = ["q", "category", "store", "size", "min", "max", "sort"] as const;
+// near — точка покупателя «широта,долгота», walk — минут пешком, place — подпись точки (адрес)
+export const FILTER_KEYS = ["q", "category", "store", "size", "min", "max", "sort", "near", "walk", "place"] as const;
 
 export type FilterKey = (typeof FILTER_KEYS)[number];
 export type CatalogFilterValues = Partial<Record<FilterKey, string>>;
@@ -33,6 +35,13 @@ export function readFilterValues(
   }
   if (values.category && !isUuid(values.category)) delete values.category;
   if (values.store && !isUuid(values.store)) delete values.store;
+  if (!parseNear(values.near)) {
+    delete values.near;
+    delete values.walk;
+    delete values.place;
+  }
+  if (values.walk && !parseWalk(values.walk)) delete values.walk;
+  if (values.place) values.place = values.place.slice(0, 80);
   return values;
 }
 
@@ -64,6 +73,12 @@ export function buildFilterChips(
   },
 ): FilterChip[] {
   const chips: FilterChip[] = [];
+
+  if (values.near) {
+    const walk = parseWalk(values.walk);
+    const where = values.place ? `Рядом: ${values.place}` : "Рядом со мной";
+    chips.push({ label: walk ? `${where} · до ${walk} мин пешком` : where, keys: ["near", "walk", "place"] });
+  }
 
   if (values.q) chips.push({ label: `«${values.q}»`, keys: ["q"] });
 

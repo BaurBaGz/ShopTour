@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { FavoriteButton } from "@/components/favorites/favorite-button";
 import type { ProductWithRelations } from "@/lib/data/types";
+import { formatNearDistance } from "@/lib/near";
 import { formatPrice } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
 import { getAvailableSizes, getDiscountPercent } from "@/lib/utils/product";
@@ -105,8 +106,12 @@ export function ProductCard({ product, className }: ProductCardProps) {
             className="-my-1 py-1 text-xs text-stone-500 transition hover:text-rose-600"
           >
             {store.name}
-            {store.city ? ` · ${store.city}` : ""}
+            {store.city && product.distanceKm == null ? ` · ${store.city}` : ""}
           </Link>
+        )}
+
+        {product.distanceKm != null && (
+          <p className="-mt-1 text-xs font-medium text-rose-700">📍 {formatNearDistance(product.distanceKm)}</p>
         )}
 
         {product.sizes?.length > 0 && (

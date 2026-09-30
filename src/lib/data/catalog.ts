@@ -5,7 +5,9 @@ import {
 } from "@/lib/supabase/log-error";
 import type { PostgrestError } from "@supabase/supabase-js";
 import { PRODUCT_SELECT, PUBLISHED_PRODUCT_SELECT } from "@/lib/data/selects";
+import { distanceToStore, maxKmForWalk } from "@/lib/near";
 import { isSizeAvailable } from "@/lib/utils/product";
+import type { Point } from "@/lib/utils/route";
 import type {
   Category,
   ProductDetails,
@@ -83,6 +85,10 @@ export async function getProductsWithError(options?: {
   includeOutOfStock?: boolean;
   /** Скрытые в админке товары — только для кабинета владельца */
   includeHidden?: boolean;
+  /** «Рядом со мной»: считаем расстояние до магазина и сортируем по нему (если не выбрана сортировка по цене) */
+  near?: Point | null;
+  /** Только магазины в пределах стольких минут пешком */
+  walkMinutes?: number | null;
 }): Promise<DataResult<ProductWithRelations[]>> {
   const envError = checkSupabaseEnv();
   if (envError) {
@@ -156,6 +162,19 @@ export async function getProductsWithError(options?: {
   if (options?.size) {
     const size = options.size;
     products = products.filter((p) => isSizeAvailable(p, size));
+  }
+
+  const near = options?.near;
+  if (near) {
+    const maxKm = options?.walkMinutes ? maxKmForWalk(options.walkMinutes) : null;
+    products = products
+      .map((p) => ({ ...p, distanceKm: distanceToStore(near, p.stores) }))
+      // Магазины без точки на карте в «рядом» не попадают
+      .filter((p) => p.distanceKm !== null && (maxKm === null || p.distanceKm <= maxKm));
+    if (options?.sort !== "price_asc" && options?.sort !== "price_desc") {
+      // Ближе — выше; внутри одного магазина порядок прежний (новые первыми)
+      products.sort((a, b) => a.distanceKm! - b.distanceKm!);
+    }
   }
 
   return {

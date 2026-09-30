@@ -19,6 +19,7 @@ import {
   getCategoriesWithError,
   getProductsWithError,
 } from "@/lib/data/catalog";
+import { parseNear, parseWalk } from "@/lib/near";
 import { formatProductCount } from "@/lib/utils/format";
 
 export const metadata: Metadata = {
@@ -35,6 +36,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   const sort = parseSort(values.sort);
   const minPrice = parsePrice(values.min);
   const maxPrice = parsePrice(values.max);
+  const near = parseNear(values.near);
 
   const [categoriesResult, productsResult, filterOptions, banners] = await Promise.all([
     getCategoriesWithError(),
@@ -46,6 +48,8 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
       minPrice,
       maxPrice,
       sort,
+      near,
+      walkMinutes: parseWalk(values.walk),
     }),
     getCatalogFilterOptions(),
     getActiveBanners(),
@@ -91,6 +95,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
           values={values}
           categories={categories}
           options={filterOptions}
+          showNear
         />
       </div>
 
@@ -117,7 +122,9 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
           <p className="mt-2 max-w-sm text-sm text-stone-500">
             {loadError
               ? "Исправьте ошибку выше — данные в базе есть, но запрос не доходит до Supabase."
-              : chips.length > 0
+              : near && values.walk
+                ? `В пределах ${values.walk} минут пешком пока нет магазинов с такими товарами. Увеличьте расстояние в «Рядом» или выберите «Любое расстояние».`
+                : chips.length > 0
                 ? "Попробуйте изменить или сбросить фильтры."
                 : "Добавьте товары в Supabase (Table Editor) или выполните demo_almaty_stores.sql."}
           </p>
