@@ -18,13 +18,10 @@ export async function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-stone-200/80 bg-white/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="group flex min-h-11 items-center gap-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-stone-900 text-sm font-bold text-white transition group-hover:bg-rose-600">
-            ST
-          </span>
-          <span className="hidden text-lg font-semibold tracking-tight text-stone-900 sm:inline">
-            ShopTour
-          </span>
+        <Link href="/" className="flex min-h-11 shrink-0 items-center" aria-label="Shop Tour — на главную">
+          {/* Логотип — только SVG из брендбука: не перекрашиваем и не набираем текстом */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logos/shoptour-logo-black.svg" alt="Shop Tour" width={124} height={36} className="h-7 w-auto sm:h-9" />
         </Link>
 
         <nav className="flex items-center gap-0.5 sm:gap-2">

@@ -158,14 +158,16 @@ export function AdminShell({ staff, children }: AdminShellProps) {
   );
 
   const logo = (compact: boolean) => (
-    <Link href="/admin" className="flex min-h-11 items-center gap-2">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-stone-900 text-sm font-bold text-white">
-        ST
-      </span>
-      {!compact && (
-        <span className="text-base font-semibold tracking-tight text-stone-900">
-          ShopTour <span className="font-normal text-stone-500">Админ</span>
-        </span>
+    <Link href="/admin" className="flex min-h-11 items-center gap-2" aria-label="Shop Tour — админка">
+      {compact ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src="/logos/shoptour-favicon.svg" alt="Shop Tour" width={36} height={36} className="h-9 w-9" />
+      ) : (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logos/shoptour-logo-black.svg" alt="Shop Tour" width={110} height={32} className="h-8 w-auto" />
+          <span className="text-sm font-normal text-stone-500">Админ</span>
+        </>
       )}
     </Link>
   );
