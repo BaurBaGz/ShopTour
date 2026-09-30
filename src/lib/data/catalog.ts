@@ -146,7 +146,10 @@ export async function getProductsWithError(options?: {
   // Запятые, скобки и спецсимволы ломают синтаксис фильтра .or() в PostgREST
   const term = options?.search?.replace(/[,()%*\\]/g, " ").trim();
   if (term) {
-    query = query.or(`name.ilike.%${term}%,description.ilike.%${term}%`);
+    // Ищем и по названию магазина — в том числе примерному («фус стор» → Fus Store)
+    const storeIds = (await searchStores(term)).map((s) => s.id);
+    const byStore = storeIds.length ? `,store_id.in.(${storeIds.join(",")})` : "";
+    query = query.or(`name.ilike.%${term}%,description.ilike.%${term}%${byStore}`);
   }
 
   if (options?.limit) {
@@ -347,4 +350,25 @@ export async function getStoreBySlug(slug: string): Promise<Store | null> {
   const { data, error } = await supabase.from("stores").select("*").eq("slug", clean).maybeSingle();
   logSupabaseError("getStoreBySlug", error);
   return data ?? null;
+}
+
+export type FoundStore = {
+  id: string;
+  name: string;
+  slug: string;
+  address: string;
+  city: string;
+  logo_url: string | null;
+  latitude: number | null;
+  longitude: number | null;
+};
+
+/** Магазины по названию, в том числе с опечатками и в другой раскладке (с 3 букв) */
+export async function searchStores(q: string, limit = 5): Promise<FoundStore[]> {
+  const term = q.trim();
+  if (term.length < 3) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("search_stores" as never, { q: term, max_results: limit } as never);
+  logSupabaseError("searchStores", error);
+  return (data as FoundStore[] | null) ?? [];
 }

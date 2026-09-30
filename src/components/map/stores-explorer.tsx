@@ -7,6 +7,7 @@ import { HeartIcon } from "@/components/favorites/favorite-button";
 import type { FavoritePreview } from "@/components/map/StoresMap";
 import StoresMap from "@/components/map/StoresMapWrapper";
 import { TourPanel } from "@/components/map/tour-panel";
+import { DistanceFromMe } from "@/components/catalog/distance-from-me";
 import { StoreAvatar } from "@/components/store/store-avatar";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import type { MapStore } from "@/lib/data/catalog";
@@ -324,83 +325,81 @@ export function StoresExplorer({
           aria-label={`Каталог магазина ${selectedStore.name}`}
           className="scroll-mt-24"
         >
-          <div className="relative flex flex-col gap-4 rounded-3xl border border-stone-200/80 bg-white p-5 pr-14 sm:flex-row sm:items-center sm:p-6 sm:pr-16">
-            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-stone-100">
-              <StoreAvatar
-                store={selectedStore}
-                sizes="64px"
-                textClassName="text-2xl"
-              />
+          <div className="relative rounded-3xl border border-stone-200/80 bg-white p-4 pr-14 sm:p-5 sm:pr-16">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full ring-1 ring-stone-200">
+                <StoreAvatar store={selectedStore} sizes="56px" textClassName="text-xl" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="truncate text-lg font-semibold text-stone-900">{selectedStore.name}</h2>
+                <p className="truncate text-sm text-stone-500">
+                  {selectedStore.address} ·{" "}
+                  {mode === "favorites"
+                    ? `${formatProductCount(storeProducts.length)} из избранного`
+                    : formatProductCount(storeProducts.length)}
+                </p>
+                <DistanceFromMe store={selectedStore} className="text-xs" />
+              </div>
             </div>
 
-            <div className="min-w-0 flex-1">
-              <h2 className="text-xl font-semibold text-stone-900">
-                {selectedStore.name}
-              </h2>
-              <p className="text-sm text-stone-500">
-                {selectedStore.city}, {selectedStore.address} ·{" "}
-                {mode === "favorites"
-                  ? `${formatProductCount(storeProducts.length)} из избранного`
-                  : formatProductCount(storeProducts.length)}
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2 text-sm">
-                {stopNumber > 0 ? (
-                  <button
-                    type="button"
-                    onClick={() => tour.remove(selectedStore.id)}
-                    className="rounded-full bg-stone-900 px-4 py-2 font-semibold text-white transition hover:bg-stone-700"
-                    title="Убрать из маршрута"
-                  >
-                    ✓ В маршруте · остановка {stopNumber}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      tour.add(selectedStore.id);
-                      setTourPanel(true);
-                    }}
-                    disabled={tourIds.length >= MAX_TOUR_STOPS}
-                    className="rounded-full px-4 py-2 font-semibold text-stone-900 ring-1 ring-stone-300 transition hover:bg-stone-50 disabled:opacity-40"
-                  >
-                    + В маршрут
-                  </button>
-                )}
-                {whatsappHref && (
-                  <a
-                    href={whatsappHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-full bg-[#15803D] px-4 py-2 font-semibold text-white transition hover:bg-[#166534]"
-                  >
-                    <WhatsAppIcon className="h-4 w-4" />
-                    WhatsApp
-                  </a>
-                )}
-                {selectedStore.instagram && (
-                  <a
-                    href={buildInstagramUrl(selectedStore.instagram)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="rounded-full px-4 py-2 font-medium text-stone-700 ring-1 ring-stone-200 transition hover:bg-stone-50"
-                  >
-                    Instagram
-                  </a>
-                )}
-                <Link
-                  href={`/stores/${selectedStore.id}`}
-                  className="rounded-full px-4 py-2 font-medium text-rose-600 ring-1 ring-rose-200 transition hover:bg-rose-50"
+            {/* Одинаковые кнопки: главное — витрина, рядом WhatsApp и маршрут */}
+            <div className="mt-4 grid grid-cols-2 gap-2 text-sm sm:flex sm:flex-wrap">
+              <Link
+                href={`/stores/${selectedStore.id}`}
+                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-stone-900 px-4 font-semibold text-white transition hover:bg-rose-600"
+              >
+                Витрина →
+              </Link>
+              {whatsappHref && (
+                <a
+                  href={whatsappHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#15803D] px-4 font-semibold text-white transition hover:bg-[#166534]"
                 >
-                  Страница магазина →
-                </Link>
-              </div>
+                  <WhatsAppIcon className="h-4 w-4" />
+                  WhatsApp
+                </a>
+              )}
+              {stopNumber > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => tour.remove(selectedStore.id)}
+                  className="min-h-11 rounded-xl bg-rose-50 px-4 font-semibold text-rose-700 ring-1 ring-rose-200 transition hover:bg-rose-100"
+                  title="Убрать из маршрута"
+                >
+                  ✓ Остановка {stopNumber}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    tour.add(selectedStore.id);
+                    setTourPanel(true);
+                  }}
+                  disabled={tourIds.length >= MAX_TOUR_STOPS}
+                  className="min-h-11 rounded-xl bg-white px-4 font-semibold text-stone-800 ring-1 ring-stone-200 transition hover:bg-stone-50 disabled:opacity-40"
+                >
+                  + В маршрут
+                </button>
+              )}
+              {selectedStore.instagram && (
+                <a
+                  href={buildInstagramUrl(selectedStore.instagram)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl bg-white px-4 font-semibold text-stone-800 ring-1 ring-stone-200 transition hover:bg-stone-50"
+                >
+                  Instagram
+                </a>
+              )}
             </div>
 
             <button
               type="button"
               onClick={() => select(null)}
               aria-label="Закрыть каталог магазина"
-              className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-full text-stone-500 transition hover:bg-stone-100 hover:text-stone-900 sm:right-4 sm:top-1/2 sm:-translate-y-1/2"
+              className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-full text-stone-500 transition hover:bg-stone-100 hover:text-stone-900 sm:right-3 sm:top-3"
             >
               <svg
                 className="h-5 w-5"

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { TrackView } from "@/components/analytics/track-view";
 import { ActiveFilterChips } from "@/components/catalog/active-filter-chips";
 import { CatalogFilters } from "@/components/catalog/catalog-filters";
+import { FoundStores } from "@/components/catalog/found-stores";
 import { ProductCard } from "@/components/catalog/product-card";
 import { PromoCarousel } from "@/components/catalog/promo-carousel";
 import { SupabaseErrorBanner } from "@/components/catalog/supabase-error-banner";
@@ -18,6 +19,7 @@ import {
   getCatalogFilterOptions,
   getCategoriesWithError,
   getProductsWithError,
+  searchStores,
 } from "@/lib/data/catalog";
 import { parseNear, parseWalk } from "@/lib/near";
 import { formatProductCount } from "@/lib/utils/format";
@@ -38,7 +40,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   const maxPrice = parsePrice(values.max);
   const near = parseNear(values.near);
 
-  const [categoriesResult, productsResult, filterOptions, banners] = await Promise.all([
+  const [categoriesResult, productsResult, filterOptions, banners, foundStores] = await Promise.all([
     getCategoriesWithError(),
     getProductsWithError({
       categoryId: values.category,
@@ -53,6 +55,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
     }),
     getCatalogFilterOptions(),
     getActiveBanners(),
+    values.q ? searchStores(values.q) : Promise.resolve([]),
   ]);
 
   const categories = categoriesResult.data;
@@ -104,6 +107,8 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
           <ActiveFilterChips chips={chips} keepOnReset={["sort"]} />
         </div>
       )}
+
+      <FoundStores stores={foundStores} near={near} />
 
       {products.length > 0 ? (
         <>

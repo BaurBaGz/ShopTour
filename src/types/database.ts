@@ -392,6 +392,19 @@ export interface Database {
         Args: { p_from: string; p_limit?: number };
         Returns: { query: string; searches: number; visitors: number; zero: number }[];
       };
+      search_stores: {
+        Args: { q: string; max_results?: number };
+        Returns: {
+          id: string;
+          name: string;
+          slug: string;
+          address: string;
+          city: string;
+          logo_url: string | null;
+          latitude: number | null;
+          longitude: number | null;
+        }[];
+      };
       analytics_banners: {
         Args: { p_from: string };
         Returns: { banner_id: string; views: number; clicks: number }[];

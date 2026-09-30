@@ -10,7 +10,7 @@ type StoreAvatarProps = {
   textClassName?: string;
 };
 
-/** Логотип магазина или первая буква на цветном фоне. Заполняет родителя (relative + размеры). */
+/** Логотип магазина или первая буква на светлом цветном фоне. Заполняет родителя (relative + размеры). */
 export function StoreAvatar({ store, sizes, textClassName = "text-xl" }: StoreAvatarProps) {
   if (store.logo_url) {
     return (
@@ -26,11 +26,9 @@ export function StoreAvatar({ store, sizes, textClassName = "text-xl" }: StoreAv
 
   return (
     <div
-      className={cn(
-        "flex h-full w-full items-center justify-center font-bold text-white",
-        textClassName,
-      )}
-      style={{ backgroundColor: getStoreColor(store.id) }}
+      className={cn("flex h-full w-full items-center justify-center font-semibold", textClassName)}
+      // Мягкий оттенок вместо яркой заливки: буква не спорит с фото товаров
+      style={{ backgroundColor: `${getStoreColor(store.id)}1f`, color: getStoreColor(store.id) }}
       role="img"
       aria-label={store.name}
     >

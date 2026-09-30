@@ -3,7 +3,7 @@
 import { showToast } from "@/lib/toast";
 
 /** «Поделиться» витриной: системное меню на телефоне, иначе — копирование ссылки */
-export function ShareStoreButton({ slug, name }: { slug: string; name: string }) {
+export function ShareStoreButton({ slug, name, className }: { slug: string; name: string; className?: string }) {
   const share = async () => {
     const url = `${window.location.origin}/s/${slug}`;
     if (navigator.share) {
@@ -27,7 +27,7 @@ export function ShareStoreButton({ slug, name }: { slug: string; name: string })
     <button
       type="button"
       onClick={() => void share()}
-      className="rounded-full bg-white/10 px-4 py-2 font-medium backdrop-blur-sm transition hover:bg-white/20"
+      className={className ?? "rounded-full bg-white/10 px-4 py-2 font-medium backdrop-blur-sm transition hover:bg-white/20"}
     >
       Поделиться
     </button>
