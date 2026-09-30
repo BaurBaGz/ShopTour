@@ -72,7 +72,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 </p>
                 <p>
                   <span className="text-stone-500">Вы магазин? </span>
-                  <Link href="/auth/register" className="inline-flex min-h-11 items-center font-medium text-stone-700 hover:text-rose-600">
+                  <Link href="/magazinam" className="inline-flex min-h-11 items-center font-medium text-stone-700 hover:text-rose-600">
                     Подключить магазин
                   </Link>
                 </p>

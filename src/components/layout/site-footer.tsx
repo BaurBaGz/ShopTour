@@ -17,7 +17,7 @@ export function SiteFooter() {
           <Link href="/stores" className="inline-flex min-h-11 items-center hover:text-stone-900">
             Магазины на карте
           </Link>
-          <Link href="/auth/register" className="inline-flex min-h-11 items-center hover:text-stone-900">
+          <Link href="/magazinam" className="inline-flex min-h-11 items-center hover:text-stone-900">
             Для магазинов
           </Link>
         </div>

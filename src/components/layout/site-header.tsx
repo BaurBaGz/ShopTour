@@ -73,7 +73,7 @@ export async function SiteHeader() {
                 Войти
               </Link>
               <Link
-                href="/auth/register"
+                href="/magazinam"
                 className="relative after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] hidden whitespace-nowrap rounded-full bg-stone-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-600 sm:inline-block"
               >
                 Для магазинов
