@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { FavoriteButton } from "@/components/favorites/favorite-button";
 import type { ProductWithRelations } from "@/lib/data/types";
+import { AUDIENCE_BADGE } from "@/lib/audience";
 import { formatNearDistance } from "@/lib/near";
 import { formatPrice } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
@@ -76,6 +77,14 @@ export function ProductCard({ product, className }: ProductCardProps) {
       </div>
 
       <div className="flex flex-1 flex-col gap-2 p-4">
+        {product.audience && (
+          <p
+            className={cn("-mb-1 text-[11px] font-semibold uppercase tracking-wide", AUDIENCE_BADGE[product.audience].className)}
+            title={AUDIENCE_BADGE[product.audience].hint}
+          >
+            {AUDIENCE_BADGE[product.audience].label}
+          </p>
+        )}
         <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-stone-900">
           <Link
             href={`/products/${product.id}`}

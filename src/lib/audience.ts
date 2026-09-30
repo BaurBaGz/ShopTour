@@ -47,3 +47,23 @@ export function parseAudience(value: unknown): ProductAudience | null {
 
 /** Запомненный раздел покупателя (cookie — чтобы сервер сразу отдал нужные товары) */
 export const SECTION_COOKIE = "shoptour_section";
+
+/** Метка на карточке товара: сразу видно, для кого вещь */
+export const AUDIENCE_BADGE: Record<ProductAudience, { label: string; hint: string; className: string }> = {
+  women: { label: "Женское", hint: "Женская модель", className: "text-rose-700" },
+  men: { label: "Мужское", hint: "Мужская модель", className: "text-sky-700" },
+  unisex: { label: "Унисекс", hint: "Подойдёт и женщинам, и мужчинам", className: "text-violet-700" },
+  girls: { label: "Девочкам", hint: "Детская модель для девочек", className: "text-rose-700" },
+  boys: { label: "Мальчикам", hint: "Детская модель для мальчиков", className: "text-sky-700" },
+  kids: { label: "Детское", hint: "Детская модель — и девочкам, и мальчикам", className: "text-emerald-700" },
+};
+
+/** Раздел каталога для метки: по нажатию — все такие вещи */
+export const AUDIENCE_SECTION: Record<ProductAudience, Section | null> = {
+  women: "women",
+  men: "men",
+  unisex: null,
+  girls: "girls",
+  boys: "boys",
+  kids: "kids",
+};

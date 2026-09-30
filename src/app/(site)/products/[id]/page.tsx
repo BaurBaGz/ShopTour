@@ -10,6 +10,7 @@ import { ProductCard } from "@/components/catalog/product-card";
 import { ProductPurchase } from "@/components/catalog/product-purchase";
 import { ShowOnMapLink } from "@/components/store/show-on-map-link";
 import { StoreAvatar } from "@/components/store/store-avatar";
+import { AUDIENCE_BADGE, AUDIENCE_SECTION } from "@/lib/audience";
 import { getSessionUser } from "@/lib/auth/session";
 import { getProductById, getProducts } from "@/lib/data/catalog";
 import { formatPrice } from "@/lib/utils/format";
@@ -118,14 +119,24 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
 
         <div className="flex flex-col gap-6">
           <div>
-            {product.categories && (
+            <div className="flex flex-wrap items-center gap-2">
+              {product.categories && (
+                <Link
+                  href={`/catalog?category=${product.categories.id}`}
+                  className="inline-block rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-600 transition hover:bg-stone-200"
+                >
+                  {product.categories.name}
+                </Link>
+              )}
+              {/* Для кого: унисекс поясняем, чтобы женская модель на фото не сбивала мужчин */}
               <Link
-                href={`/catalog?category=${product.categories.id}`}
-                className="inline-block rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-600 transition hover:bg-stone-200"
+                href={`/catalog?for=${AUDIENCE_SECTION[product.audience] ?? "all"}`}
+                className={`inline-block rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold transition hover:bg-stone-200 ${AUDIENCE_BADGE[product.audience].className}`}
               >
-                {product.categories.name}
+                {AUDIENCE_BADGE[product.audience].label}
               </Link>
-            )}
+              <span className="text-xs text-stone-500">{AUDIENCE_BADGE[product.audience].hint}</span>
+            </div>
             <h1 className="mt-3 text-3xl font-semibold tracking-tight text-stone-900 sm:text-4xl">
               {product.name}
             </h1>
