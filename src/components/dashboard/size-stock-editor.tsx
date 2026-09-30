@@ -6,6 +6,14 @@ import type { Json } from "@/types/database";
 
 type Row = { key: number; size: string; stock: string };
 
+const PRESETS: [string, string[]][] = [
+  ["XS–XL", ["XS", "S", "M", "L", "XL"]],
+  ["42–52", ["42", "44", "46", "48", "50", "52"]],
+  ["Обувь 36–41", ["36", "37", "38", "39", "40", "41"]],
+  ["Обувь 40–45", ["40", "41", "42", "43", "44", "45"]],
+  ["Один размер", ["One size"]],
+];
+
 type SizeStockEditorProps = {
   sizes?: string[];
   sizeStock?: Json;
@@ -33,6 +41,18 @@ export function SizeStockEditor({ sizes = [], sizeStock = {} }: SizeStockEditorP
     setNextKey((k) => k + 1);
   };
 
+  // Готовые наборы: добавляем недостающие размеры, пустые строки убираем
+  const addPreset = (preset: string[]) => {
+    setRows((current) => {
+      const filled = current.filter((row) => row.size.trim());
+      const have = new Set(filled.map((row) => row.size.trim().toUpperCase()));
+      let key = nextKey;
+      const added = preset.filter((size) => !have.has(size.toUpperCase())).map((size) => ({ key: key++, size, stock: "" }));
+      setNextKey(key);
+      return [...filled, ...added];
+    });
+  };
+
   const removeRow = (key: number) =>
     setRows((current) => current.filter((row) => row.key !== key));
 
@@ -51,6 +71,19 @@ export function SizeStockEditor({ sizes = [], sizeStock = {} }: SizeStockEditorP
         Пустой остаток — просто «в наличии», 0 — размер закончился.
       </p>
       <input type="hidden" name="sizeStock" value={payload} />
+
+      <div className="mb-3 flex flex-wrap gap-2">
+        {PRESETS.map(([label, sizes]) => (
+          <button
+            key={label}
+            type="button"
+            onClick={() => addPreset(sizes)}
+            className="min-h-11 rounded-xl px-3 text-sm font-medium text-stone-700 ring-1 ring-stone-200 transition hover:bg-stone-50 sm:min-h-9"
+          >
+            + {label}
+          </button>
+        ))}
+      </div>
 
       <div className="space-y-2">
         {rows.map((row) => (

@@ -50,6 +50,7 @@ export interface Database {
           longitude: number | null;
           owner_id: string | null;
           status: StoreStatus;
+          slug: string;
           created_at: string;
         };
         Insert: {
@@ -66,6 +67,7 @@ export interface Database {
           longitude?: number | null;
           owner_id?: string | null;
           status?: StoreStatus;
+          slug?: string;
           created_at?: string;
         };
         Update: {
@@ -82,6 +84,7 @@ export interface Database {
           longitude?: number | null;
           owner_id?: string | null;
           status?: StoreStatus;
+          slug?: string;
           created_at?: string;
         };
         Relationships: [];

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { DeleteProductButton } from "@/components/dashboard/delete-product-button";
 import { ProductForm } from "@/components/dashboard/product-form";
 import { getCategories } from "@/lib/data/catalog";
 import { getSessionUser, getStoreForOwner } from "@/lib/auth/session";
@@ -47,6 +48,9 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
       </h1>
       <div className="mt-8">
         <ProductForm categories={categories} product={product} storeId={store.id} />
+      </div>
+      <div className="mt-6 border-t border-stone-200 pt-4">
+        <DeleteProductButton productId={product.id} productName={product.name} />
       </div>
     </main>
   );

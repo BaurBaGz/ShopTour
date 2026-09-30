@@ -338,3 +338,13 @@ export async function getActiveBanners() {
   logSupabaseError("getActiveBanners", error);
   return data ?? [];
 }
+
+/** Магазин по короткому адресу витрины (/s/<slug>) */
+export async function getStoreBySlug(slug: string): Promise<Store | null> {
+  const clean = slug.toLowerCase();
+  if (!/^[a-z0-9-]{3,40}$/.test(clean)) return null;
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("stores").select("*").eq("slug", clean).maybeSingle();
+  logSupabaseError("getStoreBySlug", error);
+  return data ?? null;
+}

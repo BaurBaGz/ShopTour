@@ -1,4 +1,6 @@
 import type { Store } from "@/lib/data/types";
+import { DistanceFromMe } from "@/components/catalog/distance-from-me";
+import { ShareStoreButton } from "@/components/store/share-store-button";
 import { ShowOnMapLink } from "@/components/store/show-on-map-link";
 import { StoreAvatar } from "@/components/store/store-avatar";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
@@ -41,6 +43,7 @@ export function StoreHero({ store, productCount }: StoreHeroProps) {
                 {store.city}, {store.address}
               </ShowOnMapLink>
             </p>
+            <DistanceFromMe store={store} className="mt-1 text-rose-300" />
             {store.description && (
               <p className="mt-4 max-w-2xl text-base leading-relaxed text-stone-300">
                 {store.description}
@@ -77,6 +80,7 @@ export function StoreHero({ store, productCount }: StoreHeroProps) {
                   Instagram
                 </a>
               )}
+              <ShareStoreButton slug={store.slug} name={store.name} />
               <span className="self-center px-1 text-stone-300">
                 {formatProductCount(productCount)}
               </span>

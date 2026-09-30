@@ -3,11 +3,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { logoutAction } from "@/app/(site)/auth/actions";
 import { DailyChart, PeriodTabs, StatCards, TopProductsTable } from "@/components/analytics/analytics-blocks";
-import { DeleteProductButton } from "@/components/dashboard/delete-product-button";
+import { ProductsManager, type ManagedProduct } from "@/components/dashboard/products-manager";
+import { StorefrontCard } from "@/components/dashboard/storefront-card";
 import { getCategories, getProductsWithError } from "@/lib/data/catalog";
 import { getSessionUser, getStoreForOwner } from "@/lib/auth/session";
 import { getStoreAnalytics, parsePeriod } from "@/lib/data/analytics";
-import { formatPrice } from "@/lib/utils/format";
 
 export const metadata: Metadata = {
   title: "Личный кабинет — ShopTour",
@@ -31,42 +31,46 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   ]);
 
   const categoryMap = Object.fromEntries(categories.map((c) => [c.id, c.name]));
+  const managed: ManagedProduct[] = products.map((p) => ({
+    id: p.id,
+    name: p.name,
+    price: p.price,
+    images: p.images ?? [],
+    sizes: p.sizes ?? [],
+    size_stock: p.size_stock,
+    in_stock: p.in_stock,
+    is_hidden: p.is_hidden,
+    category: categoryMap[p.category_id] ?? null,
+  }));
+  const withPhoto = managed.filter((p) => p.images.length > 0).length;
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="text-sm font-medium text-rose-600">Личный кабинет</p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-stone-900">
-            {store.name}
-          </h1>
+    <main className="mx-auto flex max-w-5xl flex-col gap-8 px-4 pb-28 pt-8 sm:px-6 sm:py-10 lg:px-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-rose-600">Кабинет магазина</p>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-stone-900">{store.name}</h1>
           <p className="mt-1 text-stone-500">
             {store.city}, {store.address}
           </p>
-          <Link
-            href={`/stores/${store.id}`}
-            className="mt-2 inline-block text-sm font-medium text-stone-600 hover:text-rose-600"
-          >
-            Открыть публичную страницу →
-          </Link>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link
             href="/dashboard/products/new"
-            className="rounded-xl bg-stone-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-rose-600"
+            className="hidden min-h-11 items-center rounded-xl bg-stone-900 px-5 text-sm font-semibold text-white hover:bg-rose-600 sm:inline-flex"
           >
             + Добавить товар
           </Link>
           <Link
             href="/dashboard/password"
-            className="rounded-xl border border-stone-200 px-5 py-2.5 text-sm font-medium text-stone-600 hover:bg-stone-50"
+            className="inline-flex min-h-11 items-center rounded-xl border border-stone-200 px-4 text-sm font-medium text-stone-600 hover:bg-stone-50"
           >
             Сменить пароль
           </Link>
           <form action={logoutAction}>
             <button
               type="submit"
-              className="rounded-xl border border-stone-200 px-5 py-2.5 text-sm font-medium text-stone-600 hover:bg-stone-50"
+              className="min-h-11 rounded-xl border border-stone-200 px-4 text-sm font-medium text-stone-600 hover:bg-stone-50"
             >
               Выйти
             </button>
@@ -75,7 +79,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       </div>
 
       {store.status === "draft" && (
-        <div role="status" className="mb-8 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
+        <div role="status" className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
           <p className="font-semibold">Магазин на проверке</p>
           <p className="mt-1">
             Покупатели увидят магазин и его товары после одобрения командой ShopTour — обычно в течение дня. Пока
@@ -84,13 +88,48 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         </div>
       )}
       {store.status === "hidden" && (
-        <div role="status" className="mb-8 rounded-2xl border border-stone-200 bg-stone-100 px-5 py-4 text-sm text-stone-700">
+        <div role="status" className="rounded-2xl border border-stone-200 bg-stone-100 px-5 py-4 text-sm text-stone-700">
           <p className="font-semibold text-stone-900">Магазин временно скрыт</p>
           <p className="mt-1">Покупатели его сейчас не видят. Чтобы вернуть магазин на сайт, свяжитесь с командой ShopTour.</p>
         </div>
       )}
 
-      <section aria-labelledby="stats-title" className="mb-10 flex flex-col gap-4">
+      <StorefrontCard slug={store.slug} published={store.status === "published"} />
+
+      <section aria-labelledby="products-title" className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 id="products-title" className="text-xl font-semibold tracking-tight text-stone-900">
+            Товары
+          </h2>
+          <p className="text-sm text-stone-500">Продали — нажмите «−» у размера. Закончилось всё — «Снять с продажи».</p>
+        </div>
+
+        {errorMessage && <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{errorMessage}</p>}
+
+        {managed.length > 0 && withPhoto < 5 && (
+          <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-900">
+            Добавьте хотя бы 5 товаров с фото — так витрина выглядит живой и её чаще открывают. Сейчас с фото:{" "}
+            {withPhoto}.
+          </p>
+        )}
+
+        {managed.length === 0 ? (
+          <div className="rounded-3xl border border-dashed border-stone-300 bg-white px-6 py-12 text-center">
+            <p className="font-medium text-stone-800">Товаров пока нет</p>
+            <p className="mt-2 text-sm text-stone-500">Сфотографируйте вещь, укажите цену и размеры — это займёт минуту.</p>
+            <Link
+              href="/dashboard/products/new"
+              className="mt-6 inline-flex min-h-11 items-center rounded-xl bg-rose-600 px-6 text-sm font-semibold text-white"
+            >
+              Добавить первый товар
+            </Link>
+          </div>
+        ) : (
+          <ProductsManager products={managed} />
+        )}
+      </section>
+
+      <section aria-labelledby="stats-title" className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 id="stats-title" className="text-xl font-semibold tracking-tight text-stone-900">
@@ -119,89 +158,13 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         />
       </section>
 
-      <h2 className="mb-4 text-xl font-semibold tracking-tight text-stone-900">Товары</h2>
-
-      {errorMessage && (
-        <p className="mb-6 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
-          {errorMessage}
-        </p>
-      )}
-
-      {products.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-stone-300 bg-white px-6 py-16 text-center">
-          <p className="font-medium text-stone-800">Товаров пока нет</p>
-          <p className="mt-2 text-sm text-stone-500">
-            Добавьте первый товар в каталог.
-          </p>
-          <Link
-            href="/dashboard/products/new"
-            className="mt-6 inline-block rounded-xl bg-rose-600 px-6 py-3 text-sm font-semibold text-white"
-          >
-            Добавить товар
-          </Link>
-        </div>
-      ) : (
-        <div className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-stone-100 bg-stone-50 text-stone-500">
-              <tr>
-                <th className="px-4 py-3 font-medium sm:px-6">Товар</th>
-                <th className="hidden px-4 py-3 font-medium sm:table-cell">
-                  Категория
-                </th>
-                <th className="px-4 py-3 font-medium sm:px-6">Цена</th>
-                <th className="px-4 py-3 font-medium sm:px-6">Статус</th>
-                <th className="px-4 py-3 font-medium sm:px-6" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-stone-100">
-              {products.map((product) => (
-                <tr key={product.id} className="hover:bg-stone-50/50">
-                  <td className="px-4 py-4 font-medium text-stone-900 sm:px-6">
-                    {product.name}
-                  </td>
-                  <td className="hidden px-4 py-4 text-stone-500 sm:table-cell">
-                    {categoryMap[product.category_id] ?? "—"}
-                  </td>
-                  <td className="px-4 py-4 sm:px-6">
-                    {formatPrice(product.price)}
-                  </td>
-                  <td className="px-4 py-4 sm:px-6">
-                    <span
-                      className={
-                        product.in_stock
-                          ? "text-emerald-600"
-                          : "text-stone-500"
-                      }
-                    >
-                      {product.in_stock ? "В наличии" : "Нет"}
-                    </span>
-                    {product.is_hidden && (
-                      <span className="mt-1 block text-xs text-amber-700">
-                        Скрыт администрацией ShopTour
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-4 sm:px-6">
-                    <div className="flex flex-wrap gap-3">
-                      <Link
-                        href={`/dashboard/products/${product.id}/edit`}
-                        className="font-medium text-rose-600 hover:text-rose-700"
-                      >
-                        Изменить
-                      </Link>
-                      <DeleteProductButton
-                        productId={product.id}
-                        productName={product.name}
-                      />
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      {/* На телефоне кнопка добавления всегда под рукой */}
+      <Link
+        href="/dashboard/products/new"
+        className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] left-4 right-4 z-40 flex min-h-12 items-center justify-center rounded-2xl bg-stone-900 text-sm font-semibold text-white shadow-lg shadow-stone-900/20 sm:hidden"
+      >
+        + Добавить товар
+      </Link>
     </main>
   );
 }
