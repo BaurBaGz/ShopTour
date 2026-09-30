@@ -46,6 +46,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         ]}
         footer={
           <>
+            <Link
+              href="/auth/forgot"
+              className="mb-4 inline-flex min-h-11 items-center font-medium text-stone-600 hover:text-rose-600"
+            >
+              Забыли пароль?
+            </Link>
+            <br />
             <span className="text-stone-500">Нет аккаунта? </span>
             <Link
               href="/auth/register"

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
@@ -105,4 +106,40 @@ export async function logoutAction() {
   await supabase.auth.signOut();
   revalidatePath("/", "layout");
   redirect("/");
+}
+
+/** Адрес сайта, с которого пришёл запрос (www.shoptour.kz, превью Vercel, localhost) */
+async function requestOrigin() {
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  const proto = h.get("x-forwarded-proto") ?? (host?.startsWith("localhost") ? "http" : "https");
+  return host ? `${proto}://${host}` : "https://www.shoptour.kz";
+}
+
+export async function forgotPasswordAction(
+  _prev: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { error: "Введите email, с которым входите в ShopTour" };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${await requestOrigin()}/auth/confirm`,
+  });
+
+  if (error) {
+    if (error.status === 429 || /seconds|rate limit/i.test(error.message)) {
+      return { error: "Письмо уже отправлено недавно. Подождите минуту и попробуйте снова." };
+    }
+    console.error("[auth] resetPasswordForEmail:", error.message);
+    return { error: "Не удалось отправить письмо. Попробуйте позже." };
+  }
+
+  // Одинаковый ответ для любых адресов — чтобы по форме нельзя было узнать, чей email зарегистрирован
+  return {
+    success: `Если аккаунт с адресом ${email} существует, мы отправили на него письмо со ссылкой для нового пароля. Проверьте и папку «Спам».`,
+  };
 }

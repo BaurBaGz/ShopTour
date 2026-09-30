@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAvailableSizes } from "@/lib/utils/product";
 
 export type AdminOverview = {
-  stores: { total: number; newThisWeek: number; withoutLocation: number; withoutOwner: number };
+  stores: { total: number; newThisWeek: number; withoutLocation: number; withoutOwner: number; drafts: number };
   products: {
     total: number;
     newThisWeek: number;
@@ -20,7 +20,7 @@ const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 export async function getAdminOverview(): Promise<AdminOverview> {
   const supabase = await createClient();
   const [storesResult, productsResult, categoriesResult, staffResult] = await Promise.all([
-    supabase.from("stores").select("id, owner_id, latitude, longitude, created_at"),
+    supabase.from("stores").select("id, owner_id, status, latitude, longitude, created_at"),
     supabase.from("products").select("id, images, sizes, size_stock, in_stock, price, old_price, created_at"),
     supabase.from("categories").select("id", { count: "exact", head: true }),
     supabase.from("staff").select("user_id", { count: "exact", head: true }),
@@ -37,6 +37,7 @@ export async function getAdminOverview(): Promise<AdminOverview> {
       newThisWeek: stores.filter((s) => isNew(s.created_at)).length,
       withoutLocation: stores.filter((s) => s.latitude === null || s.longitude === null).length,
       withoutOwner: stores.filter((s) => !s.owner_id).length,
+      drafts: stores.filter((s) => s.status === "draft").length,
     },
     products: {
       total: products.length,

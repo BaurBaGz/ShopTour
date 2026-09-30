@@ -90,6 +90,22 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         </div>
       </div>
 
+      {store.status === "draft" && (
+        <div role="status" className="mb-8 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
+          <p className="font-semibold">Магазин на проверке</p>
+          <p className="mt-1">
+            Покупатели увидят магазин и его товары после одобрения командой ShopTour — обычно в течение дня. Пока
+            можно добавить товары и фото, чтобы к публикации всё было готово.
+          </p>
+        </div>
+      )}
+      {store.status === "hidden" && (
+        <div role="status" className="mb-8 rounded-2xl border border-stone-200 bg-stone-100 px-5 py-4 text-sm text-stone-700">
+          <p className="font-semibold text-stone-900">Магазин временно скрыт</p>
+          <p className="mt-1">Покупатели его сейчас не видят. Чтобы вернуть магазин на сайт, свяжитесь с командой ShopTour.</p>
+        </div>
+      )}
+
       <section aria-labelledby="stats-title" className="mb-10 flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>

@@ -3,20 +3,34 @@
 import { useActionState } from "react";
 import {
   changePasswordAction,
+  resetPasswordAction,
   type PasswordState,
 } from "@/lib/auth/password-actions";
 
 const field =
   "min-h-11 w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-rose-300 focus:ring-4 focus:ring-rose-500/15";
 
-export function ChangePasswordForm({ forced = false }: { forced?: boolean }) {
-  const [state, action, pending] = useActionState<PasswordState, FormData>(changePasswordAction, {});
+type ChangePasswordFormProps = {
+  /** Вход по временному паролю — сначала нужно задать свой */
+  forced?: boolean;
+  /** Новый пароль по ссылке из письма «Забыли пароль?» */
+  reset?: boolean;
+};
+
+export function ChangePasswordForm({ forced = false, reset = false }: ChangePasswordFormProps) {
+  const [state, action, pending] = useActionState<PasswordState, FormData>(
+    reset ? resetPasswordAction : changePasswordAction,
+    {},
+  );
 
   return (
     <form action={action} className="rounded-2xl border border-stone-200 bg-white p-6">
       <h2 className="text-lg font-semibold text-stone-900">
-        {forced ? "Придумайте свой пароль" : "Сменить пароль"}
+        {forced || reset ? "Придумайте новый пароль" : "Сменить пароль"}
       </h2>
+      {reset && (
+        <p className="mt-1 text-sm text-stone-500">Не короче 8 символов. После сохранения вы сразу войдёте.</p>
+      )}
       {forced && (
         <p className="mt-1 text-sm text-stone-500">
           Вы вошли по временному паролю. Задайте постоянный, чтобы продолжить.

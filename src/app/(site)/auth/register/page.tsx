@@ -18,7 +18,7 @@ export default async function RegisterPage() {
       <div className="mx-auto max-w-md">
         <AuthForm
           title="Регистрация магазина"
-          subtitle="Создайте аккаунт и добавьте свой магазин в ShopTour"
+          subtitle="Создайте аккаунт и добавьте свой магазин в ShopTour. После проверки командой ShopTour он появится в каталоге и на карте."
           submitLabel="Создать магазин"
           action={registerAction}
           fields={[

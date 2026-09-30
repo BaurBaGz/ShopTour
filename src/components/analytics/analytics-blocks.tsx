@@ -31,7 +31,9 @@ const METRIC_LABELS: Record<Metric, string> = {
 
 /** Столбики по дням; подробности дня — при наведении или нажатии */
 export function DailyChart({ daily, metric, title }: { daily: DailyPoint[]; metric: Metric; title: string }) {
-  const max = Math.max(1, ...daily.map((p) => p[metric]));
+  const peak = Math.max(0, ...daily.map((p) => p[metric]));
+  // Масштаб столбиков; на пустом графике делить на 0 нельзя
+  const max = Math.max(1, peak);
   const middle = daily[Math.floor(daily.length / 2)];
 
   return (
@@ -39,7 +41,7 @@ export function DailyChart({ daily, metric, title }: { daily: DailyPoint[]; metr
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-lg font-semibold text-stone-900">{title}</h2>
         <p className="text-xs text-stone-500">
-          {METRIC_LABELS[metric]} по дням · максимум {formatNumber(max)}
+          {METRIC_LABELS[metric]} по дням{peak > 0 ? ` · максимум ${formatNumber(peak)}` : " · пока нет данных"}
         </p>
       </div>
 

@@ -25,6 +25,12 @@ export default async function AdminHomePage() {
   // Что требует внимания — показываем только ненулевое
   const attention = [
     {
+      count: stores.drafts,
+      text: `${plural(stores.drafts, "партнёр", "партнёра", "партнёров")} ${plural(stores.drafts, "ждёт", "ждут", "ждут")} проверки`,
+      hint: "Черновики и новые магазины после регистрации — покупатели их не видят, пока вы не опубликуете",
+      href: "/admin/partners?filter=draft",
+    },
+    {
       count: products.withoutPhoto,
       text: `${plural(products.withoutPhoto, "товар", "товара", "товаров")} без фото`,
       hint: "Карточка без фото почти не получает кликов",
