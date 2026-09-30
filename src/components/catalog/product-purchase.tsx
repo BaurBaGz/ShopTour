@@ -22,16 +22,24 @@ type ProductPurchaseProps = {
   };
   /** Номер для WhatsApp (whatsapp или phone магазина) */
   contactPhone: string | null;
+  /** Вошедший покупатель (null — гость: бронь попросит войти) */
+  viewer: { name: string; phone: string } | null;
+  /** Вернулись после входа — открыть бронь сразу; значение — размер или «1» */
+  reserveOnOpen?: string | null;
 };
 
-export function ProductPurchase({ product, contactPhone }: ProductPurchaseProps) {
+export function ProductPurchase({ product, contactPhone, viewer, reserveOnOpen = null }: ProductPurchaseProps) {
   const sizes = product.sizes ?? [];
   const stockOf = (size: string) => getSizeStock(product, size);
   const availableSizes = sizes.filter((size) => stockOf(size) !== 0);
 
-  // Единственный доступный размер выбираем сразу
+  // Размер из ссылки «вернуться к брони»; единственный доступный — выбираем сразу
   const [selectedSize, setSelectedSize] = useState<string | null>(
-    availableSizes.length === 1 ? availableSizes[0] : null,
+    reserveOnOpen && availableSizes.includes(reserveOnOpen)
+      ? reserveOnOpen
+      : availableSizes.length === 1
+        ? availableSizes[0]
+        : null,
   );
 
   const selectedStock = selectedSize ? stockOf(selectedSize) : undefined;
@@ -44,7 +52,7 @@ export function ProductPurchase({ product, contactPhone }: ProductPurchaseProps)
   const whatsappHref = contactPhone ? buildWhatsAppUrl(contactPhone, message) : null;
   const needsSize = sizes.length > 0 && !selectedSize && availableSizes.length > 1;
   const sizesRef = useRef<HTMLDivElement>(null);
-  const [reserving, setReserving] = useState(false);
+  const [reserving, setReserving] = useState(Boolean(reserveOnOpen && viewer));
   const closeReserve = useCallback(() => setReserving(false), []);
   // Бронь: размер нужен, если он есть у товара
   const openReserve = () => (needsSize ? goToSizes() : setReserving(true));
@@ -195,7 +203,7 @@ export function ProductPurchase({ product, contactPhone }: ProductPurchaseProps)
         </div>
       </div>
 
-      {reserving && <ReserveSheet product={product} size={selectedSize} onClose={closeReserve} />}
+      {reserving && !needsSize && <ReserveSheet product={product} size={selectedSize} viewer={viewer} onClose={closeReserve} />}
     </div>
   );
 }

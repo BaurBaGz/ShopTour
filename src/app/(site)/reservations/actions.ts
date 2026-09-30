@@ -4,13 +4,14 @@ import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
 import { normalizePhone, notifyStore } from "@/lib/reservations";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { getSizeStock } from "@/lib/utils/product";
 
 export type ReserveState = { error?: string };
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** Покупатель просит отложить размер. Аккаунт не нужен; от спама — лимиты по телефону. */
+/** Покупатель просит отложить размер. Только для вошедших; от спама — ещё и лимиты по телефону. */
 export async function createReservationAction(_prev: ReserveState, formData: FormData): Promise<ReserveState> {
   const productId = String(formData.get("productId") ?? "");
   const size = String(formData.get("size") ?? "").trim() || null;
@@ -19,6 +20,8 @@ export async function createReservationAction(_prev: ReserveState, formData: For
   const visit = formData.get("visit") === "tomorrow" ? "tomorrow" : "today";
   const comment = String(formData.get("comment") ?? "").trim().slice(0, 300) || null;
 
+  const user = await getSessionUser();
+  if (!user) return { error: "Войдите или создайте аккаунт, чтобы отложить вещь" };
   if (!UUID_RE.test(productId)) return { error: "Товар не найден" };
   if (!name) return { error: "Как к вам обращаться?" };
   if (!phone) return { error: "Введите номер телефона, например +7 701 123 45 67" };
@@ -54,7 +57,6 @@ export async function createReservationAction(_prev: ReserveState, formData: For
     return { error: "Слишком много броней за час. Попробуйте позже или напишите магазину в WhatsApp." };
   }
 
-  const user = await getSessionUser();
   const { data: created, error } = await admin
     .from("reservations")
     .insert({
@@ -67,7 +69,7 @@ export async function createReservationAction(_prev: ReserveState, formData: For
       customer_phone: phone,
       visit,
       comment,
-      user_id: user?.id ?? null,
+      user_id: user.id,
     })
     .select("*")
     .single();
@@ -78,5 +80,12 @@ export async function createReservationAction(_prev: ReserveState, formData: For
 
   // Магазину — в Telegram; если бот не подключён, бронь ждёт в кабинете
   await notifyStore(created);
+
+  // Имя и телефон — в аккаунт: в следующий раз подставятся на любом устройстве
+  const meta = user.user_metadata ?? {};
+  if (meta.contact_phone !== phone || (!meta.name && !meta.full_name)) {
+    const supabase = await createClient();
+    await supabase.auth.updateUser({ data: { contact_phone: phone, ...(meta.name || meta.full_name ? {} : { name }) } });
+  }
   redirect(`/reservations/${created.id}`);
 }

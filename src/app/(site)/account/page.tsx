@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { logoutAction } from "@/app/(site)/auth/actions";
 import { RecentProducts } from "@/components/account/recent-products";
 import { DeleteAccount } from "@/components/account/delete-account";
+import { PendingReserve } from "@/components/account/pending-reserve";
 import { AccountSummary, SavedTours, type SavedTour } from "@/components/account/saved-tours";
 import { ChangePasswordForm } from "@/components/admin/change-password-form";
 import { getSessionUser, getStoreForOwner } from "@/lib/auth/session";
@@ -98,6 +99,8 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           Email подтверждён — добро пожаловать в ShopTour! Всё, что вы отмечаете, теперь сохраняется в аккаунте.
         </p>
       )}
+
+      <PendingReserve />
 
       <AccountSummary />
 

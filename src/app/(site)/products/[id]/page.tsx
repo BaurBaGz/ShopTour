@@ -10,6 +10,7 @@ import { ProductCard } from "@/components/catalog/product-card";
 import { ProductPurchase } from "@/components/catalog/product-purchase";
 import { ShowOnMapLink } from "@/components/store/show-on-map-link";
 import { StoreAvatar } from "@/components/store/store-avatar";
+import { getSessionUser } from "@/lib/auth/session";
 import { getProductById, getProducts } from "@/lib/data/catalog";
 import { formatPrice } from "@/lib/utils/format";
 import { buildInstagramUrl } from "@/lib/utils/instagram";
@@ -17,6 +18,8 @@ import { getDiscountPercent } from "@/lib/utils/product";
 
 type ProductPageProps = {
   params: Promise<{ id: string }>;
+  /** reserve — вернулись после входа: сразу открыть бронь (значение — размер или «1») */
+  searchParams: Promise<{ reserve?: string }>;
 };
 
 export async function generateMetadata({
@@ -37,7 +40,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function ProductPage({ params }: ProductPageProps) {
+export default async function ProductPage({ params, searchParams }: ProductPageProps) {
   const { id } = await params;
   const product = await getProductById(id);
 
@@ -55,6 +58,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
     : [];
 
   const contactPhone = store?.whatsapp ?? store?.phone ?? null;
+
+  // Бронь — только для вошедших; имя и телефон подставляем из аккаунта
+  const user = await getSessionUser();
+  const meta = user?.user_metadata ?? {};
+  const viewer = user
+    ? {
+        name: [meta.name, meta.full_name].find((v): v is string => typeof v === "string" && v.trim() !== "") ?? "",
+        phone: typeof meta.contact_phone === "string" ? meta.contact_phone : "",
+      }
+    : null;
+  const reserveOnOpen = (await searchParams).reserve?.slice(0, 20) ?? null;
   const discount = getDiscountPercent(product);
 
   return (
@@ -152,7 +166,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
             )}
           </div>
 
-          <ProductPurchase product={product} contactPhone={contactPhone} />
+          <ProductPurchase
+            product={product}
+            contactPhone={contactPhone}
+            viewer={viewer}
+            reserveOnOpen={reserveOnOpen}
+          />
 
           {product.description && (
             <div>
