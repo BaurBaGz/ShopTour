@@ -42,19 +42,27 @@ export async function createReservationAction(_prev: ReserveState, formData: For
 
   const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
   const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  // Лимиты считаем и по телефону, и по аккаунту: иначе один человек шлёт брони с разными номерами
   const { data: recent } = await admin
     .from("reservations")
-    .select("id, product_id, size, status, created_at")
-    .eq("customer_phone", phone)
+    .select("id, product_id, size, status, created_at, customer_phone")
+    .or(`customer_phone.eq.${phone},user_id.eq.${user.id}`)
     .gte("created_at", dayAgo);
 
   // Та же вещь уже ждёт — просто показываем её бронь
   const same = (recent ?? []).find(
-    (r) => r.product_id === productId && (r.size ?? null) === size && (r.status === "new" || r.status === "confirmed"),
+    (r) =>
+      r.customer_phone === phone &&
+      r.product_id === productId &&
+      (r.size ?? null) === size &&
+      (r.status === "new" || r.status === "confirmed"),
   );
   if (same) redirect(`/reservations/${same.id}`);
   if ((recent ?? []).filter((r) => r.created_at >= hourAgo).length >= 3) {
     return { error: "Слишком много броней за час. Попробуйте позже или напишите магазину в WhatsApp." };
+  }
+  if ((recent ?? []).length >= 10) {
+    return { error: "Слишком много броней за сутки. Попробуйте завтра или напишите магазину в WhatsApp." };
   }
 
   const { data: created, error } = await admin

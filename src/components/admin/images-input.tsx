@@ -71,8 +71,8 @@ export function ImagesInput({ name, defaultValue = [], storeId, kind = "products
 
   const addUrl = () => {
     const url = urlDraft.trim();
-    if (!/^https?:\/\//.test(url)) {
-      setError("Ссылка должна начинаться с http:// или https://");
+    if (!/^https:\/\/\S+$/.test(url)) {
+      setError("Ссылка должна начинаться с https://");
       return;
     }
     setImages((current) => (single ? [url] : [...current, url]));

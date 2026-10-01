@@ -2,6 +2,15 @@
 import { parseAudience } from "@/lib/audience";
 import type { ProductAudience } from "@/types/database";
 
+// Пределы — чтобы в базу нельзя было записать мусор огромного размера
+const MAX_NAME_LENGTH = 120;
+const MAX_DESCRIPTION_LENGTH = 2000;
+const MAX_SIZES = 40;
+const MAX_SIZE_LENGTH = 20;
+const MAX_IMAGES = 8;
+const MAX_URL_LENGTH = 500;
+const MAX_PRICE = 99_999_999;
+
 /** Размеры и остатки из редактора: [{ size, stock }] → список размеров и { размер: остаток } */
 export function parseSizeStock(raw: string): {
   sizes: string[];
@@ -20,22 +29,24 @@ export function parseSizeStock(raw: string): {
   for (const row of rows) {
     const size = String(row?.size ?? "").trim();
     if (!size || sizes.includes(size)) continue;
+    if (size.length > MAX_SIZE_LENGTH || sizes.length >= MAX_SIZES) return null;
     sizes.push(size);
     const stockRaw = String(row?.stock ?? "").trim();
     if (stockRaw === "") continue;
     const stock = Number(stockRaw);
-    if (!Number.isInteger(stock) || stock < 0) return null;
+    if (!Number.isInteger(stock) || stock < 0 || stock > 9999) return null;
     sizeStock[size] = stock;
   }
   return { sizes, sizeStock };
 }
 
-/** Ссылки на фото — по одной на строку (так их отдаёт поле загрузки) */
+/** Ссылки на фото — по одной на строку (так их отдаёт поле загрузки); только https */
 export function parseImages(raw: string): string[] {
   return raw
     .split("\n")
     .map((s) => s.trim())
-    .filter((s) => /^https?:\/\//.test(s));
+    .filter((s) => /^https:\/\/\S+$/.test(s) && s.length <= MAX_URL_LENGTH)
+    .slice(0, MAX_IMAGES);
 }
 
 export type ProductFields = {
@@ -64,6 +75,9 @@ export function parseProductForm(formData: FormData): { fields: ProductFields } 
   if (!name || !categoryId || Number.isNaN(price) || price < 0) {
     return { error: "Заполните название, категорию и цену" };
   }
+  if (name.length > MAX_NAME_LENGTH) return { error: `Название — не длиннее ${MAX_NAME_LENGTH} символов` };
+  if (description.length > MAX_DESCRIPTION_LENGTH) return { error: `Описание — не длиннее ${MAX_DESCRIPTION_LENGTH} символов` };
+  if (price > MAX_PRICE || (oldPrice !== null && oldPrice > MAX_PRICE)) return { error: "Слишком большая цена" };
   const audience = parseAudience(formData.get("audience"));
   if (!audience) return { error: "Выберите, для кого товар: женское, мужское, унисекс или детское" };
   if (!sizeStock) return { error: "Остаток по размеру должен быть целым числом от 0" };

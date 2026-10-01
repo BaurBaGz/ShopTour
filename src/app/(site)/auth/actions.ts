@@ -85,21 +85,24 @@ export async function registerAction(
   _prev: AuthActionState,
   formData: FormData,
 ): Promise<AuthActionState> {
-  const email = String(formData.get("email") ?? "").trim();
+  // Те же пределы длины, что и в настройках магазина в кабинете
+  const text = (key: string, max: number, fallback = "") => String(formData.get(key) ?? fallback).trim().slice(0, max);
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
-  const storeName = String(formData.get("storeName") ?? "").trim();
-  const city = String(formData.get("city") ?? "Алматы").trim();
-  const address = String(formData.get("address") ?? "").trim();
-  const phone = String(formData.get("phone") ?? "").trim();
-  const whatsapp = String(formData.get("whatsapp") ?? phone).trim();
-  const description = String(formData.get("description") ?? "").trim();
+  const storeName = text("storeName", 80);
+  const city = text("city", 60, "Алматы");
+  const address = text("address", 200);
+  const phone = text("phone", 30);
+  const whatsapp = text("whatsapp", 30, phone);
+  const description = text("description", 1000);
 
   if (!email || !password || !storeName || !address) {
     return { error: "Заполните обязательные поля" };
   }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "Введите email" };
 
-  if (password.length < 6) {
-    return { error: "Пароль должен быть не короче 6 символов" };
+  if (password.length < 8) {
+    return { error: "Пароль должен быть не короче 8 символов" };
   }
 
   const supabase = await createClient();
