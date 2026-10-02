@@ -3,7 +3,7 @@
 import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireStoreOwner } from "@/lib/auth/session";
+import { requireStoreMember, requireStoreOwner } from "@/lib/auth/session";
 import { isStoreMediaUrl } from "@/lib/media-url";
 import { canMove, refreshTelegramMessage } from "@/lib/reservations";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -22,7 +22,7 @@ export async function saveProductAction(
 ): Promise<ProductActionState> {
   let store;
   try {
-    ({ store } = await requireStoreOwner());
+    ({ store } = await requireStoreMember());
   } catch {
     redirect("/auth/login");
   }
@@ -31,7 +31,8 @@ export async function saveProductAction(
   const parsed = parseProductForm(formData);
   if ("error" in parsed) return { error: parsed.error };
 
-  const payload = { store_id: store.id, ...parsed.fields };
+  // Черновик: товар остаётся в кабинете, но покупатели его не видят
+  const payload = { store_id: store.id, ...parsed.fields, is_draft: formData.get("isDraft") === "on" };
 
   const supabase = await createClient();
 
@@ -70,6 +71,7 @@ export async function saveProductAction(
   redirect(!productId && formData.get("then") === "new" ? "/dashboard/products/new?added=1" : "/dashboard/products");
 }
 
+/** Удаляет только владелец; продавец убирает товар в черновик */
 export async function deleteProductAction(productId: string) {
   let store;
   try {
@@ -92,6 +94,16 @@ export async function deleteProductAction(productId: string) {
 
 type QuickResult = { error?: string };
 
+/** Магазин текущего владельца или продавца */
+async function memberStoreId(): Promise<string | null> {
+  try {
+    return (await requireStoreMember()).store.id;
+  } catch {
+    return null;
+  }
+}
+
+/** Магазин текущего владельца: настройки, которые продавцу не доступны */
 async function ownerStoreId(): Promise<string | null> {
   try {
     return (await requireStoreOwner()).store.id;
@@ -112,7 +124,7 @@ function revalidateStore(storeId: string, slug?: string) {
  * Для кнопок «−»/«+» и «нет/есть» в кабинете на телефоне.
  */
 export async function setSizeStockAction(productId: string, size: string, stock: number | null): Promise<QuickResult> {
-  const storeId = await ownerStoreId();
+  const storeId = await memberStoreId();
   if (!storeId) return { error: "Войдите в аккаунт магазина" };
   if (stock !== null && (!Number.isInteger(stock) || stock < 0 || stock > 9999)) return { error: "Неверный остаток" };
 
@@ -144,7 +156,7 @@ export async function setSizeStockAction(productId: string, size: string, stock:
 
 /** Весь товар «в наличии» / «нет в наличии» одним касанием */
 export async function setInStockAction(productId: string, inStock: boolean): Promise<QuickResult> {
-  const storeId = await ownerStoreId();
+  const storeId = await memberStoreId();
   if (!storeId) return { error: "Войдите в аккаунт магазина" };
   const supabase = await createClient();
   const { error } = await supabase
@@ -186,7 +198,7 @@ export async function updateSlugAction(_prev: SlugState, formData: FormData): Pr
 
 /** Ответ магазина на бронь из кабинета (то же, что кнопки в Telegram) */
 export async function respondReservationAction(id: string, status: ReservationStatus): Promise<QuickResult> {
-  const storeId = await ownerStoreId();
+  const storeId = await memberStoreId();
   if (!storeId) return { error: "Войдите в аккаунт магазина" };
   const supabase = await createClient();
   const { data: current } = await supabase

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { StorefrontCard } from "@/components/dashboard/storefront-card";
-import { requireOwnerPage } from "@/lib/auth/session";
+import { requireCabinetPage } from "@/lib/auth/session";
 import { getStoreAnalytics } from "@/lib/data/analytics";
 import { getStorePromotions } from "@/lib/data/promotions";
 import { createClient } from "@/lib/supabase/server";
@@ -17,10 +17,11 @@ function plural(n: number, one: string, few: string, many: string) {
 
 // Главная кабинета: сводка и то, что требует внимания; сами зоны — на своих страницах в меню
 export default async function DashboardHomePage() {
-  const { store } = await requireOwnerPage();
+  const { store, role } = await requireCabinetPage();
+  const owner = role === "owner";
   const supabase = await createClient();
   const [productsResult, waitingResult, notifyResult, stats, promotions] = await Promise.all([
-    supabase.from("products").select("id, images, sizes, size_stock, in_stock, is_hidden").eq("store_id", store.id),
+    supabase.from("products").select("id, images, sizes, size_stock, in_stock").eq("store_id", store.id),
     supabase.from("reservations").select("id", { count: "exact", head: true }).eq("store_id", store.id).eq("status", "new"),
     supabase.from("store_notifications").select("telegram_chat_id").eq("store_id", store.id).maybeSingle(),
     getStoreAnalytics(store.id, 7),
@@ -54,7 +55,7 @@ export default async function DashboardHomePage() {
       href: "/dashboard/products/new",
     },
     {
-      count: store.latitude === null ? 1 : 0,
+      count: owner && store.latitude === null ? 1 : 0,
       text: "Поставьте точку на карте",
       hint: "Без неё покупатели не найдут вас в «Рядом со мной» и в маршрутах",
       href: "/dashboard/settings",
@@ -72,7 +73,7 @@ export default async function DashboardHomePage() {
       href: "/dashboard/products",
     },
     {
-      count: telegramConfigured() && !notifyResult.data?.telegram_chat_id ? 1 : 0,
+      count: owner && telegramConfigured() && !notifyResult.data?.telegram_chat_id ? 1 : 0,
       text: "Подключите Telegram",
       hint: "Брони будут приходить в чат, отвечать можно одной кнопкой",
       href: "/dashboard/reservations",
@@ -135,7 +136,7 @@ export default async function DashboardHomePage() {
         )}
       </section>
 
-      <StorefrontCard slug={store.slug} published={store.status === "published"} />
+      <StorefrontCard slug={store.slug} published={store.status === "published"} canEdit={owner} />
     </div>
   );
 }

@@ -52,7 +52,7 @@ export function ProductForm({ categories, product, storeId }: ProductFormProps) 
     }
   };
 
-  const hasExtras = Boolean(product?.old_price || product?.description || product?.in_stock === false);
+  const hasExtras = Boolean(product?.old_price || product?.description || product?.in_stock === false || product?.is_draft);
 
   return (
     <form onSubmit={submitKeepingValues(formAction, rememberCategory)} className="space-y-6 rounded-3xl border border-stone-200 bg-white p-5 shadow-sm sm:p-8">
@@ -114,7 +114,7 @@ export function ProductForm({ categories, product, storeId }: ProductFormProps) 
 
       <details open={hasExtras} className="group rounded-2xl border border-stone-200">
         <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between px-4 text-sm font-medium text-stone-700">
-          Скидка, описание, наличие
+          Скидка, описание, наличие, черновик
           <span className="text-stone-400 transition group-open:rotate-180" aria-hidden>
             ▾
           </span>
@@ -173,6 +173,17 @@ export function ProductForm({ categories, product, storeId }: ProductFormProps) 
               className="h-5 w-5 rounded border-stone-300 text-rose-600 focus:ring-rose-500"
             />
             <span className="text-sm text-stone-700">В наличии</span>
+          </label>
+          <label className="flex min-h-11 items-center gap-3">
+            <input
+              type="checkbox"
+              name="isDraft"
+              defaultChecked={product?.is_draft ?? false}
+              className="h-5 w-5 rounded border-stone-300 text-rose-600 focus:ring-rose-500"
+            />
+            <span className="text-sm text-stone-700">
+              Черновик <span className="text-stone-500">— убрать с сайта, не удаляя</span>
+            </span>
           </label>
         </div>
       </details>

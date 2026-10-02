@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     event.results = Number.isFinite(results) ? Math.max(0, Math.min(Math.round(results), 100000)) : null;
   }
 
-  // Сотрудники не попадают в статистику, владелец — в статистику своего магазина.
+  // Сотрудники не попадают в статистику, владелец и продавцы — в статистику своего магазина.
   // Сессию проверяем только при наличии cookie входа: у обычных посетителей её нет.
   const hasSession = request.cookies.getAll().some((c) => c.name.startsWith("sb-") && c.name.includes("auth-token"));
   if (hasSession) {
@@ -95,12 +95,14 @@ export async function POST(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
     if (user) {
-      const [{ data: staff }, { data: ownStores }] = await Promise.all([
+      const [{ data: staff }, { data: ownStores }, { data: memberOf }] = await Promise.all([
         admin.from("staff").select("user_id").eq("user_id", user.id).maybeSingle(),
         admin.from("stores").select("id").eq("owner_id", user.id),
+        admin.from("store_members").select("store_id").eq("user_id", user.id),
       ]);
       if (staff) return done();
       if (event.store_id && ownStores?.some((s) => s.id === event.store_id)) return done();
+      if (event.store_id && memberOf?.some((m) => m.store_id === event.store_id)) return done();
     }
   }
 

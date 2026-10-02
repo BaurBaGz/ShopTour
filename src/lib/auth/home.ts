@@ -1,10 +1,10 @@
-import { getStoreForOwner } from "@/lib/auth/session";
+import { getCabinet } from "@/lib/auth/session";
 import { getStaffMember } from "@/lib/auth/staff";
 
-/** Куда вести после входа: сотрудника — в админку, владельца магазина — в кабинет, покупателя — в аккаунт */
+/** Куда вести после входа: сотрудника — в админку, владельца или продавца магазина — в кабинет, покупателя — в аккаунт */
 export async function accountHome(userId: string): Promise<string> {
   if (await getStaffMember()) return "/admin";
-  if (await getStoreForOwner(userId)) return "/dashboard";
+  if (await getCabinet(userId)) return "/dashboard";
   return "/account";
 }
 

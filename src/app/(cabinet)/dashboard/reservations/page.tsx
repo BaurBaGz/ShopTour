@@ -1,11 +1,11 @@
 import { ReservationsPanel, type DashboardReservation } from "@/components/dashboard/reservations-panel";
-import { requireOwnerPage } from "@/lib/auth/session";
+import { requireCabinetPage } from "@/lib/auth/session";
 import { formatPhone, VISIT_LABELS } from "@/lib/reservations";
 import { createClient } from "@/lib/supabase/server";
 import { telegramConfigured } from "@/lib/telegram";
 
 export default async function DashboardReservationsPage() {
-  const { store } = await requireOwnerPage();
+  const { store, role } = await requireCabinetPage();
   const supabase = await createClient();
   const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
   const [reservationsResult, notifyResult] = await Promise.all([
@@ -26,7 +26,8 @@ export default async function DashboardReservationsPage() {
     .map((r) => ({ ...r, phone_label: formatPhone(r.customer_phone), visit_label: VISIT_LABELS[r.visit] }))
     .sort((a, b) => order[a.status] - order[b.status]);
   const telegram = {
-    configured: telegramConfigured(),
+    // Подключением Telegram управляет владелец
+    configured: role === "owner" && telegramConfigured(),
     connectedAs: notifyResult.data?.telegram_chat_id ? (notifyResult.data.telegram_name ?? "подключено") : null,
     dailySummary: notifyResult.data?.daily_summary ?? true,
   };

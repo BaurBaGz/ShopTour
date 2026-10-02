@@ -1,8 +1,8 @@
 import { ChangePasswordForm } from "@/components/admin/change-password-form";
-import { requireOwnerPage } from "@/lib/auth/session";
+import { CABINET_ROLE_LABELS, requireCabinetPage } from "@/lib/auth/session";
 
 export default async function DashboardAccountPage() {
-  const { user, store } = await requireOwnerPage();
+  const { user, store, role } = await requireCabinetPage();
 
   return (
     <div className="mx-auto flex max-w-md flex-col gap-6">
@@ -16,6 +16,10 @@ export default async function DashboardAccountPage() {
           <div>
             <dt className="text-stone-500">Магазин</dt>
             <dd className="font-medium text-stone-900">{store.name}</dd>
+          </div>
+          <div>
+            <dt className="text-stone-500">Роль</dt>
+            <dd className="font-medium text-stone-900">{CABINET_ROLE_LABELS[role]}</dd>
           </div>
         </dl>
       </section>

@@ -104,6 +104,7 @@ export interface Database {
           size_stock: Json;
           in_stock: boolean;
           is_hidden: boolean;
+          is_draft: boolean;
           audience: ProductAudience;
           created_at: string;
         };
@@ -121,6 +122,7 @@ export interface Database {
           size_stock?: Json;
           in_stock?: boolean;
           is_hidden?: boolean;
+          is_draft?: boolean;
           audience?: ProductAudience;
           created_at?: string;
         };
@@ -138,6 +140,7 @@ export interface Database {
           size_stock?: Json;
           in_stock?: boolean;
           is_hidden?: boolean;
+          is_draft?: boolean;
           audience?: ProductAudience;
           created_at?: string;
         };
@@ -267,6 +270,43 @@ export interface Database {
         Insert: { user_id: string; kind: UserListKind; ids?: string[]; updated_at?: string };
         Update: { user_id?: string; kind?: UserListKind; ids?: string[]; updated_at?: string };
         Relationships: [];
+      };
+      store_members: {
+        Row: {
+          store_id: string;
+          user_id: string;
+          email: string;
+          name: string | null;
+          must_change_password: boolean;
+          invited_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          store_id: string;
+          user_id: string;
+          email: string;
+          name?: string | null;
+          must_change_password?: boolean;
+          invited_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          store_id?: string;
+          user_id?: string;
+          email?: string;
+          name?: string | null;
+          must_change_password?: boolean;
+          invited_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "store_members_store_id_fkey";
+            columns: ["store_id"];
+            referencedRelation: "stores";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       promotions: {
         Row: {

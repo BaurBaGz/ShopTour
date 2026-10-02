@@ -18,6 +18,7 @@ export type ManagedProduct = {
   size_stock: Json;
   in_stock: boolean;
   is_hidden: boolean;
+  is_draft: boolean;
   category: string | null;
 };
 
@@ -151,6 +152,7 @@ export function ProductsManager({ products: initial }: { products: ManagedProduc
                     </Link>
                   </div>
                   {p.is_hidden && <p className="mt-1 text-xs text-amber-700">Скрыт администрацией ShopTour</p>}
+                  {p.is_draft && <p className="mt-1 text-xs font-medium text-stone-500">Черновик — покупатели не видят</p>}
                   {!p.images[0] && <p className="mt-1 text-xs text-amber-700">Добавьте фото — без него товар почти не смотрят</p>}
                 </div>
               </div>

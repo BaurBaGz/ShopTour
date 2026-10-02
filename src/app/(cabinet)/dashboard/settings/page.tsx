@@ -1,10 +1,10 @@
 import { updateOwnLocationAction, updateOwnStoreAction } from "@/app/(cabinet)/dashboard/actions";
 import { LocationPicker } from "@/components/admin/location-picker";
 import { PartnerForm } from "@/components/admin/partner-form";
-import { requireOwnerPage } from "@/lib/auth/session";
+import { requireCabinetPage } from "@/lib/auth/session";
 
 export default async function StoreSettingsPage() {
-  const { store } = await requireOwnerPage();
+  const { store } = await requireCabinetPage({ ownerOnly: true });
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6">

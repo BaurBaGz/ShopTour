@@ -1,11 +1,11 @@
 import { DailyChart, PeriodTabs, StatCards, TopProductsTable } from "@/components/analytics/analytics-blocks";
-import { requireOwnerPage } from "@/lib/auth/session";
+import { requireCabinetPage } from "@/lib/auth/session";
 import { getStoreAnalytics, parsePeriod } from "@/lib/data/analytics";
 
 type PageProps = { searchParams: Promise<{ period?: string }> };
 
 export default async function DashboardAnalyticsPage({ searchParams }: PageProps) {
-  const { store } = await requireOwnerPage();
+  const { store } = await requireCabinetPage();
   const period = parsePeriod((await searchParams).period);
   const stats = await getStoreAnalytics(store.id, period);
 

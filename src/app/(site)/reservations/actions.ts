@@ -29,11 +29,11 @@ export async function createReservationAction(_prev: ReserveState, formData: For
   const admin = createAdminClient();
   const { data: product } = await admin
     .from("products")
-    .select("id, name, price, sizes, size_stock, in_stock, is_hidden, store:stores!products_store_id_fkey ( id, status )")
+    .select("id, name, price, sizes, size_stock, in_stock, is_hidden, is_draft, store:stores!products_store_id_fkey ( id, status )")
     .eq("id", productId)
     .maybeSingle();
   const store = (product?.store ?? null) as { id: string; status: string } | null;
-  if (!product || !store || store.status !== "published" || product.is_hidden) return { error: "Товар недоступен" };
+  if (!product || !store || store.status !== "published" || product.is_hidden || product.is_draft) return { error: "Товар недоступен" };
   if (!product.in_stock) return { error: "Товар закончился" };
   if (product.sizes.length > 0) {
     if (!size || !product.sizes.includes(size)) return { error: "Выберите размер" };

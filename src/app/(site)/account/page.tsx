@@ -7,7 +7,7 @@ import { DeleteAccount } from "@/components/account/delete-account";
 import { PendingReserve } from "@/components/account/pending-reserve";
 import { AccountSummary, SavedTours, type SavedTour } from "@/components/account/saved-tours";
 import { ChangePasswordForm } from "@/components/admin/change-password-form";
-import { getSessionUser, getStoreForOwner } from "@/lib/auth/session";
+import { getCabinet, getSessionUser } from "@/lib/auth/session";
 import { getStaffMember } from "@/lib/auth/staff";
 import { STATUS_LABELS } from "@/lib/reservations";
 import { createClient } from "@/lib/supabase/server";
@@ -28,7 +28,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
   const supabase = await createClient();
   const [staff, store, toursResult, reservationsResult] = await Promise.all([
     getStaffMember(),
-    getStoreForOwner(user.id),
+    getCabinet(user.id),
     supabase.from("saved_tours").select("id, name, store_ids, created_at").order("created_at", { ascending: false }),
     supabase
       .from("reservations")

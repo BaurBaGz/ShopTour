@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { accountHome } from "@/lib/auth/home";
 import { getSessionUser } from "@/lib/auth/session";
 import { getStaffMember } from "@/lib/auth/staff";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export type PasswordState = { error?: string; success?: string };
@@ -35,6 +36,14 @@ async function applyNewPassword(formData: FormData): Promise<string | null> {
       .eq("user_id", staff.user_id);
     if (flagError) return flagError.message;
   }
+
+  // Продавец магазина задал свой пароль вместо временного (свою запись он менять не может — пишет сервер)
+  const { error: memberError } = await createAdminClient()
+    .from("store_members")
+    .update({ must_change_password: false })
+    .eq("user_id", user.id)
+    .eq("must_change_password", true);
+  if (memberError) console.error("[password] store_members:", memberError.message);
 
   revalidatePath("/", "layout");
   return null;

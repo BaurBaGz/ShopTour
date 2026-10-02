@@ -6,7 +6,7 @@ import { showToast } from "@/lib/toast";
 import { submitKeepingValues } from "@/lib/form-submit";
 
 /** Ссылка на витрину магазина для шапки Instagram: скопировать, открыть, сменить адрес */
-export function StorefrontCard({ slug, published }: { slug: string; published: boolean }) {
+export function StorefrontCard({ slug, published, canEdit = true }: { slug: string; published: boolean; canEdit?: boolean }) {
   const [editing, setEditing] = useState(false);
   const [state, action, pending] = useActionState<SlugState, FormData>(async (prev, formData) => {
     const result = await updateSlugAction(prev, formData);
@@ -107,9 +107,11 @@ export function StorefrontCard({ slug, published }: { slug: string; published: b
         </form>
       ) : (
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1">
-          <button type="button" onClick={() => setEditing(true)} className="inline-flex min-h-11 items-center text-sm font-medium text-rose-600 hover:text-rose-700">
-            Изменить адрес
-          </button>
+{canEdit && (
+                      <button type="button" onClick={() => setEditing(true)} className="inline-flex min-h-11 items-center text-sm font-medium text-rose-600 hover:text-rose-700">
+              Изменить адрес
+            </button>
+          )}
           {state.success && (
             <p role="status" className="text-sm text-emerald-700">
               {state.success}

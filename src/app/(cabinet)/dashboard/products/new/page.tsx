@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { ProductForm } from "@/components/dashboard/product-form";
-import { requireOwnerPage } from "@/lib/auth/session";
+import { requireCabinetPage } from "@/lib/auth/session";
 import { getCategories } from "@/lib/data/catalog";
 
 type NewProductPageProps = { searchParams: Promise<{ added?: string }> };
 
 export default async function NewProductPage({ searchParams }: NewProductPageProps) {
   const { added } = await searchParams;
-  const { store } = await requireOwnerPage();
+  const { store } = await requireCabinetPage();
   const categories = await getCategories();
 
   return (

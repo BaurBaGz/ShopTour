@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DeleteProductButton } from "@/components/dashboard/delete-product-button";
 import { ProductForm } from "@/components/dashboard/product-form";
-import { requireOwnerPage } from "@/lib/auth/session";
+import { requireCabinetPage } from "@/lib/auth/session";
 import { isUuid } from "@/lib/catalog-filters";
 import { getCategories } from "@/lib/data/catalog";
 import { createClient } from "@/lib/supabase/server";
@@ -13,7 +13,7 @@ type EditProductPageProps = {
 
 export default async function EditProductPage({ params }: EditProductPageProps) {
   const { id } = await params;
-  const { store } = await requireOwnerPage();
+  const { store, role } = await requireCabinetPage();
   if (!isUuid(id)) notFound();
 
   const supabase = await createClient();
@@ -35,9 +35,12 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
       </Link>
       <h2 className="text-xl font-semibold text-stone-900">{product.name}</h2>
       <ProductForm categories={categories} product={product} storeId={store.id} />
-      <div className="border-t border-stone-200 pt-4">
-        <DeleteProductButton productId={product.id} productName={product.name} />
-      </div>
+      {/* Удаляет только владелец; продавец убирает товар в черновик */}
+      {role === "owner" && (
+        <div className="border-t border-stone-200 pt-4">
+          <DeleteProductButton productId={product.id} productName={product.name} />
+        </div>
+      )}
     </div>
   );
 }

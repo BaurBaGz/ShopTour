@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { FavoritesLink } from "@/components/favorites/favorites-link";
 import { NavLink } from "@/components/layout/nav-link";
-import { getSessionUser, getStoreForOwner } from "@/lib/auth/session";
+import { getCabinet, getSessionUser } from "@/lib/auth/session";
 import { getStaffMember } from "@/lib/auth/staff";
 
 const nav = [
@@ -13,7 +13,7 @@ const nav = [
 export async function SiteHeader() {
   const user = await getSessionUser();
   const [store, staff] = user
-    ? await Promise.all([getStoreForOwner(user.id), getStaffMember()])
+    ? await Promise.all([getCabinet(user.id), getStaffMember()])
     : [null, null];
 
   return (

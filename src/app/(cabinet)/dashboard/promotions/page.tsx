@@ -1,9 +1,9 @@
 import { PromotionsPanel } from "@/components/promotions/promotions-panel";
-import { requireOwnerPage } from "@/lib/auth/session";
+import { requireCabinetPage } from "@/lib/auth/session";
 import { getStorePromotions } from "@/lib/data/promotions";
 
 export default async function DashboardPromotionsPage() {
-  const { store } = await requireOwnerPage();
+  const { store } = await requireCabinetPage();
   const promotions = await getStorePromotions(store.id);
 
   return (

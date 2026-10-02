@@ -84,7 +84,7 @@ export async function getProductsWithError(options?: {
   limit?: number;
   /** По умолчанию только in_stock; для страницы магазина и кабинета — true */
   includeOutOfStock?: boolean;
-  /** Скрытые в админке товары — только для кабинета владельца */
+  /** Скрытые в админке товары и черновики — только для кабинета магазина */
   includeHidden?: boolean;
   /** «Рядом со мной»: считаем расстояние до магазина и сортируем по нему (если не выбрана сортировка по цене) */
   near?: Point | null;
@@ -121,7 +121,7 @@ export async function getProductsWithError(options?: {
   }
 
   if (!options?.includeHidden) {
-    query = query.eq("is_hidden", false);
+    query = query.eq("is_hidden", false).eq("is_draft", false);
   }
 
   if (!options?.includeOutOfStock) {
@@ -399,6 +399,7 @@ export async function getCategoryIdsForAudiences(audiences: ProductAudience[]): 
     .select("category_id, stores!products_store_id_fkey!inner ( status )")
     .eq("stores.status", "published")
     .eq("is_hidden", false)
+    .eq("is_draft", false)
     .eq("in_stock", true)
     .in("audience", audiences);
   logSupabaseError("getCategoryIdsForAudiences", error);

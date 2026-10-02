@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { ProductsManager, type ManagedProduct } from "@/components/dashboard/products-manager";
-import { requireOwnerPage } from "@/lib/auth/session";
+import { requireCabinetPage } from "@/lib/auth/session";
 import { getCategories, getProductsWithError } from "@/lib/data/catalog";
 
 export default async function DashboardProductsPage() {
-  const { store } = await requireOwnerPage();
+  const { store } = await requireCabinetPage();
   const [{ data: products, errorMessage }, categories] = await Promise.all([
     getProductsWithError({ storeId: store.id, includeOutOfStock: true, includeHidden: true }),
     getCategories(),
@@ -20,6 +20,7 @@ export default async function DashboardProductsPage() {
     size_stock: p.size_stock,
     in_stock: p.in_stock,
     is_hidden: p.is_hidden,
+    is_draft: p.is_draft ?? false,
     category: categoryMap[p.category_id] ?? null,
   }));
   const withPhoto = managed.filter((p) => p.images.length > 0).length;
