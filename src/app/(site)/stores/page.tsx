@@ -1,3 +1,4 @@
+import { pageMeta } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ActiveFilterChips } from "@/components/catalog/active-filter-chips";
@@ -19,10 +20,11 @@ import {
 } from "@/lib/data/catalog";
 import { formatProductCount } from "@/lib/utils/format";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title: "Магазины на карте — ShopTour",
-  description: "Локальные магазины одежды на карте города",
-};
+  description: "Магазины одежды на карте города: что есть в наличии рядом с вами и маршрут по нескольким магазинам.",
+  path: "/stores",
+});
 
 type StoresMapPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

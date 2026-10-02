@@ -1,3 +1,4 @@
+import { pageMeta } from "@/lib/seo";
 import { StorePromotions } from "@/components/promotions/promotion-list";
 import { getStorePromotions } from "@/lib/data/promotions";
 import type { Metadata } from "next";
@@ -35,12 +36,14 @@ export async function generateMetadata({
     return { title: "Товар не найден — ShopTour" };
   }
 
-  return {
+  const where = product.stores ? ` в магазине ${product.stores.name}, ${product.stores.city}` : "";
+  return pageMeta({
     title: `${product.name} — ShopTour`,
-    description:
-      product.description ??
-      `${product.name}${product.stores ? ` в магазине ${product.stores.name}` : ""}`,
-  };
+    // Цена и магазин — первым делом: это видно в карточке ссылки
+    description: `${formatPrice(product.price)}${where}. ${product.description?.slice(0, 160) ?? "Размеры в наличии — на ShopTour."}`,
+    path: `/products/${product.id}`,
+    image: `/og/product/${product.id}`,
+  });
 }
 
 export default async function ProductPage({ params, searchParams }: ProductPageProps) {

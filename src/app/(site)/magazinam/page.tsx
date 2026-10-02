@@ -1,11 +1,13 @@
+import { pageMeta } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title: "ShopTour для магазинов — покупатели рядом с вами",
   description:
     "Бесплатная витрина для магазина одежды: покупатели рядом видят ваши вещи, откладывают размер и приходят примерить. Брони — в Telegram.",
-};
+  path: "/magazinam",
+});
 
 const BENEFITS = [
   {

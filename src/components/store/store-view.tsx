@@ -7,14 +7,20 @@ import { BackLink } from "@/components/ui/back-link";
 import { getProducts } from "@/lib/data/catalog";
 import { getStorePromotions } from "@/lib/data/promotions";
 import type { Store } from "@/lib/data/types";
+import { pageMeta } from "@/lib/seo";
 import { getAvailableSizes, getDiscountPercent } from "@/lib/utils/product";
 
 export function storeMetadata(store: Store | null): Metadata {
   if (!store) return { title: "Магазин не найден — ShopTour" };
-  return {
+  // Постоянный адрес витрины — короткий /s/<slug>: его магазин ставит в Instagram
+  return pageMeta({
     title: `${store.name} — ShopTour`,
-    description: store.description ?? `Магазин ${store.name}, ${store.city}`,
-  };
+    description:
+      store.description?.slice(0, 200) ??
+      `Магазин ${store.name}, ${store.city}: вещи и размеры в наличии, адрес на карте, WhatsApp.`,
+    path: `/s/${store.slug}`,
+    image: `/og/store/${store.id}`,
+  });
 }
 
 /** Витрина магазина: /stores/<id> и короткий адрес /s/<slug> (для шапки Instagram) */

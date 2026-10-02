@@ -12,13 +12,15 @@ import { buildFilterChips, buildFilterHref, parsePrice, parseSort, readFilterVal
 import { getCatalogFilterOptions, getCategoriesWithError, getProductsWithError } from "@/lib/data/catalog";
 import { getActivePromotions } from "@/lib/data/promotions";
 import { parseNear, parseWalk } from "@/lib/near";
+import { pageMeta } from "@/lib/seo";
 import { formatProductCount } from "@/lib/utils/format";
 import { getDiscountDaysLeft, getDiscountPercent } from "@/lib/utils/product";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title: "Скидки — ShopTour",
-  description: "Все товары со скидкой в магазинах одежды вашего города",
-};
+  description: "Акции магазинов и вещи со скидкой в вашем городе — со сроками, до какого дня действует цена.",
+  path: "/sale",
+});
 
 type SalePageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

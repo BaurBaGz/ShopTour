@@ -26,12 +26,14 @@ import {
   searchStores,
 } from "@/lib/data/catalog";
 import { parseNear, parseWalk } from "@/lib/near";
+import { pageMeta } from "@/lib/seo";
 import { formatProductCount } from "@/lib/utils/format";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title: "Каталог — ShopTour",
-  description: "Все товары от локальных магазинов одежды",
-};
+  description: "Одежда из магазинов города: размеры в наличии, цены и адреса. Найдите вещь и отложите её в магазине рядом.",
+  path: "/catalog",
+});
 
 type CatalogPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

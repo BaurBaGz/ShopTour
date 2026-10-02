@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist_Mono, Onest } from "next/font/google";
 import { NavigationTracker } from "@/components/layout/navigation-tracker";
 import { Toaster } from "@/components/ui/toaster";
+import { pageMeta, SITE_URL } from "@/lib/seo";
 import "./globals.css";
 
 // Основной шрифт бренда Shop Tour
@@ -18,9 +19,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ShopTour — маркетплейс одежды вашего города",
-  description:
-    "Каталог товаров от локальных магазинов. Находите магазины рядом и покупайте у соседей.",
+  // Основа для относительных адресов в превью ссылок (og:image, canonical)
+  metadataBase: new URL(SITE_URL),
+  ...pageMeta({
+    title: "ShopTour — одежда в магазинах вашего города",
+    description: "Каталог одежды из магазинов рядом: размеры в наличии, скидки, адреса на карте. Отложите вещь и придите примерить.",
+  }),
   // Фавикон — монограмма ST, иконка для телефона — квадратный знак бренда
   icons: {
     icon: [{ url: "/logos/shoptour-favicon.svg", type: "image/svg+xml" }],
