@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
-import { getT } from "@/lib/i18n/server";
+import { PRIVACY } from "@/lib/i18n/content/privacy";
+import { getLocale, getT } from "@/lib/i18n/server";
 
 export async function SiteFooter() {
-  const t = await getT();
+  const [t, locale] = await Promise.all([getT(), getLocale()]);
   const link = "inline-flex min-h-11 items-center hover:text-stone-900";
   return (
     <footer className="border-t border-stone-200 bg-stone-50">
@@ -26,6 +27,9 @@ export async function SiteFooter() {
           </Link>
           <Link href="/magazinam" className={link}>
             {t.nav.forStores}
+          </Link>
+          <Link href="/privacy" className={link}>
+            {PRIVACY[locale].footerLink}
           </Link>
         </div>
       </div>

@@ -23,6 +23,7 @@ export default async function RegisterPage() {
           subtitle={t.auth.registerSubtitle}
           submitLabel={t.auth.createStore}
           action={registerAction}
+          consent
           fields={[
             {
               name: "storeName",

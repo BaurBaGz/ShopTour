@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { createReservationAction, type ReserveState } from "@/app/(site)/reservations/actions";
 import { useT } from "@/lib/i18n/client";
+import { PrivacyConsent } from "@/components/layout/privacy-consent";
 import { cn } from "@/lib/utils/cn";
 import { formatPrice } from "@/lib/utils/format";
 import { submitKeepingValues } from "@/lib/form-submit";
@@ -212,6 +213,7 @@ export function ReserveSheet({ product, size, viewer, onClose }: ReserveSheetPro
         <p className="mt-3 text-center text-xs text-stone-500">
           {t.reserve.freeNote}
         </p>
+        <PrivacyConsent className="mt-1 text-center" />
       </form>
     </div>
   );

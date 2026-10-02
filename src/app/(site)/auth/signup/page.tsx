@@ -29,6 +29,7 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
         subtitle={t.auth.signupSubtitle}
         submitLabel={t.auth.createAccount}
         action={signupAction}
+        consent
         hiddenFields={next ? { next } : undefined}
         fields={[
           { name: "name", label: t.auth.nameOptional, placeholder: t.auth.namePlaceholder },

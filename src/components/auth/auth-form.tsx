@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import type { AuthActionState } from "@/app/(site)/auth/actions";
+import { PrivacyConsent } from "@/components/layout/privacy-consent";
 import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils/cn";
 import { submitKeepingValues } from "@/lib/form-submit";
@@ -26,6 +27,8 @@ type AuthFormProps = {
   footer?: React.ReactNode;
   /** Скрытые поля формы (например, next — куда вернуться после входа) */
   hiddenFields?: Record<string, string>;
+  /** Форма создаёт аккаунт — под кнопкой строка согласия с политикой конфиденциальности */
+  consent?: boolean;
 };
 
 const initialState: AuthActionState = {};
@@ -38,6 +41,7 @@ export function AuthForm({
   action,
   footer,
   hiddenFields,
+  consent = false,
 }: AuthFormProps) {
   const [state, formAction, pending] = useActionState(action, initialState);
   const t = useT();
@@ -95,6 +99,7 @@ export function AuthForm({
           >
             {pending ? t.auth.wait : submitLabel}
           </button>
+          {consent && <PrivacyConsent className="text-center" />}
         </form>
 
         {footer && <div className="mt-6 text-center text-sm">{footer}</div>}
