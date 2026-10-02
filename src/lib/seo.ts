@@ -2,6 +2,11 @@ import type { Metadata } from "next";
 
 export const SITE_URL = "https://www.shoptour.kz";
 export const SITE_NAME = "ShopTour";
+/**
+ * Пускать ли поисковики. Пока в каталоге демо-магазины — нет: иначе в поиск попадут магазины,
+ * которых не существует. Поставить true после чистки демо-каталога, перед запуском.
+ */
+export const SEARCH_INDEXING_OPEN = false;
 /** Картинка по умолчанию для превью ссылок в мессенджерах и соцсетях (1200×630) */
 export const DEFAULT_OG_IMAGE = "/og-default.jpg";
 
