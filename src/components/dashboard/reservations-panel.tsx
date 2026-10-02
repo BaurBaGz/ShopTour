@@ -7,7 +7,7 @@ import {
   respondReservationAction,
   setDailySummaryAction,
   unlinkTelegramAction,
-} from "@/app/(site)/dashboard/actions";
+} from "@/app/(cabinet)/dashboard/actions";
 import { showToast } from "@/lib/toast";
 import { cn } from "@/lib/utils/cn";
 import { formatPrice } from "@/lib/utils/format";

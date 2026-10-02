@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
-import { setInStockAction, setSizeStockAction } from "@/app/(site)/dashboard/actions";
+import { setInStockAction, setSizeStockAction } from "@/app/(cabinet)/dashboard/actions";
 import { formatPrice } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
 import { showToast } from "@/lib/toast";

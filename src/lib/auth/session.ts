@@ -1,4 +1,5 @@
 import { isAuthSessionMissingError } from "@supabase/supabase-js";
+import { redirect } from "next/navigation";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { Store } from "@/lib/data/types";
@@ -19,7 +20,8 @@ export const getSessionUser = cache(async () => {
   return error ? null : user;
 });
 
-export async function getStoreForOwner(userId: string): Promise<Store | null> {
+// Кэш на один запрос: каркас кабинета и страница спрашивают магазин вместе
+export const getStoreForOwner = cache(async (userId: string): Promise<Store | null> => {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("stores")
@@ -33,6 +35,18 @@ export async function getStoreForOwner(userId: string): Promise<Store | null> {
   }
 
   return data;
+});
+
+/** Для страниц кабинета: без входа — на страницу входа, покупателя без магазина — в его аккаунт */
+export async function requireOwnerPage(): Promise<{
+  user: NonNullable<Awaited<ReturnType<typeof getSessionUser>>>;
+  store: Store;
+}> {
+  const user = await getSessionUser();
+  if (!user) redirect("/auth/login?next=/dashboard");
+  const store = await getStoreForOwner(user.id);
+  if (!store) redirect("/account");
+  return { user, store };
 }
 
 export async function requireStoreOwner(): Promise<{

@@ -12,7 +12,7 @@ const MAX_ACTIVE = 3;
 
 function revalidatePromotions(storeId: string, slug?: string | null) {
   revalidatePath("/sale");
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   revalidatePath(`/stores/${storeId}`);
   revalidatePath(`/admin/partners/${storeId}`);
   if (slug) revalidatePath(`/s/${slug}`);

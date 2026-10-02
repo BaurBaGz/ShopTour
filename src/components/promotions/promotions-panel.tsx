@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState, useTransition } from "react";
-import { addPromotionAction, deletePromotionAction, type PromotionState } from "@/app/(site)/dashboard/promotions-actions";
+import { addPromotionAction, deletePromotionAction, type PromotionState } from "@/app/(cabinet)/dashboard/promotions-actions";
 import { promotionDeadline } from "@/components/promotions/promotion-list";
 import type { Promotion } from "@/lib/data/promotions";
 import { submitKeepingValues } from "@/lib/form-submit";

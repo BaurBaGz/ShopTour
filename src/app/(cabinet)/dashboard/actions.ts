@@ -63,11 +63,11 @@ export async function saveProductAction(
     if (error) return { error: error.message };
   }
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   revalidatePath("/catalog");
   revalidatePath(`/stores/${store.id}`);
   // «Сохранить и добавить ещё» — сразу пустая форма для следующей вещи
-  redirect(!productId && formData.get("then") === "new" ? "/dashboard/products/new?added=1" : "/dashboard");
+  redirect(!productId && formData.get("then") === "new" ? "/dashboard/products/new?added=1" : "/dashboard/products");
 }
 
 export async function deleteProductAction(productId: string) {
@@ -85,7 +85,7 @@ export async function deleteProductAction(productId: string) {
     .eq("id", productId)
     .eq("store_id", store.id);
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   revalidatePath("/catalog");
   revalidatePath(`/stores/${store.id}`);
 }
@@ -101,7 +101,7 @@ async function ownerStoreId(): Promise<string | null> {
 }
 
 function revalidateStore(storeId: string, slug?: string) {
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   revalidatePath("/catalog");
   revalidatePath(`/stores/${storeId}`);
   if (slug) revalidatePath(`/s/${slug}`);
@@ -207,7 +207,7 @@ export async function respondReservationAction(id: string, status: ReservationSt
     .single();
   if (error || !updated) return { error: error?.message ?? "Не сохранилось" };
   await refreshTelegramMessage(updated);
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   revalidatePath(`/reservations/${id}`);
   return {};
 }
@@ -233,7 +233,7 @@ export async function unlinkTelegramAction(): Promise<QuickResult> {
     .update({ telegram_chat_id: null, telegram_name: null, linked_at: null, link_code: null, link_code_expires_at: null })
     .eq("store_id", storeId);
   if (error) return { error: error.message };
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   return {};
 }
 

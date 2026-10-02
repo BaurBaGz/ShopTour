@@ -106,7 +106,7 @@ export async function notifyStore(r: Reservation) {
 
   const sent = await sendMessage(
     link.telegram_chat_id,
-    `${reservationText(r)}\n\n<a href="${siteUrl()}/dashboard">Все брони в кабинете</a>`,
+    `${reservationText(r)}\n\n<a href="${siteUrl()}/dashboard/reservations">Все брони в кабинете</a>`,
     reservationKeyboard(r),
   );
   if (!sent) return false;
@@ -127,7 +127,7 @@ export async function refreshTelegramMessage(r: Reservation) {
   await editMessage(
     link.telegram_chat_id,
     r.telegram_message_id,
-    `${reservationText(r)}\n\n<a href="${siteUrl()}/dashboard">Все брони в кабинете</a>`,
+    `${reservationText(r)}\n\n<a href="${siteUrl()}/dashboard/reservations">Все брони в кабинете</a>`,
     reservationKeyboard(r),
   );
 }

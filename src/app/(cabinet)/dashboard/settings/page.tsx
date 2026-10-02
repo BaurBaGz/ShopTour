@@ -1,0 +1,36 @@
+import { updateOwnLocationAction, updateOwnStoreAction } from "@/app/(cabinet)/dashboard/actions";
+import { LocationPicker } from "@/components/admin/location-picker";
+import { PartnerForm } from "@/components/admin/partner-form";
+import { requireOwnerPage } from "@/lib/auth/session";
+
+export default async function StoreSettingsPage() {
+  const { store } = await requireOwnerPage();
+
+  return (
+    <div className="mx-auto flex max-w-6xl flex-col gap-6">
+      <p className="text-sm text-stone-500">
+        Это видят покупатели на витрине, в каталоге и на карте. Телефон и WhatsApp нужны, чтобы с вами могли связаться.
+      </p>
+
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="min-w-0">
+          <PartnerForm action={updateOwnStoreAction} store={store} storeId={store.id} submitLabel="Сохранить" />
+        </div>
+        <div className="flex min-w-0 flex-col gap-4">
+          {store.latitude === null && (
+            <p className="rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              Поставьте точку на карте — без неё магазина нет в «Рядом со мной» и в маршрутах покупателей.
+            </p>
+          )}
+          <LocationPicker
+            storeId={store.id}
+            latitude={store.latitude}
+            longitude={store.longitude}
+            address={`${store.city}, ${store.address}`}
+            onSave={updateOwnLocationAction}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}

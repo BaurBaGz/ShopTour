@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { updateSlugAction, type SlugState } from "@/app/(site)/dashboard/actions";
+import { updateSlugAction, type SlugState } from "@/app/(cabinet)/dashboard/actions";
 import { showToast } from "@/lib/toast";
 import { submitKeepingValues } from "@/lib/form-submit";
 

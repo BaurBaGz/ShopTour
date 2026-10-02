@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { deleteProductAction } from "@/app/(site)/dashboard/actions";
+import { deleteProductAction } from "@/app/(cabinet)/dashboard/actions";
 
 type DeleteProductButtonProps = {
   productId: string;
@@ -24,7 +24,7 @@ export function DeleteProductButton({
           return;
         }
         await deleteProductAction(productId);
-        router.push("/dashboard");
+        router.push("/dashboard/products");
         router.refresh();
       }}
       className="inline-flex min-h-11 items-center text-sm font-medium text-red-600 hover:text-red-700"

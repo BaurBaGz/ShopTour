@@ -5,7 +5,7 @@ import { useActionState, useEffect, useRef } from "react";
 import {
   saveProductAction,
   type ProductActionState,
-} from "@/app/(site)/dashboard/actions";
+} from "@/app/(cabinet)/dashboard/actions";
 import { ImagesInput } from "@/components/admin/images-input";
 import { AudienceField } from "@/components/dashboard/audience-field";
 import { SizeStockEditor } from "@/components/dashboard/size-stock-editor";
@@ -207,7 +207,7 @@ export function ProductForm({ categories, product, storeId }: ProductFormProps) 
           </button>
         )}
         <Link
-          href="/dashboard"
+          href="/dashboard/products"
           className="hidden min-h-12 items-center rounded-xl px-5 text-sm font-medium text-stone-600 hover:bg-stone-50 sm:inline-flex"
         >
           Отмена

@@ -1,4 +1,4 @@
-// Иконки меню админки (контурные, 24×24, цвет — currentColor)
+// Иконки меню админки и кабинета магазина (контурные, 24×24, цвет — currentColor)
 type IconProps = { className?: string };
 
 const base = {
@@ -84,5 +84,20 @@ export const MenuIcon = ({ className }: IconProps) => (
 export const CloseIcon = ({ className }: IconProps) => (
   <svg className={className} {...base}>
     <path d="M6 6l12 12M18 6 6 18" />
+  </svg>
+);
+
+export const BagIcon = ({ className }: IconProps) => (
+  <svg className={className} {...base}>
+    <path d="M5 8h14l-1 12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1z" />
+    <path d="M9 8V7a3 3 0 0 1 6 0v1" />
+  </svg>
+);
+
+export const PercentIcon = ({ className }: IconProps) => (
+  <svg className={className} {...base}>
+    <path d="M19 5 5 19" />
+    <circle cx="7" cy="7" r="2.5" />
+    <circle cx="17" cy="17" r="2.5" />
   </svg>
 );
