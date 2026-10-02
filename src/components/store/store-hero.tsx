@@ -1,3 +1,4 @@
+import { TrackedLink } from "@/components/analytics/tracked-link";
 import { DistanceFromMe } from "@/components/catalog/distance-from-me";
 import { ShareStoreButton } from "@/components/store/share-store-button";
 import { ShowOnMapLink } from "@/components/store/show-on-map-link";
@@ -69,7 +70,8 @@ export function StoreHero({ store, stats }: StoreHeroProps) {
 
         <div className="mt-5 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
           {whatsappHref && (
-            <a
+            <TrackedLink
+              event={{ type: "whatsapp_click", storeId: store.id }}
               href={whatsappHref}
               target="_blank"
               rel="noopener noreferrer"
@@ -77,12 +79,12 @@ export function StoreHero({ store, stats }: StoreHeroProps) {
             >
               <WhatsAppIcon className="h-5 w-5" />
               WhatsApp
-            </a>
+            </TrackedLink>
           )}
           {store.phone && (
-            <a href={telHref(store.phone)} className={outline} title={displayPhone(store.phone)}>
+            <TrackedLink event={{ type: "phone_click", storeId: store.id }} href={telHref(store.phone)} className={outline} title={displayPhone(store.phone)}>
               Позвонить
-            </a>
+            </TrackedLink>
           )}
           {store.instagram && (
             <a href={buildInstagramUrl(store.instagram)} target="_blank" rel="noopener noreferrer" className={outline}>

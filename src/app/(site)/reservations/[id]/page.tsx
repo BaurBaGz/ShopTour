@@ -1,3 +1,4 @@
+import { TrackedLink } from "@/components/analytics/tracked-link";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -104,7 +105,8 @@ export default async function ReservationPage({ params }: PageProps) {
             </ShowOnMapLink>
           </div>
           {whatsapp && (
-            <a
+            <TrackedLink
+              event={{ type: "whatsapp_click", storeId: store.id }}
               href={whatsapp}
               target="_blank"
               rel="noopener noreferrer"
@@ -112,7 +114,7 @@ export default async function ReservationPage({ params }: PageProps) {
             >
               <WhatsAppIcon className="h-5 w-5" />
               Написать магазину
-            </a>
+            </TrackedLink>
           )}
         </section>
       )}

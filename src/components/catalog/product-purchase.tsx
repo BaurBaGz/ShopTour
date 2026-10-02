@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@/lib/analytics";
 import { useCallback, useRef, useState } from "react";
 import { ReserveSheet } from "@/components/catalog/reserve-sheet";
 import { FavoriteButton } from "@/components/favorites/favorite-button";
@@ -50,6 +51,7 @@ export function ProductPurchase({ product, contactPhone, viewer, reserveOnOpen =
     ? `Здравствуйте! Пишу с ShopTour. Интересует «${product.name}», размер ${selectedSize}, за ${formatPrice(product.price)}. Он ещё в наличии?`
     : `Здравствуйте! Пишу с ShopTour. Интересует «${product.name}» за ${formatPrice(product.price)}. Он ещё в наличии?`;
   const whatsappHref = contactPhone ? buildWhatsAppUrl(contactPhone, message) : null;
+  const trackWhatsApp = () => track({ type: "whatsapp_click", productId: product.id });
   const needsSize = sizes.length > 0 && !selectedSize && availableSizes.length > 1;
   const sizesRef = useRef<HTMLDivElement>(null);
   const [reserving, setReserving] = useState(Boolean(reserveOnOpen && viewer));
@@ -138,6 +140,7 @@ export function ProductPurchase({ product, contactPhone, viewer, reserveOnOpen =
         {whatsappHref && !soldOut && (
           <a
             href={whatsappHref}
+            onClick={trackWhatsApp}
             target="_blank"
             rel="noopener noreferrer"
             className="hidden items-center gap-2 rounded-full bg-[#15803D] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#166534] sm:inline-flex"
@@ -183,6 +186,7 @@ export function ProductPurchase({ product, contactPhone, viewer, reserveOnOpen =
               {whatsappHref && (
                 <a
                   href={whatsappHref}
+                  onClick={trackWhatsApp}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={selectedSize ? `Спросить про размер ${selectedSize} в WhatsApp` : "Спросить в WhatsApp"}

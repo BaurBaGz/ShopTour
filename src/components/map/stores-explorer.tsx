@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@/lib/analytics";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ProductCard } from "@/components/catalog/product-card";
@@ -353,6 +354,7 @@ export function StoresExplorer({
               {whatsappHref && (
                 <a
                   href={whatsappHref}
+                  onClick={() => track({ type: "whatsapp_click", storeId: selectedStore.id })}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#15803D] px-4 font-semibold text-white transition hover:bg-[#166534]"

@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils/cn";
 
 type ShowOnMapLinkProps = {
@@ -18,6 +21,7 @@ export function ShowOnMapLink({ storeId, productId, children, className }: ShowO
     <Link
       href={`/stores?${params.toString()}`}
       title="Показать на карте"
+      onClick={() => track({ type: "map_click", storeId })}
       className={cn(
         "group inline-flex min-h-11 items-center gap-1 py-1 underline decoration-dotted underline-offset-4 transition hover:decoration-solid",
         className,

@@ -197,3 +197,38 @@ export async function getStoreAnalytics(storeId: string, days: AnalyticsPeriod) 
   const topProducts = await getTopProducts(from, storeId, 5);
   return { days, daily, totals, topProducts };
 }
+
+export type StoreValue = {
+  days: number;
+  /** Нашли магазин внутри ShopTour: каталог, поиск, карта, скидки */
+  foundVisitors: number;
+  /** Пришли по ссылке извне: витрина в Instagram, мессенджеры, поисковик */
+  ownLinkVisitors: number;
+  whatsappClicks: number;
+  phoneClicks: number;
+  mapClicks: number;
+  tourAdds: number;
+  reservations: number;
+  pickedUp: number;
+  pickedUpSum: number;
+  waitingPickup: number;
+};
+
+/** «Что дал ShopTour»: брони и нажатия, которые ведут покупателя в магазин */
+export async function getStoreValue(storeId: string, days: number): Promise<StoreValue> {
+  const { from } = periodDays(days);
+  const row = (await rpc("store_value_summary", { p_store: storeId, p_from: from }))?.[0];
+  return {
+    days,
+    foundVisitors: Number(row?.found_visitors ?? 0),
+    ownLinkVisitors: Number(row?.own_link_visitors ?? 0),
+    whatsappClicks: Number(row?.whatsapp_clicks ?? 0),
+    phoneClicks: Number(row?.phone_clicks ?? 0),
+    mapClicks: Number(row?.map_clicks ?? 0),
+    tourAdds: Number(row?.tour_adds ?? 0),
+    reservations: Number(row?.reservations ?? 0),
+    pickedUp: Number(row?.picked_up ?? 0),
+    pickedUpSum: Number(row?.picked_up_sum ?? 0),
+    waitingPickup: Number(row?.waiting_pickup ?? 0),
+  };
+}

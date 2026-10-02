@@ -1,3 +1,5 @@
+import { StoreValueBlock } from "@/components/analytics/store-value";
+import { getStoreValue } from "@/lib/data/analytics";
 import { PromotionsPanel } from "@/components/promotions/promotions-panel";
 import { getStorePromotions } from "@/lib/data/promotions";
 import Link from "next/link";
@@ -27,7 +29,10 @@ export default async function AdminPartnerPage({ params, searchParams }: PagePro
   const partner = await getPartner(id);
   if (!partner) notFound();
   const { store, ownerEmail, products, stats } = partner;
-  const promotions = await getStorePromotions(store.id, { includeExpired: true });
+  const [promotions, value] = await Promise.all([
+    getStorePromotions(store.id, { includeExpired: true }),
+    getStoreValue(store.id, 30),
+  ]);
   const hasLocation = store.latitude !== null && store.longitude !== null;
 
   const statCards = [
@@ -90,6 +95,9 @@ export default async function AdminPartnerPage({ params, searchParams }: PagePro
           </div>
         ))}
       </section>
+
+      {/* Тот же итог, что видит магазин в своей статистике, — аргумент для разговора с партнёром */}
+      <StoreValueBlock value={value} />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="flex min-w-0 flex-col gap-6">

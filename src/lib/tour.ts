@@ -1,6 +1,7 @@
 "use client";
 
 // Маршрут — упорядоченный список магазинов для обхода. Хранится в браузере.
+import { track } from "@/lib/analytics";
 import { createLocalListStore } from "@/lib/local-list-store";
 
 /** Google Карты принимают до 9 промежуточных точек в ссылке — всего 10 остановок */
@@ -18,6 +19,8 @@ export const tour = {
     const current = store.get();
     if (current.includes(storeId) || current.length >= MAX_TOUR_STOPS) return;
     store.set([...current, storeId]);
+    // Магазин попал в маршрут — человек собирается к нему зайти
+    track({ type: "tour_add", storeId });
   },
   remove(storeId: string) {
     store.set(store.get().filter((id) => id !== storeId));
@@ -32,7 +35,10 @@ export const tour = {
     store.set(current);
   },
   replace(storeIds: string[]) {
-    store.set([...new Set(storeIds)].slice(0, MAX_TOUR_STOPS));
+    const before = store.get();
+    const next = [...new Set(storeIds)].slice(0, MAX_TOUR_STOPS);
+    store.set(next);
+    for (const storeId of next) if (!before.includes(storeId)) track({ type: "tour_add", storeId });
   },
   clear() {
     store.set([]);

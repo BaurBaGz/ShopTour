@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import type { AnalyticsEventType, Database } from "@/types/database";
+import type { AnalyticsEventType, AnalyticsSource, Database } from "@/types/database";
 
 type EventInsert = Database["public"]["Tables"]["analytics_events"]["Insert"];
 
@@ -13,7 +13,15 @@ const TYPES = new Set<AnalyticsEventType>([
   "search",
   "banner_view",
   "banner_click",
+  "whatsapp_click",
+  "phone_click",
+  "map_click",
+  "tour_add",
 ]);
+
+// Нажатия, которые показывают намерение прийти в магазин: привязаны к магазину (или к товару магазина)
+const CLICK_TYPES = new Set<AnalyticsEventType>(["whatsapp_click", "phone_click", "map_click", "tour_add"]);
+const SOURCES: AnalyticsSource[] = ["shoptour", "direct", "instagram", "external"];
 
 // Поисковые роботы, превью ссылок в мессенджерах, автотесты
 const BOT_RE =
@@ -59,14 +67,19 @@ export async function POST(request: NextRequest) {
   }
 
   // Привязываем событие к товару/магазину/баннеру только если они есть в базе
-  if (type === "product_view" || type === "favorite_add") {
+  // Откуда пришёл посетитель — только для просмотров магазина и товара
+  if ((type === "store_view" || type === "product_view") && SOURCES.includes(body.source as AnalyticsSource)) {
+    event.source = body.source as AnalyticsSource;
+  }
+
+  if (type === "product_view" || type === "favorite_add" || (CLICK_TYPES.has(type) && body.productId)) {
     const productId = uuid(body.productId);
     if (!productId) return done();
     const { data } = await admin.from("products").select("id, store_id").eq("id", productId).maybeSingle();
     if (!data) return done();
     event.product_id = data.id;
     event.store_id = data.store_id;
-  } else if (type === "store_view") {
+  } else if (type === "store_view" || CLICK_TYPES.has(type)) {
     const storeId = uuid(body.storeId);
     if (!storeId) return done();
     const { data } = await admin.from("stores").select("id").eq("id", storeId).maybeSingle();

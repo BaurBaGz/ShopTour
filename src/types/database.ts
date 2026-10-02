@@ -249,6 +249,7 @@ export interface Database {
           banner_id: string | null;
           query: string | null;
           results: number | null;
+          source: AnalyticsSource | null;
         };
         Insert: {
           id?: never;
@@ -261,6 +262,7 @@ export interface Database {
           banner_id?: string | null;
           query?: string | null;
           results?: number | null;
+          source?: AnalyticsSource | null;
         };
         Update: Record<string, never>;
         Relationships: [];
@@ -478,6 +480,21 @@ export interface Database {
         Args: { p_from: string; p_limit?: number };
         Returns: { query: string; searches: number; visitors: number; zero: number }[];
       };
+      store_value_summary: {
+        Args: { p_store: string; p_from: string };
+        Returns: {
+          found_visitors: number;
+          own_link_visitors: number;
+          whatsapp_clicks: number;
+          phone_clicks: number;
+          map_clicks: number;
+          tour_adds: number;
+          reservations: number;
+          picked_up: number;
+          picked_up_sum: number;
+          waiting_pickup: number;
+        }[];
+      };
       search_stores: {
         Args: { q: string; max_results?: number };
         Returns: {
@@ -512,6 +529,9 @@ export type StaffRole = "admin" | "moderator";
 export type StoreStatus = "draft" | "published" | "hidden";
 export type BannerKind = "text" | "steps";
 export type BannerTheme = "rose" | "dark" | "light";
+/** Откуда посетитель пришёл на страницу магазина или товара */
+export type AnalyticsSource = "shoptour" | "direct" | "instagram" | "external";
+
 export type AnalyticsEventType =
   | "page_view"
   | "product_view"
@@ -519,7 +539,11 @@ export type AnalyticsEventType =
   | "favorite_add"
   | "search"
   | "banner_view"
-  | "banner_click";
+  | "banner_click"
+  | "whatsapp_click"
+  | "phone_click"
+  | "map_click"
+  | "tour_add";
 export type UserListKind = "favorites" | "tour" | "recent";
 export type ReservationStatus = "new" | "confirmed" | "declined" | "completed" | "no_show";
 export type ReservationVisit = "today" | "tomorrow";
