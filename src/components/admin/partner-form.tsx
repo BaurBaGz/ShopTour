@@ -12,13 +12,15 @@ type PartnerFormProps = {
   submitLabel: string;
   /** id существующего партнёра — чтобы грузить логотип в его папку */
   storeId?: string;
+  /** Админка: логотип можно вставить ссылкой. В кабинете магазина — только загрузка файла */
+  allowLogoUrl?: boolean;
 };
 
 const field =
   "min-h-11 w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-rose-300 focus:ring-4 focus:ring-rose-500/15";
 const label = "mb-1.5 block text-sm font-medium text-stone-700";
 
-export function PartnerForm({ action, store, submitLabel, storeId }: PartnerFormProps) {
+export function PartnerForm({ action, store, submitLabel, storeId, allowLogoUrl = false }: PartnerFormProps) {
   const [state, formAction, pending] = useActionState(action, {});
 
   return (
@@ -61,8 +63,9 @@ export function PartnerForm({ action, store, submitLabel, storeId }: PartnerForm
             kind="stores"
             storeId={storeId ?? null}
             defaultValue={store?.logo_url ? [store.logo_url] : []}
+            allowUrl={allowLogoUrl}
           />
-          {!storeId && <p className="mt-1 text-xs text-stone-500">Загрузить файл можно после создания — или вставьте ссылку.</p>}
+          {!storeId && allowLogoUrl && <p className="mt-1 text-xs text-stone-500">Загрузить файл можно после создания — или вставьте ссылку.</p>}
         </div>
       </div>
       {state.error && (

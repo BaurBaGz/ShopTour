@@ -16,10 +16,12 @@ type ImagesInputProps = {
   label?: string;
   /** Сообщить наружу о новом списке фото (например, для превью) */
   onChange?: (urls: string[]) => void;
+  /** Поле «вставьте ссылку на фото» — только для сотрудников; магазины загружают файлы */
+  allowUrl?: boolean;
 };
 
-/** Фото товара или логотип: загрузка файлами, порядок, обложка, удаление, ссылка вручную */
-export function ImagesInput({ name, defaultValue = [], storeId, kind = "products", max = 8, label = "Фото", onChange }: ImagesInputProps) {
+/** Фото товара или логотип: загрузка файлами, порядок, обложка, удаление; ссылка вручную — только в админке */
+export function ImagesInput({ name, defaultValue = [], storeId, kind = "products", max = 8, label = "Фото", onChange, allowUrl = false }: ImagesInputProps) {
   const [images, setImages] = useState<string[]>(defaultValue.filter(Boolean));
 
   // Сообщаем наружу после отрисовки (не во время неё) и не при первом показе
@@ -144,7 +146,7 @@ export function ImagesInput({ name, defaultValue = [], storeId, kind = "products
       />
       {!storeId && <p className="mt-2 text-xs text-amber-700">Сначала выберите магазин — фото сохраняются в его папку.</p>}
 
-      {!full && (
+      {allowUrl && !full && (
         <div className="mt-3 flex gap-2">
           <label htmlFor={`${name}-url`} className="sr-only">Ссылка на фото</label>
           <input

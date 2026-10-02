@@ -90,7 +90,7 @@ export default async function AdminPartnerPage({ params, searchParams }: PagePro
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="flex min-w-0 flex-col gap-6">
-          <PartnerForm action={updatePartnerAction.bind(null, store.id)} store={store} storeId={store.id} submitLabel="Сохранить" />
+          <PartnerForm action={updatePartnerAction.bind(null, store.id)} store={store} storeId={store.id} submitLabel="Сохранить" allowLogoUrl />
           <OwnerPanel storeId={store.id} ownerEmail={ownerEmail} />
         </div>
         <div className="flex min-w-0 flex-col gap-6">

@@ -14,7 +14,7 @@ export default async function AdminNewPartnerPage() {
         Партнёр создаётся черновиком — покупатели его не увидят, пока вы не опубликуете. Точку на карте и владельца
         можно задать на следующем шаге.
       </p>
-      <PartnerForm action={createPartnerAction} submitLabel="Создать черновик" />
+      <PartnerForm action={createPartnerAction} submitLabel="Создать черновик" allowLogoUrl />
     </div>
   );
 }

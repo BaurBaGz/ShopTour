@@ -4,6 +4,7 @@ import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireStoreOwner } from "@/lib/auth/session";
+import { isStoreMediaUrl } from "@/lib/media-url";
 import { canMove, refreshTelegramMessage } from "@/lib/reservations";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -33,6 +34,21 @@ export async function saveProductAction(
   const payload = { store_id: store.id, ...parsed.fields };
 
   const supabase = await createClient();
+
+  // Фото — только загруженные в папку этого магазина; уже стоявшие у товара ссылки не трогаем
+  let keptImages: string[] = [];
+  if (productId) {
+    const { data: current } = await supabase
+      .from("products")
+      .select("images")
+      .eq("id", productId)
+      .eq("store_id", store.id)
+      .maybeSingle();
+    keptImages = current?.images ?? [];
+  }
+  if (payload.images.some((url) => !isStoreMediaUrl(url, store.id, "products") && !keptImages.includes(url))) {
+    return { error: "Фото можно добавить только загрузкой файла — ссылки на другие сайты не принимаются" };
+  }
 
   if (productId) {
     const { error } = await supabase
@@ -241,7 +257,8 @@ export async function updateOwnStoreAction(_prev: StoreProfileState, formData: F
     phone: text("phone", 30) || null,
     whatsapp: text("whatsapp", 30) || null,
     instagram: text("instagram", 100).replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/\/$/, "") || null,
-    logo_url: /^https:\/\//.test(logo) ? logo : null,
+    // Логотип — только загруженный файл; прежний логотип остаётся как был
+    logo_url: isStoreMediaUrl(logo, store.id, "stores") || (logo && logo === store.logo_url) ? logo : null,
   };
   if (!info.name || !info.address) return { error: "Заполните название и адрес" };
 

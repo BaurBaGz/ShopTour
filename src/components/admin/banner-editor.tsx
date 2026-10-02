@@ -96,6 +96,7 @@ export function BannerEditor({ action, banner, canDelete, submitLabel }: BannerE
             max={1}
             kind="banners"
             storeId="site"
+            allowUrl
             defaultValue={banner?.image_url ? [banner.image_url] : []}
             onChange={(urls) => set({ image_url: urls[0] ?? null })}
           />

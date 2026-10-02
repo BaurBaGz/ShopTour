@@ -88,7 +88,7 @@ export function AdminProductForm({ action, product, stores, categories, defaultS
 
       <div className="flex min-w-0 flex-col gap-6">
         <section className="rounded-2xl border border-stone-200 bg-white p-5 sm:p-6">
-          <ImagesInput name="images" defaultValue={product?.images} storeId={storeId || null} />
+          <ImagesInput name="images" defaultValue={product?.images} storeId={storeId || null} allowUrl />
         </section>
 
         <section className="rounded-2xl border border-stone-200 bg-white p-5 sm:p-6">
