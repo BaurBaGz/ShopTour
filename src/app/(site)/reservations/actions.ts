@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
+import { getT } from "@/lib/i18n/server";
 import { normalizePhone, notifyStore } from "@/lib/reservations";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -20,11 +21,12 @@ export async function createReservationAction(_prev: ReserveState, formData: For
   const visit = formData.get("visit") === "tomorrow" ? "tomorrow" : "today";
   const comment = String(formData.get("comment") ?? "").trim().slice(0, 300) || null;
 
+  const t = await getT();
   const user = await getSessionUser();
-  if (!user) return { error: "Войдите или создайте аккаунт, чтобы отложить вещь" };
-  if (!UUID_RE.test(productId)) return { error: "Товар не найден" };
-  if (!name) return { error: "Как к вам обращаться?" };
-  if (!phone) return { error: "Введите номер телефона, например +7 701 123 45 67" };
+  if (!user) return { error: t.reserve.errorLogin };
+  if (!UUID_RE.test(productId)) return { error: t.reserve.errorNotFound };
+  if (!name) return { error: t.reserve.errorName };
+  if (!phone) return { error: t.reserve.errorPhone };
 
   const admin = createAdminClient();
   const { data: product } = await admin
@@ -33,11 +35,11 @@ export async function createReservationAction(_prev: ReserveState, formData: For
     .eq("id", productId)
     .maybeSingle();
   const store = (product?.store ?? null) as { id: string; status: string } | null;
-  if (!product || !store || store.status !== "published" || product.is_hidden || product.is_draft) return { error: "Товар недоступен" };
-  if (!product.in_stock) return { error: "Товар закончился" };
+  if (!product || !store || store.status !== "published" || product.is_hidden || product.is_draft) return { error: t.reserve.errorUnavailable };
+  if (!product.in_stock) return { error: t.reserve.errorSoldOut };
   if (product.sizes.length > 0) {
-    if (!size || !product.sizes.includes(size)) return { error: "Выберите размер" };
-    if (getSizeStock(product, size) === 0) return { error: `Размер ${size} закончился` };
+    if (!size || !product.sizes.includes(size)) return { error: t.reserve.errorChooseSize };
+    if (getSizeStock(product, size) === 0) return { error: t.reserve.errorSizeSoldOut(size) };
   }
 
   const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
@@ -59,10 +61,10 @@ export async function createReservationAction(_prev: ReserveState, formData: For
   );
   if (same) redirect(`/reservations/${same.id}`);
   if ((recent ?? []).filter((r) => r.created_at >= hourAgo).length >= 3) {
-    return { error: "Слишком много броней за час. Попробуйте позже или напишите магазину в WhatsApp." };
+    return { error: t.reserve.errorTooManyHour };
   }
   if ((recent ?? []).length >= 10) {
-    return { error: "Слишком много броней за сутки. Попробуйте завтра или напишите магазину в WhatsApp." };
+    return { error: t.reserve.errorTooManyDay };
   }
 
   const { data: created, error } = await admin
@@ -83,7 +85,7 @@ export async function createReservationAction(_prev: ReserveState, formData: For
     .single();
   if (error || !created) {
     console.error("[reserve] insert:", error?.message);
-    return { error: "Не удалось отправить бронь. Попробуйте ещё раз." };
+    return { error: t.reserve.errorFailed };
   }
 
   // Магазину — в Telegram; если бот не подключён, бронь ждёт в кабинете

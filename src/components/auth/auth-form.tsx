@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import type { AuthActionState } from "@/app/(site)/auth/actions";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils/cn";
 import { submitKeepingValues } from "@/lib/form-submit";
 
@@ -39,6 +40,7 @@ export function AuthForm({
   hiddenFields,
 }: AuthFormProps) {
   const [state, formAction, pending] = useActionState(action, initialState);
+  const t = useT();
 
   return (
     <div className="mx-auto w-full max-w-md">
@@ -91,7 +93,7 @@ export function AuthForm({
               pending && "cursor-not-allowed opacity-60",
             )}
           >
-            {pending ? "Подождите…" : submitLabel}
+            {pending ? t.auth.wait : submitLabel}
           </button>
         </form>
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/lib/i18n/client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { PENDING_RESERVE_KEY } from "@/components/catalog/reserve-sheet";
@@ -8,6 +9,7 @@ type Pending = { href: string; name: string; size: string | null; at: number };
 
 /** «Вы хотели отложить…» — после регистрации и подтверждения почты возвращаем к брони */
 export function PendingReserve() {
+  const t = useT();
   const [pending, setPending] = useState<Pending | null>(null);
 
   useEffect(() => {
@@ -35,15 +37,15 @@ export function PendingReserve() {
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-sm text-rose-950">
-        Вы хотели отложить <span className="font-semibold">«{pending.name}»</span>
-        {pending.size ? `, размер ${pending.size}` : ""}.
+        {t.reserve.pendingWanted} <span className="font-semibold">«{pending.name}»</span>
+        {pending.size ? t.reserve.sizeSuffix(pending.size) : ""}.
       </p>
       <div className="flex gap-2">
         <Link href={pending.href} className="inline-flex min-h-11 items-center rounded-xl bg-rose-600 px-4 text-sm font-semibold text-white hover:bg-rose-700">
-          Продолжить бронь
+          {t.reserve.pendingContinue}
         </Link>
         <button type="button" onClick={forget} className="min-h-11 px-3 text-sm font-medium text-rose-800 hover:text-rose-950">
-          Не нужно
+          {t.reserve.pendingDismiss}
         </button>
       </div>
     </div>

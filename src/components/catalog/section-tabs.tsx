@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 import { isKidsSection, KIDS_SECTIONS, SECTION_COOKIE, SECTIONS, type Section } from "@/lib/audience";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils/cn";
 
 /** «Все · Женщинам · Мужчинам · Детям» над каталогом. Выбор запоминается. */
@@ -12,6 +13,7 @@ export function SectionTabs({ current, saleLink = false }: { current: Section | 
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [pending, startTransition] = useTransition();
+  const t = useT();
 
   const choose = (section: Section | null) => {
     // Год помним выбор; «Все» тоже запоминаем, чтобы не открывать раздел против желания
@@ -31,14 +33,14 @@ export function SectionTabs({ current, saleLink = false }: { current: Section | 
     );
 
   return (
-    <nav aria-label="Для кого" aria-busy={pending} className="flex flex-col gap-2">
+    <nav aria-label={t.sections.label} aria-busy={pending} className="flex flex-col gap-2">
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-0.5 [scrollbar-width:none] sm:mx-0 sm:px-0">
         <button type="button" onClick={() => choose(null)} aria-pressed={main === null} className={pill(main === null)}>
-          Все
+          {t.sections.all}
         </button>
-        {SECTIONS.map((s) => (
-          <button key={s.id} type="button" onClick={() => choose(s.id)} aria-pressed={main === s.id} className={pill(main === s.id)}>
-            {s.label}
+        {SECTIONS.map((id) => (
+          <button key={id} type="button" onClick={() => choose(id)} aria-pressed={main === id} className={pill(main === id)}>
+            {t.sections[id]}
           </button>
         ))}
         {saleLink && (
@@ -46,24 +48,24 @@ export function SectionTabs({ current, saleLink = false }: { current: Section | 
             href={current ? `/sale?for=${current}` : "/sale"}
             className="flex min-h-10 shrink-0 items-center rounded-full bg-rose-600 px-4 text-sm font-semibold text-white transition hover:bg-rose-700"
           >
-            % Скидки
+            {t.sections.sale}
           </Link>
         )}
       </div>
       {isKidsSection(current) && (
         <div className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0">
-          {KIDS_SECTIONS.map((s) => (
+          {KIDS_SECTIONS.map((id) => (
             <button
-              key={s.id}
+              key={id}
               type="button"
-              onClick={() => choose(s.id)}
-              aria-pressed={current === s.id}
+              onClick={() => choose(id)}
+              aria-pressed={current === id}
               className={cn(
                 "min-h-9 shrink-0 rounded-full px-3 text-sm font-medium transition",
-                current === s.id ? "bg-rose-100 text-rose-800" : "text-stone-600 hover:bg-stone-100",
+                current === id ? "bg-rose-100 text-rose-800" : "text-stone-600 hover:bg-stone-100",
               )}
             >
-              {s.label}
+              {id === "kids" ? t.sections.kidsAll : t.sections[id]}
             </button>
           ))}
         </div>

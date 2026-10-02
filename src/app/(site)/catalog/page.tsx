@@ -26,20 +26,20 @@ import {
   searchStores,
 } from "@/lib/data/catalog";
 import { parseNear, parseWalk } from "@/lib/near";
+import { getT } from "@/lib/i18n/server";
 import { pageMeta } from "@/lib/seo";
-import { formatProductCount } from "@/lib/utils/format";
 
-export const metadata: Metadata = pageMeta({
-  title: "Каталог — ShopTour",
-  description: "Одежда из магазинов города: размеры в наличии, цены и адреса. Найдите вещь и отложите её в магазине рядом.",
-  path: "/catalog",
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return pageMeta({ title: `${t.catalog.title} — ShopTour`, description: t.meta.catalogDescription, path: "/catalog" });
+}
 
 type CatalogPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export default async function CatalogPage({ searchParams }: CatalogPageProps) {
+  const t = await getT();
   const values = readFilterValues(await searchParams);
   const sort = parseSort(values.sort);
   const minPrice = parsePrice(values.min);
@@ -77,16 +77,20 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   const products = productsResult.data;
   const loadError = productsResult.errorMessage ?? categoriesResult.errorMessage;
 
-  const chips = buildFilterChips(values, {
-    categories,
-    stores: filterOptions.stores,
-  });
+  const chips = buildFilterChips(
+    values,
+    {
+      categories,
+      stores: filterOptions.stores,
+    },
+    t,
+  );
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
       <div className="mb-4">
         <h1 className="text-2xl font-semibold tracking-tight text-stone-900 sm:text-3xl">
-          Каталог
+          {t.catalog.title}
         </h1>
       </div>
 
@@ -126,12 +130,12 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
         </div>
       )}
 
-      <FoundStores stores={foundStores} near={near} />
+      <FoundStores stores={foundStores} near={near} t={t} />
 
       {products.length > 0 ? (
         <>
           <p className="mb-4 text-sm text-stone-500">
-            {formatProductCount(products.length)}
+            {t.catalog.productCount(products.length)}
           </p>
           <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
             {products.map((product) => (
@@ -142,25 +146,25 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
       ) : (
         <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-stone-300 bg-white px-6 py-20 text-center">
           <p className="text-lg font-medium text-stone-800">
-            {isKidsSection(section) && chips.length === 0 ? "Детский раздел скоро наполнится" : "Товары не найдены"}
+            {isKidsSection(section) && chips.length === 0 ? t.catalog.emptyKidsTitle : t.catalog.emptyTitle}
           </p>
           <p className="mt-2 max-w-sm text-sm text-stone-500">
             {loadError
-              ? "Исправьте ошибку выше — данные в базе есть, но запрос не доходит до Supabase."
+              ? t.catalog.emptyErrorText
               : isKidsSection(section) && chips.length === 0
-                ? "В детском разделе пока нет товаров — магазины детской одежды скоро появятся."
-              : near && values.walk
-                ? `В пределах ${values.walk} минут пешком пока нет магазинов с такими товарами. Увеличьте расстояние в «Рядом» или выберите «Любое расстояние».`
-                : chips.length > 0
-                ? "Попробуйте изменить или сбросить фильтры."
-                : "Добавьте товары в Supabase (Table Editor) или выполните demo_almaty_stores.sql."}
+                ? t.catalog.emptyKidsText
+                : near && values.walk
+                  ? t.catalog.emptyNearText(values.walk)
+                  : chips.length > 0
+                    ? t.catalog.emptyFilteredText
+                    : t.catalog.emptyNoProductsText}
           </p>
           {chips.length > 0 && (
             <Link
               href="/catalog"
               className="mt-6 rounded-xl bg-stone-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-600"
             >
-              Сбросить фильтры
+              {t.catalog.resetFilters}
             </Link>
           )}
         </div>

@@ -14,9 +14,9 @@ import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import type { MapStore } from "@/lib/data/catalog";
 import type { ProductWithRelations } from "@/lib/data/types";
 import { useFavoriteIds } from "@/lib/favorites";
+import { useT } from "@/lib/i18n/client";
 import { MAX_TOUR_STOPS, tour, useTourIds } from "@/lib/tour";
 import { cn } from "@/lib/utils/cn";
-import { formatProductCount } from "@/lib/utils/format";
 import { buildInstagramUrl } from "@/lib/utils/instagram";
 import { buildWhatsAppUrl } from "@/lib/utils/whatsapp";
 
@@ -51,6 +51,7 @@ export function StoresExplorer({
   highlightProductId,
   showCounts = false,
 }: StoresExplorerProps) {
+  const t = useT();
   const [chosenId, setSelectedId] = useState<string | null>(
     initialStoreId ?? null,
   );
@@ -197,7 +198,7 @@ export function StoresExplorer({
     selectedStore && contactPhone
       ? buildWhatsAppUrl(
           contactPhone,
-          `Здравствуйте! Пишу с ShopTour по магазину «${selectedStore.name}».`,
+          t.store.whatsappMessage(selectedStore.name),
         )
       : null;
 
@@ -207,7 +208,7 @@ export function StoresExplorer({
         <div
           className="inline-flex rounded-full bg-stone-100 p-1 text-sm font-medium"
           role="group"
-          aria-label="Какие магазины показать"
+          aria-label={t.map.modeLabel}
         >
           <button
             type="button"
@@ -220,8 +221,8 @@ export function StoresExplorer({
                 : "text-stone-500 hover:text-stone-900",
             )}
           >
-            <span className="sm:hidden">Все</span>
-            <span className="hidden sm:inline">Все магазины</span>
+            <span className="sm:hidden">{t.map.all}</span>
+            <span className="hidden sm:inline">{t.map.allStores}</span>
           </button>
           <button
             type="button"
@@ -235,8 +236,8 @@ export function StoresExplorer({
             )}
           >
             <HeartIcon filled={mode === "favorites"} className="h-4 w-4" />
-            <span className="sm:hidden">Избранное</span>
-            <span className="hidden sm:inline">Избранное на карте</span>
+            <span className="sm:hidden">{t.map.favorites}</span>
+            <span className="hidden sm:inline">{t.map.favoritesOnMap}</span>
             {favoriteCount > 0 && (
               <span className="rounded-full bg-rose-600 px-1.5 text-xs font-semibold text-white">
                 {favoriteCount}
@@ -270,7 +271,7 @@ export function StoresExplorer({
               d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
             />
           </svg>
-          Маршрут
+          {t.map.route}
           {tourStops.length > 0 && (
             <span className="rounded-full bg-rose-600 px-1.5 text-xs font-semibold text-white">
               {tourStops.length}
@@ -282,8 +283,8 @@ export function StoresExplorer({
       {mode === "favorites" && favoriteStores.length === 0 && (
         <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
           {favoriteIds.length === 0
-            ? "В избранном пока пусто — отметьте сердечком товары в каталоге, и их магазины появятся здесь."
-            : "Товаров из избранного нет среди найденных — попробуйте сбросить фильтры."}
+            ? t.map.favoritesEmpty
+            : t.map.favoritesFilteredOut}
         </p>
       )}
 
@@ -323,7 +324,7 @@ export function StoresExplorer({
       {selectedStore ? (
         <section
           ref={panelRef}
-          aria-label={`Каталог магазина ${selectedStore.name}`}
+          aria-label={t.map.storeCatalogLabel(selectedStore.name)}
           className="scroll-mt-24"
         >
           <div className="relative rounded-3xl border border-stone-200/80 bg-white p-4 pr-14 sm:p-5 sm:pr-16">
@@ -336,8 +337,8 @@ export function StoresExplorer({
                 <p className="truncate text-sm text-stone-500">
                   {selectedStore.address} ·{" "}
                   {mode === "favorites"
-                    ? `${formatProductCount(storeProducts.length)} из избранного`
-                    : formatProductCount(storeProducts.length)}
+                    ? t.map.fromFavorites(t.catalog.productCount(storeProducts.length))
+                    : t.catalog.productCount(storeProducts.length)}
                 </p>
                 <DistanceFromMe store={selectedStore} className="text-xs" />
               </div>
@@ -349,7 +350,7 @@ export function StoresExplorer({
                 href={`/stores/${selectedStore.id}`}
                 className="inline-flex min-h-11 items-center justify-center rounded-xl bg-stone-900 px-4 font-semibold text-white transition hover:bg-rose-600"
               >
-                Витрина →
+                {t.map.storefront}
               </Link>
               {whatsappHref && (
                 <a
@@ -368,9 +369,9 @@ export function StoresExplorer({
                   type="button"
                   onClick={() => tour.remove(selectedStore.id)}
                   className="min-h-11 rounded-xl bg-rose-50 px-4 font-semibold text-rose-700 ring-1 ring-rose-200 transition hover:bg-rose-100"
-                  title="Убрать из маршрута"
+                  title={t.map.removeFromRoute}
                 >
-                  ✓ Остановка {stopNumber}
+                  {t.map.stop(stopNumber)}
                 </button>
               ) : (
                 <button
@@ -382,7 +383,7 @@ export function StoresExplorer({
                   disabled={tourIds.length >= MAX_TOUR_STOPS}
                   className="min-h-11 rounded-xl bg-white px-4 font-semibold text-stone-800 ring-1 ring-stone-200 transition hover:bg-stone-50 disabled:opacity-40"
                 >
-                  + В маршрут
+                  {t.map.addToRoute}
                 </button>
               )}
               {selectedStore.instagram && (
@@ -400,7 +401,7 @@ export function StoresExplorer({
             <button
               type="button"
               onClick={() => select(null)}
-              aria-label="Закрыть каталог магазина"
+              aria-label={t.map.closeStore}
               className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-full text-stone-500 transition hover:bg-stone-100 hover:text-stone-900 sm:right-3 sm:top-3"
             >
               <svg
@@ -425,7 +426,7 @@ export function StoresExplorer({
               {storeProducts.map((product) =>
                 product.id === highlightProductId ? (
                   <div key={product.id} className="flex flex-col gap-2">
-                    <p className="text-xs font-semibold text-rose-700">Вы смотрели этот товар</p>
+                    <p className="text-xs font-semibold text-rose-700">{t.map.youViewed}</p>
                     <ProductCard product={product} className="flex-1 ring-2 ring-rose-500" />
                   </div>
                 ) : (
@@ -436,14 +437,14 @@ export function StoresExplorer({
           ) : (
             <div className="mt-6 rounded-3xl border border-dashed border-stone-300 bg-white px-6 py-12 text-center text-sm text-stone-500">
               {mode === "favorites"
-                ? "Из избранного здесь ничего нет."
-                : "В этом магазине пока нет товаров в наличии."}
+                ? t.map.storeNoFavorites
+                : t.map.storeEmpty}
             </div>
           )}
         </section>
       ) : (
         <p className="text-center text-sm text-stone-500">
-          Нажмите на логотип магазина, чтобы открыть его каталог
+          {t.map.tapHint}
         </p>
       )}
     </div>

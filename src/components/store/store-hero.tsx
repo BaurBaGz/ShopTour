@@ -5,6 +5,7 @@ import { ShowOnMapLink } from "@/components/store/show-on-map-link";
 import { StoreAvatar } from "@/components/store/store-avatar";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import type { Store } from "@/lib/data/types";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { buildInstagramUrl } from "@/lib/utils/instagram";
 import { displayPhone, telHref } from "@/lib/utils/phone";
 import { buildWhatsAppUrl } from "@/lib/utils/whatsapp";
@@ -12,25 +13,18 @@ import { buildWhatsAppUrl } from "@/lib/utils/whatsapp";
 type StoreHeroProps = {
   store: Store;
   stats: { total: number; available: number; discounted: number };
+  t: Dictionary;
 };
 
 const button =
   "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition";
 const outline = `${button} bg-white text-stone-800 ring-1 ring-stone-200 hover:bg-stone-50`;
 
-function plural(n: number, one: string, few: string, many: string) {
-  const mod10 = n % 10;
-  const mod100 = n % 100;
-  if (mod10 === 1 && mod100 !== 11) return one;
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
-  return many;
-}
-
 /** Шапка витрины магазина — светлая, как профиль в Instagram */
-export function StoreHero({ store, stats }: StoreHeroProps) {
+export function StoreHero({ store, stats, t }: StoreHeroProps) {
   const contactPhone = store.whatsapp ?? store.phone;
   const whatsappHref = contactPhone
-    ? buildWhatsAppUrl(contactPhone, `Здравствуйте! Пишу с ShopTour по магазину «${store.name}».`)
+    ? buildWhatsAppUrl(contactPhone, t.store.whatsappMessage(store.name))
     : null;
 
   return (
@@ -52,16 +46,16 @@ export function StoreHero({ store, stats }: StoreHeroProps) {
         <p className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-sm text-stone-600">
           <span>
             <span className="font-semibold text-stone-900">{stats.total}</span>{" "}
-            {plural(stats.total, "товар", "товара", "товаров")}
+            {t.store.itemsWord(stats.total)}
           </span>
           {stats.available < stats.total && (
             <span>
-              <span className="font-semibold text-stone-900">{stats.available}</span> в наличии
+              <span className="font-semibold text-stone-900">{stats.available}</span> {t.store.inStock}
             </span>
           )}
           {stats.discounted > 0 && (
             <span>
-              <span className="font-semibold text-rose-600">{stats.discounted}</span> со скидкой
+              <span className="font-semibold text-rose-600">{stats.discounted}</span> {t.store.discounted}
             </span>
           )}
         </p>
@@ -83,7 +77,7 @@ export function StoreHero({ store, stats }: StoreHeroProps) {
           )}
           {store.phone && (
             <TrackedLink event={{ type: "phone_click", storeId: store.id }} href={telHref(store.phone)} className={outline} title={displayPhone(store.phone)}>
-              Позвонить
+              {t.store.call}
             </TrackedLink>
           )}
           {store.instagram && (
@@ -93,7 +87,7 @@ export function StoreHero({ store, stats }: StoreHeroProps) {
           )}
           <ShareStoreButton slug={store.slug} name={store.name} className={outline} />
         </div>
-        {store.phone && <p className="mt-3 text-xs text-stone-500">Телефон: {displayPhone(store.phone)}</p>}
+        {store.phone && <p className="mt-3 text-xs text-stone-500">{t.store.phone(displayPhone(store.phone))}</p>}
       </div>
     </section>
   );

@@ -7,6 +7,7 @@ import type { CatalogFilterValues, FilterKey } from "@/lib/catalog-filters";
 import { NearMeButton, NearMePanel } from "@/components/catalog/near-me";
 import type { CatalogFilterOptions } from "@/lib/data/catalog";
 import type { Category } from "@/lib/data/types";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils/cn";
 
 const DESKTOP_QUERY = "(min-width: 640px)";
@@ -49,6 +50,7 @@ export function CatalogFilters({
   preserveKeys = [],
   showNear = false,
 }: CatalogFiltersProps) {
+  const t = useT();
   const [nearOpen, setNearOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
@@ -131,20 +133,20 @@ export function CatalogFilters({
       {values.near && values.place && <input type="hidden" name="place" value={values.place} />}
       <div className="flex flex-col gap-3 sm:flex-row">
         <label className="sr-only" htmlFor="catalog-search">
-          Поиск по каталогу
+          {t.catalog.searchLabel}
         </label>
         <input
           id="catalog-search"
           name="q"
           type="search"
           defaultValue={values.q}
-          placeholder="Поиск: платье, куртка, кроссовки…"
+          placeholder={t.catalog.searchPlaceholder}
           className={cn(fieldClass, "sm:flex-1")}
         />
 
         <div className="flex gap-3">
           <label className="sr-only" htmlFor="catalog-sort">
-            Сортировка
+            {t.catalog.sortLabel}
           </label>
           <select
             id="catalog-sort"
@@ -154,9 +156,9 @@ export function CatalogFilters({
             className={cn(fieldClass, "flex-1 sm:w-48 sm:flex-none")}
           >
             {/* Коротко: на телефоне в одной строке с «Рядом» и «Фильтрами» */}
-            <option value="">{values.near ? "Ближе" : "Новинки"}</option>
-            <option value="price_asc">Дешевле</option>
-            <option value="price_desc">Дороже</option>
+            <option value="">{values.near ? t.catalog.sortNear : t.catalog.sortNew}</option>
+            <option value="price_asc">{t.catalog.sortCheap}</option>
+            <option value="price_desc">{t.catalog.sortExpensive}</option>
           </select>
 
           {showNear && (
@@ -189,7 +191,7 @@ export function CatalogFilters({
                 d="M3 4h18M6 12h12M10 20h4"
               />
             </svg>
-            Фильтры
+            {t.catalog.filters}
             {panelCount > 0 && (
               <span className="rounded-full bg-rose-600 px-1.5 text-xs font-semibold text-white">
                 {panelCount}
@@ -215,7 +217,7 @@ export function CatalogFilters({
         >
           <div>
             <label className={labelClass} htmlFor="filter-category">
-              Категория
+              {t.catalog.category}
             </label>
             <select
               id="filter-category"
@@ -224,7 +226,7 @@ export function CatalogFilters({
               onChange={submitOnChange}
               className={fieldClass}
             >
-              <option value="">Все категории</option>
+              <option value="">{t.catalog.allCategories}</option>
               {categories.map((category) => (
                 <option key={category.id} value={category.id}>
                   {category.name}
@@ -236,7 +238,7 @@ export function CatalogFilters({
           {showStoreFilter && (
             <div>
               <label className={labelClass} htmlFor="filter-store">
-                Магазин
+                {t.catalog.store}
               </label>
               <select
                 id="filter-store"
@@ -245,7 +247,7 @@ export function CatalogFilters({
                 onChange={submitOnChange}
                 className={fieldClass}
               >
-                <option value="">Все магазины</option>
+                <option value="">{t.catalog.allStores}</option>
                 {options.stores.map((store) => (
                   <option key={store.id} value={store.id}>
                     {store.name}
@@ -257,7 +259,7 @@ export function CatalogFilters({
 
           <div>
             <label className={labelClass} htmlFor="filter-size">
-              Размер
+              {t.catalog.size}
             </label>
             <select
               id="filter-size"
@@ -266,7 +268,7 @@ export function CatalogFilters({
               onChange={submitOnChange}
               className={fieldClass}
             >
-              <option value="">Любой размер</option>
+              <option value="">{t.catalog.anySize}</option>
               {options.sizes.map((size) => (
                 <option key={size} value={size}>
                   {size}
@@ -276,7 +278,7 @@ export function CatalogFilters({
           </div>
 
           <div>
-            <span className={labelClass}>Цена, ₸</span>
+            <span className={labelClass}>{t.catalog.price}</span>
             <div className="flex items-center gap-2">
               <input
                 name="min"
@@ -285,8 +287,8 @@ export function CatalogFilters({
                 min={0}
                 step={100}
                 defaultValue={values.min}
-                placeholder="от"
-                aria-label="Цена от"
+                placeholder={t.catalog.priceFromPlaceholder}
+                aria-label={t.catalog.priceFrom}
                 className={fieldClass}
               />
               <span className="text-stone-500">—</span>
@@ -297,8 +299,8 @@ export function CatalogFilters({
                 min={0}
                 step={100}
                 defaultValue={values.max}
-                placeholder="до"
-                aria-label="Цена до"
+                placeholder={t.catalog.priceToPlaceholder}
+                aria-label={t.catalog.priceTo}
                 className={fieldClass}
               />
             </div>
@@ -311,13 +313,13 @@ export function CatalogFilters({
             disabled={isPending}
             className="min-h-11 rounded-xl bg-stone-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-600 disabled:opacity-70"
           >
-            {isPending ? "Обновляем…" : "Показать товары"}
+            {isPending ? t.catalog.updating : t.catalog.showProducts}
           </button>
           <Link
             href={resetHref}
             className="inline-flex min-h-11 items-center rounded-xl px-4 py-2.5 text-sm font-medium text-stone-500 transition hover:bg-stone-100 hover:text-stone-900"
           >
-            Сбросить все
+            {t.catalog.resetAll}
           </Link>
         </div>
       </div>

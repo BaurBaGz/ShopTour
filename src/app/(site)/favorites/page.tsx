@@ -3,30 +3,29 @@ import Link from "next/link";
 import { RecentProducts } from "@/components/account/recent-products";
 import { FavoritesList } from "@/components/favorites/favorites-list";
 import { getSessionUser } from "@/lib/auth/session";
+import { getT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Избранное — ShopTour",
-  description: "Товары, которые вы отметили сердечком",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: `${t.favoritesPage.title} — ShopTour`, description: t.favoritesPage.metaDescription };
+}
 
 export default async function FavoritesPage() {
-  const user = await getSessionUser();
+  const [user, t] = await Promise.all([getSessionUser(), getT()]);
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight text-stone-900 sm:text-4xl">
-          Избранное
-        </h1>
+        <h1 className="text-3xl font-semibold tracking-tight text-stone-900 sm:text-4xl">{t.favoritesPage.title}</h1>
         <p className="mt-2 text-stone-500">
           {user ? (
-            "Сохраняется в вашем аккаунте — одинаково на телефоне и компьютере"
+            t.favoritesPage.savedInAccount
           ) : (
             <>
-              Сохраняется в этом браузере.{" "}
+              {t.favoritesPage.savedInBrowser}{" "}
               <Link href="/auth/signup?next=/favorites" className="font-medium text-rose-600 hover:text-rose-700">
-                Создайте аккаунт
+                {t.favoritesPage.createAccount}
               </Link>
-              , чтобы избранное было на всех устройствах.
+              {t.favoritesPage.createAccountAfter}
             </>
           )}
         </p>

@@ -4,6 +4,7 @@ import { useActionState, useState, useTransition } from "react";
 import { addPromotionAction, deletePromotionAction, type PromotionState } from "@/app/(cabinet)/dashboard/promotions-actions";
 import { promotionDeadline } from "@/components/promotions/promotion-list";
 import type { Promotion } from "@/lib/data/promotions";
+import { useT } from "@/lib/i18n/client";
 import { submitKeepingValues } from "@/lib/form-submit";
 
 const field =
@@ -22,6 +23,7 @@ export function PromotionsPanel({ promotions, canAdd = false, maxActive = 3 }: P
   const [state, formAction, pending] = useActionState<PromotionState, FormData>(addPromotionAction, {});
   const [removing, startRemoving] = useTransition();
   const [removeError, setRemoveError] = useState<string | null>(null);
+  const t = useT();
 
   const remove = (id: string) =>
     startRemoving(async () => {
@@ -47,7 +49,7 @@ export function PromotionsPanel({ promotions, canAdd = false, maxActive = 3 }: P
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-stone-900">{promotion.title}</p>
                 {promotion.description && <p className="mt-0.5 text-sm text-stone-600">{promotion.description}</p>}
-                <p className="mt-0.5 text-xs font-medium text-rose-700">{promotionDeadline(promotion)}</p>
+                <p className="mt-0.5 text-xs font-medium text-rose-700">{promotionDeadline(promotion, t)}</p>
               </div>
               <button
                 type="button"

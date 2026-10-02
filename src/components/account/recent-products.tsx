@@ -1,5 +1,7 @@
 "use client";
 
+import { localizeProductCategory } from "@/lib/i18n/categories";
+import { useLocale, useT } from "@/lib/i18n/client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ProductCard } from "@/components/catalog/product-card";
@@ -15,7 +17,10 @@ type RecentProductsProps = {
 };
 
 /** «Недавно смотрели» — товары из истории просмотров, последние первыми */
-export function RecentProducts({ limit, title = "Недавно смотрели" }: RecentProductsProps) {
+export function RecentProducts({ limit, title: customTitle }: RecentProductsProps) {
+  const t = useT();
+  const locale = useLocale();
+  const title = customTitle ?? t.favoritesPage.recentTitle;
   const allIds = useRecentIds();
   const ids = limit ? allIds.slice(0, limit) : allIds;
   const idsKey = ids.join(",");
@@ -44,14 +49,19 @@ export function RecentProducts({ limit, title = "Недавно смотрели
     };
   }, [idsKey, limit]);
 
-  const visible = products ? ids.map((id) => products.get(id)).filter((p): p is ProductWithRelations => Boolean(p)) : [];
+  const visible = products
+    ? ids
+        .map((id) => products.get(id))
+        .filter((p): p is ProductWithRelations => Boolean(p))
+        .map((p) => localizeProductCategory(p, locale))
+    : [];
 
   if (ids.length === 0 || (products && visible.length === 0)) {
     return (
       <section aria-label={title}>
         <h2 className="text-xl font-semibold tracking-tight text-stone-900">{title}</h2>
         <p className="mt-2 text-sm text-stone-500">
-          Здесь появятся товары, которые вы открывали. <Link href="/catalog" className="font-medium text-rose-600 hover:text-rose-700">В каталог →</Link>
+          {t.favoritesPage.recentEmpty} <Link href="/catalog" className="font-medium text-rose-600 hover:text-rose-700">{t.favoritesPage.recentToCatalog}</Link>
         </p>
       </section>
     );
@@ -66,11 +76,11 @@ export function RecentProducts({ limit, title = "Недавно смотрели
           onClick={() => recentList.set([])}
           className="inline-flex min-h-11 items-center text-sm font-medium text-stone-500 hover:text-stone-900"
         >
-          Очистить историю
+          {t.favoritesPage.clearHistory}
         </button>
       </div>
       {!products ? (
-        <p className="mt-2 text-sm text-stone-500">Загружаем…</p>
+        <p className="mt-2 text-sm text-stone-500">{t.favoritesPage.loadingShort}</p>
       ) : (
         <div className="mt-4 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
           {visible.map((product) => (

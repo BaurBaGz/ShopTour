@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils/cn";
 import type { BannerKind, BannerTheme } from "@/types/database";
 
@@ -38,22 +41,8 @@ const THEMES: Record<BannerTheme, { box: string; title: string; accent: string; 
   },
 };
 
-// Встроенные шаги баннера «Как это работает»
-const STEPS = [
-  { title: "Найдите вещь", text: "Фильтры по размеру, цене и категории, скидки и остатки по размерам." },
-  {
-    title: "Отметьте сердечком",
-    text: "Избранное без регистрации. На карте видно, в каком магазине что лежит.",
-    href: "/stores?view=favorites",
-    cta: "Избранное на карте",
-  },
-  {
-    title: "Постройте маршрут",
-    text: "Магазины с вашим избранным в самом коротком порядке — сразу в Google или Яндекс Карты.",
-    href: "/favorites",
-    cta: "Построить маршрут",
-  },
-];
+// Встроенные шаги баннера «Как это работает»: тексты — в словарях (t.carousel.steps), здесь — куда ведут
+const STEP_LINKS: (string | null)[] = [null, "/stores?view=favorites", "/favorites"];
 
 type BannerSlideProps = {
   banner: BannerData;
@@ -67,6 +56,7 @@ type BannerSlideProps = {
 /** Содержимое одного баннера. Размер задаёт родитель (карусель или превью в админке). */
 export function BannerSlide({ banner, onNext, onCtaClick, className }: BannerSlideProps) {
   const theme = THEMES[banner.theme];
+  const t = useT();
 
   if (banner.kind === "steps") {
     return (
@@ -75,7 +65,7 @@ export function BannerSlide({ banner, onNext, onCtaClick, className }: BannerSli
         {banner.body && <p className={cn("mt-1 text-sm", theme.body)}>{banner.body}</p>}
         {/* Три шага в ряд и на телефоне — иначе этот слайд вытягивает всю карусель */}
         <ol className="mt-3 grid flex-1 grid-cols-3 gap-3 sm:gap-6">
-          {STEPS.map((step, i) => (
+          {t.carousel.steps.map((step, i) => (
             <li key={step.title} className="flex flex-col items-start gap-1.5">
               <span
                 className={cn(
@@ -89,8 +79,8 @@ export function BannerSlide({ banner, onNext, onCtaClick, className }: BannerSli
               <div className="min-w-0">
                 <p className={cn("text-sm font-semibold leading-snug sm:text-base", theme.title)}>{step.title}</p>
                 <p className={cn("mt-0.5 hidden text-sm leading-snug lg:block", theme.body)}>{step.text}</p>
-                {step.href && (
-                  <Link href={step.href} onClick={onCtaClick} className={cn("inline-flex min-h-9 items-center text-xs font-semibold sm:min-h-0 sm:text-sm", theme.cta)}>
+                {STEP_LINKS[i] && (
+                  <Link href={STEP_LINKS[i]} onClick={onCtaClick} className={cn("inline-flex min-h-9 items-center text-xs font-semibold sm:min-h-0 sm:text-sm", theme.cta)}>
                     {step.cta} →
                   </Link>
                 )}

@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useSyncExternalStore, useTransition } from "react";
+import { useLocale, useT } from "@/lib/i18n/client";
 import { DEFAULT_WALK, formatNear, parseWalk, WALK_OPTIONS } from "@/lib/near";
 import { cn } from "@/lib/utils/cn";
 import type { Point } from "@/lib/utils/route";
@@ -67,6 +68,7 @@ const chipButton =
 
 /** Кнопка «Рядом» в строке фильтров каталога */
 export function NearMeButton({ active, open, onClick }: { active: boolean; open: boolean; onClick: () => void }) {
+  const t = useT();
   return (
     <button
       type="button"
@@ -82,7 +84,7 @@ export function NearMeButton({ active, open, onClick }: { active: boolean; open:
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 21s-7-6.2-7-11.5A7 7 0 0112 2.5a7 7 0 017 7C19 14.8 12 21 12 21z" />
         <circle cx="12" cy="9.5" r="2.5" />
       </svg>
-      Рядом
+      {t.near.button}
     </button>
   );
 }
@@ -102,6 +104,8 @@ export function NearMePanel({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const t = useT();
+  const locale = useLocale();
   const saved = useSavedPlace();
   const [editingPlace, setEditingPlace] = useState(false);
   const [status, setStatus] = useState<{ kind: "idle" | "locating" | "searching" | "error"; text?: string }>({ kind: "idle" });
@@ -131,7 +135,7 @@ export function NearMePanel({
 
   const locate = () => {
     if (!("geolocation" in navigator)) {
-      setStatus({ kind: "error", text: "Браузер не умеет определять местоположение. Введите адрес." });
+      setStatus({ kind: "error", text: t.near.errorUnsupported });
       return;
     }
     setStatus({ kind: "locating" });
@@ -142,8 +146,8 @@ export function NearMePanel({
           kind: "error",
           text:
             err.code === err.PERMISSION_DENIED
-              ? "Нет доступа к местоположению. Разрешите его в настройках браузера или введите адрес."
-              : "Не получилось определить местоположение. Введите адрес.",
+              ? t.near.errorDenied
+              : t.near.errorFailed,
         }),
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 5 * 60 * 1000 },
     );
@@ -162,7 +166,8 @@ export function NearMePanel({
       limit: "5",
       countrycodes: "kz",
       addressdetails: "1",
-      "accept-language": "ru",
+      // Подписи адресов — на языке сайта
+      "accept-language": locale,
     });
     try {
       const response = await fetch(`https://nominatim.openstreetmap.org/search?${params}`);
@@ -180,7 +185,7 @@ export function NearMePanel({
       setResults(found.map((r, i) => ({ r, i, s: score(r.label) })).sort((a, b) => b.s - a.s || a.i - b.i).map((x) => x.r));
       setStatus({ kind: "idle" });
     } catch {
-      setStatus({ kind: "error", text: "Поиск адреса сейчас недоступен. Попробуйте определить местоположение." });
+      setStatus({ kind: "error", text: t.near.errorSearch });
     }
   };
 
@@ -191,8 +196,8 @@ export function NearMePanel({
           {choosing ? (
             <div className="flex flex-col gap-3">
               <div>
-                <p className="font-semibold text-stone-900">Где вы?</p>
-                <p className="text-sm text-stone-500">Покажем вещи в магазинах рядом — ближе всего сверху.</p>
+                <p className="font-semibold text-stone-900">{t.near.whereTitle}</p>
+                <p className="text-sm text-stone-500">{t.near.whereHint}</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <button
@@ -201,7 +206,7 @@ export function NearMePanel({
                   disabled={status.kind === "locating"}
                   className="min-h-11 rounded-xl bg-stone-900 px-4 text-sm font-semibold text-white transition hover:bg-rose-600 disabled:opacity-60"
                 >
-                  {status.kind === "locating" ? "Определяем…" : "📍 Определить моё местоположение"}
+                  {status.kind === "locating" ? t.near.locating : t.near.locate}
                 </button>
                 {saved && (
                   <button
@@ -209,19 +214,19 @@ export function NearMePanel({
                     onClick={() => applyPlace(saved)}
                     className={cn(chipButton, "text-stone-700 ring-stone-200 hover:bg-stone-50")}
                   >
-                    {saved.place ? `Как в прошлый раз: ${saved.place}` : "Как в прошлый раз"}
+                    {saved.place ? t.near.lastTimePlace(saved.place) : t.near.lastTime}
                   </button>
                 )}
               </div>
               <form onSubmit={search} className="flex gap-2">
                 <label htmlFor="near-address" className="sr-only">
-                  Адрес
+                  {t.near.addressLabel}
                 </label>
                 <input
                   id="near-address"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="или адрес: Абая 10, Тимирязева 42…"
+                  placeholder={t.near.addressPlaceholder}
                   className="min-h-11 min-w-0 flex-1 rounded-xl border border-stone-200 bg-white px-3 text-sm outline-none placeholder:text-stone-400 focus:border-rose-300 focus:ring-4 focus:ring-rose-500/15"
                 />
                 <button
@@ -229,12 +234,12 @@ export function NearMePanel({
                   disabled={status.kind === "searching"}
                   className="min-h-11 shrink-0 rounded-xl px-4 text-sm font-medium text-stone-700 ring-1 ring-stone-200 transition hover:bg-stone-50 disabled:opacity-60"
                 >
-                  {status.kind === "searching" ? "Ищем…" : "Найти"}
+                  {status.kind === "searching" ? t.near.searching : t.near.find}
                 </button>
               </form>
               {results && (
                 <ul className="flex flex-col gap-1">
-                  {results.length === 0 && <li className="text-sm text-stone-500">Адрес не найден. Попробуйте иначе: улица и номер дома.</li>}
+                  {results.length === 0 && <li className="text-sm text-stone-500">{t.near.addressNotFound}</li>}
                   {results.map((r, i) => (
                     <li key={`${r.lat},${r.lng},${i}`}>
                       <button
@@ -256,21 +261,21 @@ export function NearMePanel({
               )}
               {active && (
                 <button type="button" onClick={() => setEditingPlace(false)} className="self-start text-sm font-medium text-stone-500 hover:text-stone-900">
-                  Отмена
+                  {t.common.cancel}
                 </button>
               )}
             </div>
           ) : (
             <div className="flex flex-col gap-3">
               <p className="text-sm text-stone-600">
-                {place ? <>Рядом с адресом <span className="font-medium text-stone-900">{place}</span></> : "Рядом с вами"}
+                {place ? <>{t.near.nearAddress} <span className="font-medium text-stone-900">{place}</span></> : t.near.nearYou}
                 {" · "}
                 <button type="button" onClick={() => setEditingPlace(true)} className="font-medium text-rose-600 hover:text-rose-700">
-                  изменить
+                  {t.near.change}
                 </button>
               </p>
               <div>
-                <p className="mb-2 text-xs font-medium text-stone-500">Сколько идти пешком</p>
+                <p className="mb-2 text-xs font-medium text-stone-500">{t.near.walkTitle}</p>
                 <div className="flex flex-wrap gap-2">
                   {WALK_OPTIONS.map((minutes) => (
                     <button
@@ -283,7 +288,7 @@ export function NearMePanel({
                         currentWalk === minutes ? "bg-stone-900 text-white ring-stone-900" : "text-stone-700 ring-stone-200 hover:bg-stone-50",
                       )}
                     >
-                      до {minutes} мин
+                      {t.near.upToMinutes(minutes)}
                     </button>
                   ))}
                   <button
@@ -295,7 +300,7 @@ export function NearMePanel({
                       currentWalk === null ? "bg-stone-900 text-white ring-stone-900" : "text-stone-700 ring-stone-200 hover:bg-stone-50",
                     )}
                   >
-                    Любое расстояние
+                    {t.near.anyDistance}
                   </button>
                 </div>
               </div>
@@ -307,7 +312,7 @@ export function NearMePanel({
                 }}
                 className="self-start text-sm font-medium text-stone-500 hover:text-stone-900"
               >
-                Выключить «Рядом»
+                {t.near.turnOff}
               </button>
             </div>
           )}

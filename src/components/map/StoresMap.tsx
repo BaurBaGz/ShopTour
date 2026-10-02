@@ -1,4 +1,7 @@
 "use client";
+import { useT } from "@/lib/i18n/client";
+import { DEFAULT_LOCALE } from "@/lib/i18n/config";
+import { dictionaryFor, type Dictionary } from "@/lib/i18n/dictionaries";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useRef, useState } from "react";
 import type { DivIcon, LayerGroup, Map as LeafletMap, Marker } from "leaflet";
@@ -173,6 +176,9 @@ function createLogoElement(
 // Карточка при наведении: избранные товары в этом магазине (через DOM — без HTML-вставок)
 const TOOLTIP_LIMIT = 3;
 
+// Подписи для элементов, которые карта рисует сама (не через React): обновляются при каждой отрисовке
+let mapLabels: Dictionary["map"] = dictionaryFor(DEFAULT_LOCALE).map;
+
 function createFavoritesTooltip(store: MapStore, items: FavoritePreview[]): HTMLElement {
   const root = document.createElement("div");
   Object.assign(root.style, { width: "230px", whiteSpace: "normal" });
@@ -181,7 +187,7 @@ function createFavoritesTooltip(store: MapStore, items: FavoritePreview[]): HTML
   title.textContent = store.name;
   Object.assign(title.style, { fontWeight: "700", fontSize: "13px", color: "#1c1917" });
   const subtitle = document.createElement("div");
-  subtitle.textContent = "♥ Из вашего избранного";
+  subtitle.textContent = mapLabels.tooltipFavorites;
   Object.assign(subtitle.style, { fontSize: "11px", color: "#e11d48", marginBottom: "6px" });
   root.append(title, subtitle);
 
@@ -230,7 +236,7 @@ function createFavoritesTooltip(store: MapStore, items: FavoritePreview[]): HTML
 
   if (items.length > TOOLTIP_LIMIT) {
     const more = document.createElement("div");
-    more.textContent = `+ ещё ${items.length - TOOLTIP_LIMIT}`;
+    more.textContent = mapLabels.tooltipMore(items.length - TOOLTIP_LIMIT);
     Object.assign(more.style, { fontSize: "11px", color: "#78716c", marginTop: "6px" });
     root.append(more);
   }
@@ -295,6 +301,7 @@ export default function StoresMap({
   favoritesByStore,
   tourIds,
 }: StoresMapProps) {
+  mapLabels = useT().map;
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletRef = useRef<Leaflet | null>(null);
   const mapInstanceRef = useRef<LeafletMap | null>(null);
@@ -355,8 +362,8 @@ export default function StoresMap({
           const button = L.DomUtil.create("a", "", bar);
           button.href = "#";
           button.setAttribute("role", "button");
-          button.title = "Показать все магазины";
-          button.setAttribute("aria-label", "Показать все магазины");
+          button.title = mapLabels.showAll;
+          button.setAttribute("aria-label", mapLabels.showAll);
           Object.assign(button.style, {
             display: "flex",
             alignItems: "center",

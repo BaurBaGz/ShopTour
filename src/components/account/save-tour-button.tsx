@@ -3,15 +3,15 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useT } from "@/lib/i18n/client";
 import { createClient } from "@/lib/supabase/client";
 import { showToast } from "@/lib/toast";
-
-const dayFormat = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long" });
 
 /** «Сохранить маршрут» под названием; без входа — предлагает войти */
 export function SaveTourButton({ storeIds }: { storeIds: string[] }) {
   const router = useRouter();
   const pathname = usePathname();
+  const t = useT();
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -32,7 +32,7 @@ export function SaveTourButton({ storeIds }: { storeIds: string[] }) {
         href={`/auth/login?next=${encodeURIComponent(next)}`}
         className="rounded-full px-3 py-1.5 font-medium text-stone-700 ring-1 ring-stone-200 transition hover:bg-stone-50"
       >
-        Войти, чтобы сохранить маршрут
+        {t.tour.loginToSave}
       </Link>
     );
   }
@@ -42,12 +42,12 @@ export function SaveTourButton({ storeIds }: { storeIds: string[] }) {
       <button
         type="button"
         onClick={() => {
-          setName(`Маршрут ${dayFormat.format(new Date())}`);
+          setName(t.tour.defaultName(new Intl.DateTimeFormat(t.intl, { day: "numeric", month: "long" }).format(new Date())));
           setOpen(true);
         }}
         className="rounded-full px-3 py-1.5 font-medium text-stone-700 ring-1 ring-stone-200 transition hover:bg-stone-50"
       >
-        Сохранить маршрут
+        {t.tour.save}
       </button>
     );
   }
@@ -65,14 +65,14 @@ export function SaveTourButton({ storeIds }: { storeIds: string[] }) {
     }
     setStatus("idle");
     setOpen(false);
-    showToast({ message: "Маршрут сохранён", action: { label: "Мои маршруты", href: "/account#tours" } });
+    showToast({ message: t.tour.saved, action: { label: t.tour.myRoutes, href: "/account#tours" } });
     router.refresh();
   };
 
   return (
     <form onSubmit={save} className="flex w-full flex-col gap-2 rounded-2xl bg-stone-50 p-3">
       <label htmlFor="tour-name" className="text-xs font-medium text-stone-600">
-        Название маршрута
+        {t.tour.nameLabel}
       </label>
       <input
         id="tour-name"
@@ -83,21 +83,21 @@ export function SaveTourButton({ storeIds }: { storeIds: string[] }) {
         required
         className="min-h-11 w-full rounded-xl border border-stone-200 bg-white px-3 text-sm outline-none focus:border-rose-300 focus:ring-4 focus:ring-rose-500/15"
       />
-      {status === "error" && <p role="alert" className="text-xs text-red-700">Не удалось сохранить. Попробуйте ещё раз.</p>}
+      {status === "error" && <p role="alert" className="text-xs text-red-700">{t.tour.saveFailed}</p>}
       <div className="flex gap-2">
         <button
           type="submit"
           disabled={status === "saving"}
           className="min-h-11 flex-1 rounded-xl bg-stone-900 px-4 text-sm font-semibold text-white transition hover:bg-rose-600 disabled:opacity-60"
         >
-          {status === "saving" ? "Сохраняем…" : "Сохранить"}
+          {status === "saving" ? t.tour.saving : t.tour.saveShort}
         </button>
         <button
           type="button"
           onClick={() => setOpen(false)}
           className="min-h-11 rounded-xl px-4 text-sm font-medium text-stone-600 hover:bg-stone-100"
         >
-          Отмена
+          {t.common.cancel}
         </button>
       </div>
     </form>

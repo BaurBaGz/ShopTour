@@ -18,18 +18,24 @@ export interface Database {
         Row: {
           id: string;
           name: string;
+          name_kk?: string | null;
+          name_en?: string | null;
           sort_order: number;
           created_at: string;
         };
         Insert: {
           id?: string;
           name: string;
+          name_kk?: string | null;
+          name_en?: string | null;
           sort_order?: number;
           created_at?: string;
         };
         Update: {
           id?: string;
           name?: string;
+          name_kk?: string | null;
+          name_en?: string | null;
           sort_order?: number;
           created_at?: string;
         };

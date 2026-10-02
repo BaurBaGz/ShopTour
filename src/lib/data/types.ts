@@ -6,12 +6,12 @@ export type Product = Database["public"]["Tables"]["products"]["Row"];
 
 export type ProductWithRelations = Product & {
   stores: Pick<Store, "id" | "name" | "city" | "latitude" | "longitude"> | null;
-  categories: Pick<Category, "id" | "name"> | null;
+  categories: Pick<Category, "id" | "name" | "name_kk" | "name_en"> | null;
   /** Расстояние до магазина по прямой, км — когда покупатель указал, где он */
   distanceKm?: number | null;
 };
 
 export type ProductDetails = Product & {
   stores: Store | null;
-  categories: Pick<Category, "id" | "name"> | null;
+  categories: Pick<Category, "id" | "name" | "name_kk" | "name_en"> | null;
 };

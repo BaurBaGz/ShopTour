@@ -5,6 +5,7 @@ import { useCallback, useRef, useState } from "react";
 import { ReserveSheet } from "@/components/catalog/reserve-sheet";
 import { FavoriteButton } from "@/components/favorites/favorite-button";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils/cn";
 import { formatPrice } from "@/lib/utils/format";
 import { formatStockLeft, getSizeStock } from "@/lib/utils/product";
@@ -30,6 +31,7 @@ type ProductPurchaseProps = {
 };
 
 export function ProductPurchase({ product, contactPhone, viewer, reserveOnOpen = null }: ProductPurchaseProps) {
+  const t = useT();
   const sizes = product.sizes ?? [];
   const stockOf = (size: string) => getSizeStock(product, size);
   const availableSizes = sizes.filter((size) => stockOf(size) !== 0);
@@ -44,12 +46,12 @@ export function ProductPurchase({ product, contactPhone, viewer, reserveOnOpen =
   );
 
   const selectedStock = selectedSize ? stockOf(selectedSize) : undefined;
-  const stockText = formatStockLeft(selectedStock);
+  const stockText = formatStockLeft(selectedStock, t);
   const soldOut = !product.in_stock || (sizes.length > 0 && availableSizes.length === 0);
 
   const message = selectedSize
-    ? `Здравствуйте! Пишу с ShopTour. Интересует «${product.name}», размер ${selectedSize}, за ${formatPrice(product.price)}. Он ещё в наличии?`
-    : `Здравствуйте! Пишу с ShopTour. Интересует «${product.name}» за ${formatPrice(product.price)}. Он ещё в наличии?`;
+    ? t.purchase.whatsappMessageSize(product.name, selectedSize, formatPrice(product.price))
+    : t.purchase.whatsappMessage(product.name, formatPrice(product.price));
   const whatsappHref = contactPhone ? buildWhatsAppUrl(contactPhone, message) : null;
   const trackWhatsApp = () => track({ type: "whatsapp_click", productId: product.id });
   const needsSize = sizes.length > 0 && !selectedSize && availableSizes.length > 1;
@@ -73,14 +75,14 @@ export function ProductPurchase({ product, contactPhone, viewer, reserveOnOpen =
         <div ref={sizesRef} className="scroll-mt-24">
           <div className="mb-2 flex items-baseline justify-between gap-3">
             <h2 className="text-sm font-medium text-stone-500">
-              Размер{selectedSize ? `: ${selectedSize}` : ""}
+              {selectedSize ? t.purchase.sizeSelected(selectedSize) : t.purchase.size}
             </h2>
             {!selectedSize && availableSizes.length > 1 && (
-              <span className="text-xs text-stone-500">Выберите размер</span>
+              <span className="text-xs text-stone-500">{t.purchase.chooseSize}</span>
             )}
           </div>
 
-          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Размер">
+          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t.purchase.size}>
             {sizes.map((size) => {
               const stock = stockOf(size);
               const unavailable = stock === 0;
@@ -93,7 +95,7 @@ export function ProductPurchase({ product, contactPhone, viewer, reserveOnOpen =
                   aria-checked={selected}
                   disabled={unavailable}
                   onClick={() => setSelectedSize(selected ? null : size)}
-                  title={unavailable ? "Нет в наличии" : undefined}
+                  title={unavailable ? t.product.outOfStock : undefined}
                   className={cn(
                     "min-h-11 min-w-12 rounded-xl border px-3 py-2 text-sm font-medium transition",
                     selected
@@ -119,9 +121,9 @@ export function ProductPurchase({ product, contactPhone, viewer, reserveOnOpen =
             aria-live="polite"
           >
             {selectedSize
-              ? (stockText ?? "В наличии")
+              ? (stockText ?? t.purchase.inStock)
               : soldOut
-                ? "Все размеры закончились"
+                ? t.purchase.allSoldOut
                 : null}
           </p>
         </div>
@@ -134,7 +136,7 @@ export function ProductPurchase({ product, contactPhone, viewer, reserveOnOpen =
             onClick={openReserve}
             className="hidden min-h-11 items-center rounded-full bg-rose-600 px-5 text-sm font-semibold text-white transition hover:bg-rose-700 sm:inline-flex"
           >
-            {selectedSize ? `Отложить размер ${selectedSize}` : needsSize ? "Выбрать размер и отложить" : "Отложить в магазине"}
+            {selectedSize ? t.purchase.reserveSize(selectedSize) : needsSize ? t.purchase.chooseAndReserve : t.purchase.reserveInStore}
           </button>
         )}
         {whatsappHref && !soldOut && (
@@ -146,7 +148,7 @@ export function ProductPurchase({ product, contactPhone, viewer, reserveOnOpen =
             className="hidden items-center gap-2 rounded-full bg-[#15803D] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#166534] sm:inline-flex"
           >
             <WhatsAppIcon className="h-5 w-5" />
-            {selectedSize ? `Спросить про размер ${selectedSize}` : "Спросить в WhatsApp"}
+            {selectedSize ? t.purchase.askSize(selectedSize) : t.purchase.askWhatsApp}
           </a>
         )}
         <FavoriteButton productId={product.id} productName={product.name} variant="full" />
@@ -166,12 +168,12 @@ export function ProductPurchase({ product, contactPhone, viewer, reserveOnOpen =
             {product.old_price && product.old_price > product.price ? (
               <p className="text-xs text-stone-500 line-through">{formatPrice(product.old_price)}</p>
             ) : selectedSize ? (
-              <p className="text-xs text-stone-500">Размер {selectedSize}</p>
+              <p className="text-xs text-stone-500">{t.purchase.sizeShort(selectedSize)}</p>
             ) : null}
           </div>
           {soldOut ? (
             <span className="rounded-full bg-stone-100 px-4 py-3 text-sm font-medium text-stone-500">
-              Нет в наличии
+              {t.product.outOfStock}
             </span>
           ) : needsSize ? (
             <button
@@ -179,7 +181,7 @@ export function ProductPurchase({ product, contactPhone, viewer, reserveOnOpen =
               onClick={goToSizes}
               className="min-h-11 rounded-full bg-stone-900 px-5 text-sm font-semibold text-white"
             >
-              Выбрать размер
+              {t.purchase.chooseSizeButton}
             </button>
           ) : (
             <div className="flex items-center gap-2">
@@ -189,7 +191,7 @@ export function ProductPurchase({ product, contactPhone, viewer, reserveOnOpen =
                   onClick={trackWhatsApp}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label={selectedSize ? `Спросить про размер ${selectedSize} в WhatsApp` : "Спросить в WhatsApp"}
+                  aria-label={selectedSize ? t.purchase.askSizeWhatsApp(selectedSize) : t.purchase.askWhatsApp}
                   className="flex h-11 w-11 items-center justify-center rounded-full bg-[#15803D] text-white"
                 >
                   <WhatsAppIcon className="h-5 w-5" />
@@ -200,7 +202,7 @@ export function ProductPurchase({ product, contactPhone, viewer, reserveOnOpen =
                 onClick={openReserve}
                 className="min-h-11 rounded-full bg-rose-600 px-5 text-sm font-semibold text-white"
               >
-                {selectedSize ? `Отложить ${selectedSize}` : "Отложить"}
+                {selectedSize ? t.purchase.reserveShortSize(selectedSize) : t.purchase.reserveShort}
               </button>
             </div>
           )}

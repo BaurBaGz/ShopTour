@@ -4,12 +4,14 @@ import { redirect } from "next/navigation";
 import { registerAction } from "@/app/(site)/auth/actions";
 import { AuthForm } from "@/components/auth/auth-form";
 import { getSessionUser } from "@/lib/auth/session";
+import { getT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Регистрация магазина — ShopTour",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT()).auth.registerMeta };
+}
 
 export default async function RegisterPage() {
+  const t = await getT();
   const user = await getSessionUser();
   if (user) redirect("/dashboard");
 
@@ -17,65 +19,65 @@ export default async function RegisterPage() {
     <main className="px-4 py-12 sm:py-16">
       <div className="mx-auto max-w-md">
         <AuthForm
-          title="Регистрация магазина"
-          subtitle="Создайте аккаунт и добавьте свой магазин в ShopTour. После проверки командой ShopTour он появится в каталоге и на карте."
-          submitLabel="Создать магазин"
+          title={t.auth.registerTitle}
+          subtitle={t.auth.registerSubtitle}
+          submitLabel={t.auth.createStore}
           action={registerAction}
           fields={[
             {
               name: "storeName",
-              label: "Название магазина *",
+              label: t.auth.storeName,
               placeholder: "Boutique Dostyk",
               required: true,
             },
             {
               name: "city",
-              label: "Город *",
-              placeholder: "Алматы",
+              label: t.auth.city,
+              placeholder: t.auth.cityPlaceholder,
               required: true,
             },
             {
               name: "address",
-              label: "Адрес *",
-              placeholder: "пр. Достык, 89",
+              label: t.auth.address,
+              placeholder: t.auth.addressPlaceholder,
               required: true,
             },
             {
               name: "phone",
-              label: "Телефон",
+              label: t.auth.phone,
               placeholder: "+7 727 000 00 00",
             },
             {
               name: "whatsapp",
-              label: "WhatsApp (если другой номер)",
+              label: t.auth.whatsapp,
               placeholder: "+7 700 000 00 00",
             },
             {
               name: "description",
-              label: "Описание магазина",
-              placeholder: "Кратко о вашем бутике…",
+              label: t.auth.storeDescription,
+              placeholder: t.auth.storeDescriptionPlaceholder,
             },
             {
               name: "email",
-              label: "Email для входа *",
+              label: t.auth.emailForLogin,
               type: "email",
               required: true,
             },
             {
               name: "password",
-              label: "Пароль *",
+              label: t.auth.passwordRequired,
               type: "password",
               required: true,
             },
           ]}
           footer={
             <>
-              <span className="text-stone-500">Уже есть аккаунт? </span>
+              <span className="text-stone-500">{t.auth.haveAccount} </span>
               <Link
                 href="/auth/login"
                 className="font-medium text-rose-600 hover:text-rose-700"
               >
-                Войти
+                {t.nav.login}
               </Link>
             </>
           }

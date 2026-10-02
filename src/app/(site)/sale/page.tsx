@@ -12,15 +12,14 @@ import { buildFilterChips, buildFilterHref, parsePrice, parseSort, readFilterVal
 import { getCatalogFilterOptions, getCategoriesWithError, getProductsWithError } from "@/lib/data/catalog";
 import { getActivePromotions } from "@/lib/data/promotions";
 import { parseNear, parseWalk } from "@/lib/near";
+import { getT } from "@/lib/i18n/server";
 import { pageMeta } from "@/lib/seo";
-import { formatProductCount } from "@/lib/utils/format";
 import { getDiscountDaysLeft, getDiscountPercent } from "@/lib/utils/product";
 
-export const metadata: Metadata = pageMeta({
-  title: "Скидки — ShopTour",
-  description: "Акции магазинов и вещи со скидкой в вашем городе — со сроками, до какого дня действует цена.",
-  path: "/sale",
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return pageMeta({ title: `${t.sale.title} — ShopTour`, description: t.meta.saleDescription, path: "/sale" });
+}
 
 type SalePageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -28,6 +27,7 @@ type SalePageProps = {
 
 // Вкладка «Скидки»: тот же каталог, но только товары с действующей скидкой
 export default async function SalePage({ searchParams }: SalePageProps) {
+  const t = await getT();
   const values = readFilterValues(await searchParams);
   const sort = parseSort(values.sort);
   const near = parseNear(values.near);
@@ -67,15 +67,13 @@ export default async function SalePage({ searchParams }: SalePageProps) {
   }
 
   const loadError = productsResult.errorMessage ?? categoriesResult.errorMessage;
-  const chips = buildFilterChips(values, { categories: categoriesResult.data, stores: filterOptions.stores });
+  const chips = buildFilterChips(values, { categories: categoriesResult.data, stores: filterOptions.stores }, t);
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
       <div className="mb-4">
-        <h1 className="text-2xl font-semibold tracking-tight text-stone-900 sm:text-3xl">Скидки</h1>
-        <p className="mt-1 text-sm text-stone-500">
-          Акции магазинов и вещи со скидкой. Если у скидки есть срок — указано, до какого дня она действует.
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight text-stone-900 sm:text-3xl">{t.sale.title}</h1>
+        <p className="mt-1 text-sm text-stone-500">{t.sale.subtitle}</p>
       </div>
 
       {loadError && <SupabaseErrorBanner message={loadError} context="getProducts" />}
@@ -106,7 +104,7 @@ export default async function SalePage({ searchParams }: SalePageProps) {
 
       {products.length > 0 ? (
         <>
-          <p className="mb-4 text-sm text-stone-500">{formatProductCount(products.length)} со скидкой</p>
+          <p className="mb-4 text-sm text-stone-500">{t.sale.count(products.length)}</p>
           <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
             {products.map((product) => (
               <ProductCard key={product.id} product={product} />
@@ -116,18 +114,16 @@ export default async function SalePage({ searchParams }: SalePageProps) {
       ) : (
         <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-stone-300 bg-white px-6 py-20 text-center">
           <p className="text-lg font-medium text-stone-800">
-            {chips.length > 0 || section ? "Товаров со скидкой по этим условиям нет" : "Товаров со скидкой сейчас нет"}
+            {chips.length > 0 || section ? t.sale.emptyFilteredTitle : t.sale.emptyTitle}
           </p>
           <p className="mt-2 max-w-sm text-sm text-stone-500">
-            {chips.length > 0 || section
-              ? "Попробуйте другой раздел или сбросьте фильтры."
-              : "Магазины добавляют скидки постоянно — загляните позже или посмотрите весь каталог."}
+            {chips.length > 0 || section ? t.sale.emptyFilteredText : t.sale.emptyText}
           </p>
           <Link
             href={chips.length > 0 ? "/sale" : "/catalog"}
             className="mt-6 rounded-xl bg-stone-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-600"
           >
-            {chips.length > 0 ? "Сбросить фильтры" : "Весь каталог"}
+            {chips.length > 0 ? t.catalog.resetFilters : t.sale.wholeCatalog}
           </Link>
         </div>
       )}

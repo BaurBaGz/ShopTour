@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import { pageMeta } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -18,24 +19,15 @@ import {
   getProducts,
   getStoresWithCoords,
 } from "@/lib/data/catalog";
-import { formatProductCount } from "@/lib/utils/format";
 
-export const metadata: Metadata = pageMeta({
-  title: "Магазины на карте — ShopTour",
-  description: "Магазины одежды на карте города: что есть в наличии рядом с вами и маршрут по нескольким магазинам.",
-  path: "/stores",
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return pageMeta({ title: `${t.map.title} — ShopTour`, description: t.map.metaDescription, path: "/stores" });
+}
 
 type StoresMapPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
-
-function formatStoreCount(count: number): string {
-  const mod10 = count % 10;
-  const mod100 = count % 100;
-  if (mod10 === 1 && mod100 !== 11) return `${count} магазине`;
-  return `${count} магазинах`;
-}
 
 export default async function StoresMapPage({ searchParams }: StoresMapPageProps) {
   // store — выбранный на карте магазин, а не фильтр
@@ -62,7 +54,8 @@ export default async function StoresMapPage({ searchParams }: StoresMapPageProps
     getCatalogFilterOptions(),
   ]);
 
-  const chips = buildFilterChips(values, { categories });
+  const t = await getT();
+  const chips = buildFilterChips(values, { categories }, t);
   const hasFilters = chips.length > 0;
 
   // С фильтрами на карте только магазины, где есть подходящие товары
@@ -78,10 +71,10 @@ export default async function StoresMapPage({ searchParams }: StoresMapPageProps
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="mb-4 sm:mb-8">
         <h1 className="text-3xl font-semibold tracking-tight text-stone-900 sm:text-4xl">
-          Магазины на карте
+          {t.map.title}
         </h1>
         <p className="mt-2 hidden text-stone-500 sm:block">
-          Выберите магазин на карте — ниже откроются его товары
+          {t.map.subtitle}
         </p>
       </div>
 
@@ -103,8 +96,8 @@ export default async function StoresMapPage({ searchParams }: StoresMapPageProps
           <ActiveFilterChips chips={chips} keepOnReset={["sort", "store"]} />
           <p className="text-sm text-stone-500">
             {stores.length > 0
-              ? `Найдено ${formatProductCount(productsOnMap.length)} в ${formatStoreCount(stores.length)}`
-              : "Подходящих товаров нет ни в одном магазине"}
+              ? t.map.found(productsOnMap.length, stores.length)
+              : t.map.noMatches}
           </p>
         </div>
       )}
@@ -124,15 +117,15 @@ export default async function StoresMapPage({ searchParams }: StoresMapPageProps
         <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-stone-300 bg-white px-6 py-20 text-center">
           <p className="text-lg font-medium text-stone-800">
             {hasFilters
-              ? "Ни в одном магазине нет подходящих товаров"
-              : "Пока нет магазинов с адресом на карте"}
+              ? t.map.emptyFiltered
+              : t.map.emptyNoStores}
           </p>
           {hasFilters && (
             <Link
               href="/stores"
               className="mt-6 rounded-xl bg-stone-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-600"
             >
-              Сбросить фильтры
+              {t.catalog.resetFilters}
             </Link>
           )}
         </div>

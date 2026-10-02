@@ -1,6 +1,7 @@
 "use client";
 
 import { useFavorite } from "@/lib/favorites";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils/cn";
 
 type FavoriteButtonProps = {
@@ -43,9 +44,8 @@ export function FavoriteButton({
   className,
 }: FavoriteButtonProps) {
   const { isFavorite, toggle } = useFavorite(productId);
-  const label = isFavorite
-    ? `Убрать «${productName}» из избранного`
-    : `Добавить «${productName}» в избранное`;
+  const t = useT();
+  const label = isFavorite ? t.favorites.remove(productName) : t.favorites.add(productName);
 
   if (variant === "full") {
     return (
@@ -63,7 +63,7 @@ export function FavoriteButton({
         )}
       >
         <HeartIcon filled={isFavorite} className="h-5 w-5" />
-        {isFavorite ? "В избранном" : "В избранное"}
+        {isFavorite ? t.favorites.inFavorites : t.favorites.toFavorites}
       </button>
     );
   }
@@ -74,7 +74,7 @@ export function FavoriteButton({
       onClick={toggle}
       aria-pressed={isFavorite}
       aria-label={label}
-      title={isFavorite ? "Убрать из избранного" : "В избранное"}
+      title={isFavorite ? t.favorites.removeShort : t.favorites.toFavorites}
       // Зона нажатия 44×44, видимый круг 36 — палец попадает, а карточка не перегружена
       className={cn(
         "group/fav flex h-11 w-11 items-center justify-center",

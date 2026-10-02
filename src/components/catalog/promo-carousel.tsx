@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { BannerSlide, type BannerData } from "@/components/catalog/banner-slide";
 import { track } from "@/lib/analytics";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils/cn";
 
 // Раньше баннеры можно было скрыть — теперь их видят все. Старую отметку «скрыто» стираем.
@@ -12,6 +13,7 @@ const LEGACY_HIDDEN_KEY = "shoptour:promo-hidden";
 export function PromoCarousel({ banners }: { banners: BannerData[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
+  const t = useT();
   useEffect(() => {
     try {
       window.localStorage.removeItem(LEGACY_HIDDEN_KEY);
@@ -53,7 +55,7 @@ export function PromoCarousel({ banners }: { banners: BannerData[] }) {
   if (slideCount === 0) return null;
 
   return (
-    <section aria-roledescription="карусель" aria-label="Как работает ShopTour" className="relative">
+    <section aria-roledescription={t.carousel.roleDescription} aria-label={t.carousel.label} className="relative">
       <div
         ref={trackRef}
         className="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto scroll-smooth px-4 pb-1 sm:scroll-px-0 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden"
@@ -62,8 +64,8 @@ export function PromoCarousel({ banners }: { banners: BannerData[] }) {
           <div
             key={banner.id}
             role="group"
-            aria-roledescription="слайд"
-            aria-label={`${index + 1} из ${slideCount}`}
+            aria-roledescription={t.carousel.slideRole}
+            aria-label={t.carousel.slideOf(index + 1, slideCount)}
             className={cn("shrink-0 snap-start", slideCount > 1 ? "w-[88%] sm:w-[92%]" : "w-full")}
           >
             <BannerSlide
@@ -83,7 +85,7 @@ export function PromoCarousel({ banners }: { banners: BannerData[] }) {
               key={i}
               type="button"
               onClick={() => goTo(i)}
-              aria-label={`Баннер ${i + 1} из ${slideCount}`}
+              aria-label={t.carousel.bannerOf(i + 1, slideCount)}
               aria-current={active === i}
               className="flex h-11 w-7 items-center justify-center"
             >

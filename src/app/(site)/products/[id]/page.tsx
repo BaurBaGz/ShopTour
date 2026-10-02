@@ -13,7 +13,8 @@ import { ProductCard } from "@/components/catalog/product-card";
 import { ProductPurchase } from "@/components/catalog/product-purchase";
 import { ShowOnMapLink } from "@/components/store/show-on-map-link";
 import { StoreAvatar } from "@/components/store/store-avatar";
-import { AUDIENCE_BADGE, AUDIENCE_SECTION } from "@/lib/audience";
+import { AUDIENCE_COLOR, AUDIENCE_SECTION } from "@/lib/audience";
+import { getT } from "@/lib/i18n/server";
 import { getSessionUser } from "@/lib/auth/session";
 import { getProductById, getProducts } from "@/lib/data/catalog";
 import { formatPrice } from "@/lib/utils/format";
@@ -32,15 +33,16 @@ export async function generateMetadata({
   const { id } = await params;
   const product = await getProductById(id);
 
+  const t = await getT();
   if (!product) {
-    return { title: "Товар не найден — ShopTour" };
+    return { title: t.productPage.metaNotFound };
   }
 
-  const where = product.stores ? ` в магазине ${product.stores.name}, ${product.stores.city}` : "";
+  const where = product.stores ? t.productPage.metaWhere(product.stores.name, product.stores.city) : "";
   return pageMeta({
     title: `${product.name} — ShopTour`,
     // Цена и магазин — первым делом: это видно в карточке ссылки
-    description: `${formatPrice(product.price)}${where}. ${product.description?.slice(0, 160) ?? "Размеры в наличии — на ShopTour."}`,
+    description: `${formatPrice(product.price)}${where}. ${product.description?.slice(0, 160) ?? t.productPage.metaDefault}`,
     path: `/products/${product.id}`,
     image: `/og/product/${product.id}`,
   });
@@ -76,13 +78,14 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
     : null;
   const reserveOnOpen = (await searchParams).reserve?.slice(0, 20) ?? null;
   const discount = getDiscountPercent(product);
+  const t = await getT();
   const promotions = store ? await getStorePromotions(store.id) : [];
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
       <TrackView type="product_view" productId={product.id} />
       <RecordRecent productId={product.id} />
-      <BackLink fallbackHref="/catalog" fallbackLabel="в каталог" />
+      <BackLink fallbackHref="/catalog" />
 
       <div className="mt-6 grid gap-8 lg:grid-cols-2 lg:gap-12">
         <div className="flex flex-col gap-4">
@@ -98,7 +101,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
               />
             ) : (
               <div className="flex h-full items-center justify-center text-sm text-stone-500">
-                Нет фото
+                {t.product.noPhoto}
               </div>
             )}
           </div>
@@ -112,7 +115,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                 >
                   <Image
                     src={src}
-                    alt={`${product.name}, фото ${index + 2}`}
+                    alt={t.productPage.photoAlt(product.name, index + 2)}
                     fill
                     className="object-cover"
                     sizes="(max-width: 1024px) 33vw, 16vw"
@@ -137,11 +140,11 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
               {/* Для кого: унисекс поясняем, чтобы женская модель на фото не сбивала мужчин */}
               <Link
                 href={`/catalog?for=${AUDIENCE_SECTION[product.audience] ?? "all"}`}
-                className={`inline-block rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold transition hover:bg-stone-200 ${AUDIENCE_BADGE[product.audience].className}`}
+                className={`inline-block rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold transition hover:bg-stone-200 ${AUDIENCE_COLOR[product.audience]}`}
               >
-                {AUDIENCE_BADGE[product.audience].label}
+                {t.audience[product.audience].label}
               </Link>
-              <span className="text-xs text-stone-500">{AUDIENCE_BADGE[product.audience].hint}</span>
+              <span className="text-xs text-stone-500">{t.audience[product.audience].hint}</span>
             </div>
             <h1 className="mt-3 text-3xl font-semibold tracking-tight text-stone-900 sm:text-4xl">
               {product.name}
@@ -173,13 +176,13 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                     : "rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-500"
                 }
               >
-                {product.in_stock ? "В наличии" : "Нет в наличии"}
+                {product.in_stock ? t.purchase.inStock : t.product.outOfStock}
               </span>
             </div>
             {discount && product.old_price && (
               <p className="mt-1 text-sm text-rose-700">
-                Экономия {formatPrice(product.old_price - product.price)}
-                {formatDiscountDeadline(product) ? ` · ${formatDiscountDeadline(product)}` : ""}
+                {t.productPage.saving(formatPrice(product.old_price - product.price))}
+                {formatDiscountDeadline(product, t) ? ` · ${formatDiscountDeadline(product, t)}` : ""}
               </p>
             )}
           </div>
@@ -195,7 +198,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
 
           {product.description && (
             <div>
-              <h2 className="mb-2 text-sm font-medium text-stone-500">Описание</h2>
+              <h2 className="mb-2 text-sm font-medium text-stone-500">{t.productPage.description}</h2>
               <p className="whitespace-pre-line leading-relaxed text-stone-700">
                 {product.description}
               </p>
@@ -209,7 +212,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                   <StoreAvatar store={store} sizes="56px" textClassName="text-2xl" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs text-stone-500">Продаёт магазин</p>
+                  <p className="text-xs text-stone-500">{t.productPage.soldBy}</p>
                   <Link
                     href={`/stores/${store.id}`}
                     className="font-semibold text-stone-900 transition hover:text-rose-600"
@@ -252,7 +255,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                 href={`/stores/${store.id}`}
                 className="mt-2 inline-flex min-h-11 items-center text-sm font-medium text-rose-600 hover:text-rose-700"
               >
-                Все товары магазина →
+                {t.productPage.allStoreProducts}
               </Link>
             </section>
           )}
@@ -262,7 +265,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
       {store && moreFromStore.length > 0 && (
         <section className="mt-16">
           <h2 className="mb-6 text-2xl font-semibold tracking-tight text-stone-900">
-            Другие товары магазина {store.name}
+            {t.productPage.otherProducts(store.name)}
           </h2>
           <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
             {moreFromStore.map((item) => (

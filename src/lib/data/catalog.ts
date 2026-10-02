@@ -5,6 +5,8 @@ import {
 } from "@/lib/supabase/log-error";
 import type { PostgrestError } from "@supabase/supabase-js";
 import { PRODUCT_SELECT, PUBLISHED_PRODUCT_SELECT } from "@/lib/data/selects";
+import { localizedName, localizeProductCategory } from "@/lib/i18n/categories";
+import { getLocale } from "@/lib/i18n/server";
 import { distanceToStore, maxKmForWalk } from "@/lib/near";
 import { isOnSale, isSizeAvailable } from "@/lib/utils/product";
 import type { Point } from "@/lib/utils/route";
@@ -59,8 +61,11 @@ export async function getCategoriesWithError(): Promise<DataResult<Category[]>> 
 
   logSupabaseError("getCategories", error);
 
+  // Названия — на языке сайта
+  const locale = await getLocale();
+
   return {
-    data: data ?? [],
+    data: (data ?? []).map((c) => ({ ...c, name: localizedName(c, locale) })),
     error,
     errorMessage: formatSupabaseError(error),
   };
@@ -174,7 +179,8 @@ export async function getProductsWithError(options?: {
 
   logSupabaseError("getProducts", error);
 
-  let products = (data as ProductWithRelations[]) ?? [];
+  const locale = await getLocale();
+  let products = ((data as ProductWithRelations[]) ?? []).map((p) => localizeProductCategory(p, locale));
   // Размер из фильтра должен быть не просто в списке, а ещё и не закончиться
   if (options?.size) {
     const size = options.size;
@@ -227,7 +233,7 @@ export async function getProductById(id: string): Promise<ProductDetails | null>
       `
       *,
       stores!products_store_id_fkey ( * ),
-      categories!products_category_id_fkey ( id, name )
+      categories!products_category_id_fkey ( * )
     `,
     )
     .eq("id", id)
@@ -235,7 +241,7 @@ export async function getProductById(id: string): Promise<ProductDetails | null>
 
   logSupabaseError("getProductById", error);
 
-  return (data as ProductDetails | null) ?? null;
+  return data ? localizeProductCategory(data as ProductDetails, await getLocale()) : null;
 }
 
 export async function getStoreByIdWithError(

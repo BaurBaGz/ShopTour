@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist_Mono, Onest } from "next/font/google";
 import { NavigationTracker } from "@/components/layout/navigation-tracker";
 import { Toaster } from "@/components/ui/toaster";
+import { LocaleProvider } from "@/lib/i18n/client";
+import { getLocale, getT } from "@/lib/i18n/server";
 import { pageMeta, SITE_URL } from "@/lib/seo";
 import "./globals.css";
 
@@ -18,33 +20,40 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  // Основа для относительных адресов в превью ссылок (og:image, canonical)
-  metadataBase: new URL(SITE_URL),
-  ...pageMeta({
-    title: "ShopTour — одежда в магазинах вашего города",
-    description: "Каталог одежды из магазинов рядом: размеры в наличии, скидки, адреса на карте. Отложите вещь и придите примерить.",
-  }),
-  // Фавикон — монограмма ST, иконка для телефона — квадратный знак бренда
-  icons: {
-    icon: [{ url: "/logos/shoptour-favicon.svg", type: "image/svg+xml" }],
-    apple: [{ url: "/logos/shoptour-app-icon.svg", type: "image/svg+xml" }],
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return {
+    // Основа для относительных адресов в превью ссылок (og:image, canonical)
+    metadataBase: new URL(SITE_URL),
+    ...pageMeta({
+      title: t.meta.siteTitle,
+      description: t.meta.siteDescription,
+    }),
+    // Фавикон — монограмма ST, иконка для телефона — квадратный знак бренда
+    icons: {
+      icon: [{ url: "/logos/shoptour-favicon.svg", type: "image/svg+xml" }],
+      apple: [{ url: "/logos/shoptour-app-icon.svg", type: "image/svg+xml" }],
+    },
+  };
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Язык выбран переключателем и запомнен в cookie
+  const locale = await getLocale();
   return (
-    <html lang="ru">
+    <html lang={locale}>
       <body
         className={`${onest.variable} ${geistMono.variable} flex min-h-screen flex-col bg-stone-50 text-stone-900 antialiased`}
       >
-        <NavigationTracker />
-        {children}
-        <Toaster />
+        <LocaleProvider locale={locale}>
+          <NavigationTracker />
+          {children}
+          <Toaster />
+        </LocaleProvider>
       </body>
     </html>
   );

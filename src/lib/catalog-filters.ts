@@ -2,6 +2,7 @@
 // Без серверных импортов — используется и на сервере, и в клиентских компонентах.
 import type { ProductSort } from "@/lib/data/catalog";
 import { parseSection } from "@/lib/audience";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { parseNear, parseWalk } from "@/lib/near";
 import { formatPrice } from "@/lib/utils/format";
 
@@ -74,16 +75,17 @@ export function buildFilterChips(
     categories: { id: string; name: string }[];
     stores?: { id: string; name: string }[];
   },
+  t: Dictionary,
 ): FilterChip[] {
   const chips: FilterChip[] = [];
 
   if (values.near) {
     const walk = parseWalk(values.walk);
-    const where = values.place ? `Рядом: ${values.place}` : "Рядом со мной";
-    chips.push({ label: walk ? `${where} · до ${walk} мин пешком` : where, keys: ["near", "walk", "place"] });
+    const where = values.place ? t.chips.nearPlace(values.place) : t.chips.nearMe;
+    chips.push({ label: walk ? t.chips.withinWalk(where, walk) : where, keys: ["near", "walk", "place"] });
   }
 
-  if (values.q) chips.push({ label: `«${values.q}»`, keys: ["q"] });
+  if (values.q) chips.push({ label: t.chips.search(values.q), keys: ["q"] });
 
   const category = names.categories.find((c) => c.id === values.category);
   if (category) chips.push({ label: category.name, keys: ["category"] });
@@ -91,7 +93,7 @@ export function buildFilterChips(
   const store = names.stores?.find((s) => s.id === values.store);
   if (store) chips.push({ label: store.name, keys: ["store"] });
 
-  if (values.size) chips.push({ label: `Размер ${values.size}`, keys: ["size"] });
+  if (values.size) chips.push({ label: t.chips.size(values.size), keys: ["size"] });
 
   const min = parsePrice(values.min);
   const max = parsePrice(values.max);
@@ -100,8 +102,8 @@ export function buildFilterChips(
       min !== undefined && max !== undefined
         ? `${formatPrice(min)} — ${formatPrice(max)}`
         : min !== undefined
-          ? `от ${formatPrice(min)}`
-          : `до ${formatPrice(max!)}`;
+          ? t.chips.priceFrom(formatPrice(min))
+          : t.chips.priceTo(formatPrice(max!));
     chips.push({ label, keys: ["min", "max"] });
   }
 

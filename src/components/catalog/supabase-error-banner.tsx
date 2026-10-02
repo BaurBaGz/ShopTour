@@ -1,29 +1,22 @@
+"use client";
+
+import { useT } from "@/lib/i18n/client";
+
 type SupabaseErrorBannerProps = {
   message: string;
   context?: string;
 };
 
-export function SupabaseErrorBanner({
-  message,
-  context,
-}: SupabaseErrorBannerProps) {
+/** Каталог не загрузился: понятное сообщение посетителю; техническая причина — мелко, для поддержки */
+export function SupabaseErrorBanner({ message, context }: SupabaseErrorBannerProps) {
+  const t = useT();
   return (
-    <div
-      role="alert"
-      className="mb-8 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-left sm:px-5"
-    >
-      <p className="text-sm font-semibold text-red-800">
-        Ошибка загрузки из Supabase
-        {context ? ` (${context})` : ""}
-      </p>
-      <p className="mt-2 font-mono text-xs leading-relaxed text-red-700">
+    <div role="alert" className="mb-8 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-left sm:px-5">
+      <p className="text-sm font-semibold text-red-800">{t.catalog.loadErrorTitle}</p>
+      <p className="mt-1 text-sm text-red-700">{t.catalog.loadErrorHint}</p>
+      <p className="mt-2 font-mono text-xs leading-relaxed text-red-600/80">
+        {context ? `${context}: ` : ""}
         {message}
-      </p>
-      <p className="mt-3 text-xs text-red-600/90">
-        Проверьте терминал с <code className="rounded bg-red-100 px-1">npm run dev</code>{" "}
-        — там полный лог. Убедитесь, что в{" "}
-        <code className="rounded bg-red-100 px-1">.env.local</code> реальные URL и anon key,
-        затем перезапустите сервер.
       </p>
     </div>
   );

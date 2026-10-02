@@ -4,17 +4,11 @@ import type { ProductAudience } from "@/types/database";
 /** Раздел в адресе страницы (?for=…) */
 export type Section = "women" | "men" | "kids" | "girls" | "boys";
 
-export const SECTIONS: { id: Section; label: string }[] = [
-  { id: "women", label: "Женщинам" },
-  { id: "men", label: "Мужчинам" },
-  { id: "kids", label: "Детям" },
-];
+// Подписи разделов — в словарях (t.sections): сайт на трёх языках
+export const SECTIONS: Section[] = ["women", "men", "kids"];
 
-export const KIDS_SECTIONS: { id: Section; label: string }[] = [
-  { id: "kids", label: "Всё детское" },
-  { id: "girls", label: "Девочкам" },
-  { id: "boys", label: "Мальчикам" },
-];
+/** Подразделы «Детям»; первый — «Всё детское» (подпись t.sections.kidsAll) */
+export const KIDS_SECTIONS: Section[] = ["kids", "girls", "boys"];
 
 /** Какие товары показывать в разделе: унисекс — и женщинам, и мужчинам */
 export const SECTION_AUDIENCES: Record<Section, ProductAudience[]> = {
@@ -48,14 +42,14 @@ export function parseAudience(value: unknown): ProductAudience | null {
 /** Запомненный раздел покупателя (cookie — чтобы сервер сразу отдал нужные товары) */
 export const SECTION_COOKIE = "shoptour_section";
 
-/** Метка на карточке товара: сразу видно, для кого вещь */
-export const AUDIENCE_BADGE: Record<ProductAudience, { label: string; hint: string; className: string }> = {
-  women: { label: "Женское", hint: "Женская модель", className: "text-rose-700" },
-  men: { label: "Мужское", hint: "Мужская модель", className: "text-sky-700" },
-  unisex: { label: "Унисекс", hint: "Подойдёт и женщинам, и мужчинам", className: "text-violet-700" },
-  girls: { label: "Девочкам", hint: "Детская модель для девочек", className: "text-rose-700" },
-  boys: { label: "Мальчикам", hint: "Детская модель для мальчиков", className: "text-sky-700" },
-  kids: { label: "Детское", hint: "Детская модель — и девочкам, и мальчикам", className: "text-emerald-700" },
+/** Цвет метки на карточке товара: сразу видно, для кого вещь. Подпись и подсказка — в словарях (t.audience) */
+export const AUDIENCE_COLOR: Record<ProductAudience, string> = {
+  women: "text-rose-700",
+  men: "text-sky-700",
+  unisex: "text-violet-700",
+  girls: "text-rose-700",
+  boys: "text-sky-700",
+  kids: "text-emerald-700",
 };
 
 /** Раздел каталога для метки: по нажатию — все такие вещи */

@@ -1,5 +1,7 @@
 // Расчёты для маршрута: расстояния по прямой, порядок обхода, ссылки на навигаторы
 
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+
 export type Point = { lat: number; lng: number };
 
 /** Средняя скорость пешком, км/ч */
@@ -30,16 +32,14 @@ export function walkingMinutes(km: number): number {
   return Math.round((km / WALKING_SPEED_KMH) * 60);
 }
 
-export function formatDistance(km: number): string {
-  if (km < 1) return `${Math.round(km * 1000 / 10) * 10} м`;
-  return `${km.toFixed(1).replace(".", ",")} км`;
+export function formatDistance(km: number, t: Dictionary): string {
+  if (km < 1) return t.near.meters(Math.round(km * 1000 / 10) * 10);
+  return t.near.kilometers(km.toFixed(1).replace(".", ","));
 }
 
-export function formatDuration(minutes: number): string {
-  if (minutes < 60) return `${minutes} мин`;
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return m ? `${h} ч ${m} мин` : `${h} ч`;
+export function formatDuration(minutes: number, t: Dictionary): string {
+  if (minutes < 60) return t.tour.minutes(minutes);
+  return t.tour.hours(Math.floor(minutes / 60), minutes % 60);
 }
 
 /** Ближайший сосед от заданного старта, затем улучшение 2-opt (старт остаётся первым) */

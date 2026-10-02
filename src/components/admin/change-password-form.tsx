@@ -7,6 +7,7 @@ import {
   type PasswordState,
 } from "@/lib/auth/password-actions";
 import { submitKeepingValues } from "@/lib/form-submit";
+import { useT } from "@/lib/i18n/client";
 
 const field =
   "min-h-11 w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-rose-300 focus:ring-4 focus:ring-rose-500/15";
@@ -24,6 +25,7 @@ export function ChangePasswordForm({ forced = false, reset = false }: ChangePass
     {},
   );
   const formRef = useRef<HTMLFormElement>(null);
+  const t = useT();
   // Пароль сохранён — поля больше не нужны
   useEffect(() => {
     if (state.success) formRef.current?.reset();
@@ -32,26 +34,26 @@ export function ChangePasswordForm({ forced = false, reset = false }: ChangePass
   return (
     <form ref={formRef} onSubmit={submitKeepingValues(action)} className="rounded-2xl border border-stone-200 bg-white p-6">
       <h2 className="text-lg font-semibold text-stone-900">
-        {forced || reset ? "Придумайте новый пароль" : "Сменить пароль"}
+        {forced || reset ? t.password.newTitle : t.password.changeTitle}
       </h2>
       {reset && (
-        <p className="mt-1 text-sm text-stone-500">Не короче 8 символов. После сохранения вы сразу войдёте.</p>
+        <p className="mt-1 text-sm text-stone-500">{t.password.resetHint}</p>
       )}
       {forced && (
         <p className="mt-1 text-sm text-stone-500">
-          Вы вошли по временному паролю. Задайте постоянный, чтобы продолжить.
+          {t.password.forcedHint}
         </p>
       )}
       <div className="mt-5 space-y-4">
         <div>
           <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-stone-700">
-            Новый пароль
+            {t.password.newPassword}
           </label>
           <input id="password" name="password" type="password" minLength={8} required autoComplete="new-password" className={field} />
         </div>
         <div>
           <label htmlFor="confirm" className="mb-1.5 block text-sm font-medium text-stone-700">
-            Повторите пароль
+            {t.password.repeat}
           </label>
           <input id="confirm" name="confirm" type="password" minLength={8} required autoComplete="new-password" className={field} />
         </div>
@@ -71,7 +73,7 @@ export function ChangePasswordForm({ forced = false, reset = false }: ChangePass
         disabled={pending}
         className="mt-5 min-h-11 w-full rounded-xl bg-stone-900 px-5 text-sm font-semibold text-white transition hover:bg-rose-600 disabled:opacity-60"
       >
-        {pending ? "Сохраняем…" : "Сохранить пароль"}
+        {pending ? t.password.saving : t.password.save}
       </button>
     </form>
   );

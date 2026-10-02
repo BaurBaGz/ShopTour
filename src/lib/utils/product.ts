@@ -1,3 +1,4 @@
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Json } from "@/types/database";
 
 type PricedProduct = { price: number; old_price: number | null };
@@ -13,7 +14,6 @@ export function getDiscountPercent(product: PricedProduct): number | null {
 
 const ALMATY_OFFSET_MS = 5 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
-const MONTHS = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
 
 /** Сегодняшняя дата в Алматы, «2026-11-05» */
 export function almatyToday(now = Date.now()): string {
@@ -25,22 +25,14 @@ export function daysUntil(date: string, today = almatyToday()): number {
   return Math.round((Date.parse(date) - Date.parse(today)) / DAY_MS);
 }
 
-function pluralDays(n: number) {
-  const mod10 = n % 10;
-  const mod100 = n % 100;
-  if (mod10 === 1 && mod100 !== 11) return "день";
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "дня";
-  return "дней";
-}
-
-/** «до 5 ноября», «до 5 ноября · осталось 2 дня», «только сегодня»; null — срок прошёл */
-export function formatUntil(date: string, today = almatyToday()): string | null {
+/** «до 5 ноября», «до 5 ноября · осталось 2 дня», «только сегодня» — на языке словаря; null — срок прошёл */
+export function formatUntil(date: string, t: Dictionary, today = almatyToday()): string | null {
   const daysLeft = daysUntil(date, today);
   if (daysLeft < 0) return null;
-  if (daysLeft === 0) return "только сегодня";
-  const [, month, day] = date.split("-").map(Number);
-  const until = `до ${day} ${MONTHS[month - 1]}`;
-  return daysLeft <= 3 ? `${until} · ${daysLeft === 1 ? "остался" : "осталось"} ${daysLeft} ${pluralDays(daysLeft)}` : until;
+  if (daysLeft === 0) return t.deadline.onlyToday;
+  const label = new Intl.DateTimeFormat(t.intl, { day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${date}T00:00:00Z`));
+  const until = t.deadline.until(label);
+  return daysLeft <= 3 ? `${until} · ${t.deadline.daysLeft(daysLeft)}` : until;
 }
 
 type DiscountedProduct = PricedProduct & { discount_until?: string | null };
@@ -59,10 +51,10 @@ export function isOnSale(product: DiscountedProduct, today = almatyToday()): boo
 }
 
 /** «Скидка до 5 ноября», «Скидка только сегодня»; null — срока нет или он прошёл */
-export function formatDiscountDeadline(product: DiscountedProduct, today = almatyToday()): string | null {
+export function formatDiscountDeadline(product: DiscountedProduct, t: Dictionary, today = almatyToday()): string | null {
   if (getDiscountDaysLeft(product, today) === null) return null;
-  const until = formatUntil(product.discount_until!, today);
-  return until ? `Скидка ${until}` : null;
+  const until = formatUntil(product.discount_until!, t, today);
+  return until ? t.deadline.discountUntil(until) : null;
 }
 
 /**
@@ -86,9 +78,9 @@ export function getAvailableSizes(product: StockedProduct): string[] {
 }
 
 /** «Осталось 3 шт.» / «Осталось всего 1 шт.»; null — остаток не указан */
-export function formatStockLeft(stock: number | undefined): string | null {
+export function formatStockLeft(stock: number | undefined, t: Dictionary): string | null {
   if (stock === undefined) return null;
-  if (stock === 0) return "Нет в наличии";
-  if (stock <= 2) return `Осталось всего ${stock} шт.`;
-  return `В наличии ${stock} шт.`;
+  if (stock === 0) return t.product.outOfStock;
+  if (stock <= 2) return t.purchase.stockFew(stock);
+  return t.purchase.stockLeft(stock);
 }

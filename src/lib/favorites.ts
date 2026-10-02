@@ -3,6 +3,7 @@
 // Избранное хранится в браузере (localStorage) — покупателям не нужен аккаунт.
 import { useCallback } from "react";
 import { track } from "@/lib/analytics";
+import { useT } from "@/lib/i18n/client";
 import { createLocalListStore } from "@/lib/local-list-store";
 import { showToast } from "@/lib/toast";
 
@@ -17,16 +18,17 @@ export const useFavoriteIds = store.useIds;
 export function useFavorite(productId: string) {
   const ids = useFavoriteIds();
   const isFavorite = ids.includes(productId);
+  const t = useT();
 
   const toggle = useCallback(() => {
     const current = store.get();
     if (current.includes(productId)) {
       store.set(current.filter((id) => id !== productId));
       showToast({
-        message: "Удалено из избранного",
+        message: t.favorites.removedToast,
         // Случайное нажатие легко отменить — возвращаем только этот товар, на прежнее место
         action: {
-          label: "Вернуть",
+          label: t.favorites.undo,
           onClick: () => {
             const now = store.get();
             if (now.includes(productId)) return;
@@ -39,11 +41,11 @@ export function useFavorite(productId: string) {
       store.set([productId, ...current]);
       track({ type: "favorite_add", productId });
       showToast({
-        message: "Добавлено в избранное",
-        action: { label: "Смотреть", href: "/favorites" },
+        message: t.favorites.addedToast,
+        action: { label: t.favorites.view, href: "/favorites" },
       });
     }
-  }, [productId]);
+  }, [productId, t]);
 
   return { isFavorite, toggle };
 }

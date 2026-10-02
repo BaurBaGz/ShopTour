@@ -1,9 +1,11 @@
 "use client";
 
+import { useT } from "@/lib/i18n/client";
 import { showToast } from "@/lib/toast";
 
 /** «Поделиться» витриной: системное меню на телефоне, иначе — копирование ссылки */
 export function ShareStoreButton({ slug, name, className }: { slug: string; name: string; className?: string }) {
+  const t = useT();
   const share = async () => {
     const url = `${window.location.origin}/s/${slug}`;
     if (navigator.share) {
@@ -17,7 +19,7 @@ export function ShareStoreButton({ slug, name, className }: { slug: string; name
     }
     try {
       await navigator.clipboard.writeText(url);
-      showToast({ message: "Ссылка на витрину скопирована" });
+      showToast({ message: t.store.shareCopied });
     } catch {
       showToast({ message: url });
     }
@@ -29,7 +31,7 @@ export function ShareStoreButton({ slug, name, className }: { slug: string; name
       onClick={() => void share()}
       className={className ?? "rounded-full bg-white/10 px-4 py-2 font-medium backdrop-blur-sm transition hover:bg-white/20"}
     >
-      Поделиться
+      {t.store.share}
     </button>
   );
 }

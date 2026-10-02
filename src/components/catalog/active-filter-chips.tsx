@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import type { FilterChip, FilterKey } from "@/lib/catalog-filters";
+import { useT } from "@/lib/i18n/client";
 
 type ActiveFilterChipsProps = {
   chips: FilterChip[];
@@ -14,6 +15,7 @@ type ActiveFilterChipsProps = {
 export function ActiveFilterChips({ chips, keepOnReset }: ActiveFilterChipsProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const t = useT();
 
   if (chips.length === 0) return null;
 
@@ -42,7 +44,7 @@ export function ActiveFilterChips({ chips, keepOnReset }: ActiveFilterChipsProps
           href={hrefWithout(chip.keys)}
           scroll={false}
           className="group inline-flex items-center gap-1.5 rounded-full bg-white py-1.5 pl-3 pr-2 text-sm text-stone-700 ring-1 ring-stone-200 transition hover:ring-stone-300"
-          aria-label={`Убрать фильтр: ${chip.label}`}
+          aria-label={t.catalog.removeFilter(chip.label)}
         >
           {chip.label}
           <span className="text-stone-500 group-hover:text-rose-600" aria-hidden>
@@ -56,7 +58,7 @@ export function ActiveFilterChips({ chips, keepOnReset }: ActiveFilterChipsProps
           scroll={false}
           className="px-2 text-sm font-medium text-stone-500 hover:text-stone-900"
         >
-          Сбросить все
+          {t.catalog.resetAll}
         </Link>
       )}
     </div>

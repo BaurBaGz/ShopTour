@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { createReservationAction, type ReserveState } from "@/app/(site)/reservations/actions";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils/cn";
 import { formatPrice } from "@/lib/utils/format";
 import { submitKeepingValues } from "@/lib/form-submit";
@@ -26,6 +27,7 @@ const inputClass =
 /** «Отложить в магазине»: имя, телефон, когда придёте. Снизу на телефоне, по центру на компьютере. */
 export function ReserveSheet({ product, size, viewer, onClose }: ReserveSheetProps) {
   const [state, action, pending] = useActionState<ReserveState, FormData>(createReservationAction, {});
+  const t = useT();
   const [visit, setVisit] = useState<"today" | "tomorrow">("today");
   const nameRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
@@ -74,38 +76,37 @@ export function ReserveSheet({ product, size, viewer, onClose }: ReserveSheetPro
   if (!viewer) {
     return (
       <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center" role="dialog" aria-modal="true" aria-labelledby="reserve-title">
-        <button type="button" aria-label="Закрыть" onClick={onClose} className="absolute inset-0 bg-stone-900/40" />
+        <button type="button" aria-label={t.reserve.close} onClick={onClose} className="absolute inset-0 bg-stone-900/40" />
         <div className="relative w-full rounded-t-3xl bg-white p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] shadow-xl sm:max-w-md sm:rounded-3xl sm:p-6">
           <div className="flex items-start justify-between gap-3">
             <div>
               <h2 id="reserve-title" className="text-lg font-semibold text-stone-900">
-                Отложить в магазине
+                {t.reserve.title}
               </h2>
               <p className="mt-0.5 text-sm text-stone-500">
                 {product.name}
-                {size ? `, размер ${size}` : ""} · {formatPrice(product.price)}
+                {size ? t.reserve.sizeSuffix(size) : ""} · {formatPrice(product.price)}
               </p>
             </div>
-            <button type="button" onClick={onClose} aria-label="Закрыть" className="-mr-2 -mt-1 flex h-11 w-11 items-center justify-center rounded-full text-stone-500 hover:bg-stone-100">
+            <button type="button" onClick={onClose} aria-label={t.reserve.close} className="-mr-2 -mt-1 flex h-11 w-11 items-center justify-center rounded-full text-stone-500 hover:bg-stone-100">
               ✕
             </button>
           </div>
           <p className="mt-4 text-stone-700">
-            Чтобы отложить вещь, войдите или создайте аккаунт — это минута. Брони будут в вашем аккаунте, а магазин
-            увидит, кто придёт.
+            {t.reserve.loginText}
           </p>
           <div className="mt-5 flex flex-col gap-2">
             <Link
               href={`/auth/login?next=${encodeURIComponent(back)}`}
               className="flex min-h-12 items-center justify-center rounded-xl bg-rose-600 text-sm font-semibold text-white transition hover:bg-rose-700"
             >
-              Войти
+              {t.nav.login}
             </Link>
             <Link
               href={`/auth/signup?next=${encodeURIComponent(back)}`}
               className="flex min-h-12 items-center justify-center rounded-xl text-sm font-semibold text-stone-800 ring-1 ring-stone-200 transition hover:bg-stone-50"
             >
-              Создать аккаунт
+              {t.reserve.createAccount}
             </Link>
           </div>
         </div>
@@ -115,7 +116,7 @@ export function ReserveSheet({ product, size, viewer, onClose }: ReserveSheetPro
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center" role="dialog" aria-modal="true" aria-labelledby="reserve-title">
-      <button type="button" aria-label="Закрыть" onClick={onClose} className="absolute inset-0 bg-stone-900/40" />
+      <button type="button" aria-label={t.reserve.close} onClick={onClose} className="absolute inset-0 bg-stone-900/40" />
       <form
         onSubmit={submitKeepingValues(action, remember)}
         className="relative max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] shadow-xl sm:max-w-md sm:rounded-3xl sm:p-6"
@@ -127,14 +128,14 @@ export function ReserveSheet({ product, size, viewer, onClose }: ReserveSheetPro
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 id="reserve-title" className="text-lg font-semibold text-stone-900">
-              Отложить в магазине
+              {t.reserve.title}
             </h2>
             <p className="mt-0.5 text-sm text-stone-500">
               {product.name}
-              {size ? `, размер ${size}` : ""} · {formatPrice(product.price)}
+              {size ? t.reserve.sizeSuffix(size) : ""} · {formatPrice(product.price)}
             </p>
           </div>
-          <button type="button" onClick={onClose} aria-label="Закрыть" className="-mr-2 -mt-1 flex h-11 w-11 items-center justify-center rounded-full text-stone-500 hover:bg-stone-100">
+          <button type="button" onClick={onClose} aria-label={t.reserve.close} className="-mr-2 -mt-1 flex h-11 w-11 items-center justify-center rounded-full text-stone-500 hover:bg-stone-100">
             ✕
           </button>
         </div>
@@ -142,13 +143,13 @@ export function ReserveSheet({ product, size, viewer, onClose }: ReserveSheetPro
         <div className="mt-5 space-y-4">
           <div>
             <label htmlFor="reserve-name" className="mb-1.5 block text-sm font-medium text-stone-700">
-              Ваше имя
+              {t.reserve.yourName}
             </label>
             <input id="reserve-name" ref={nameRef} name="name" required maxLength={60} autoComplete="given-name" className={inputClass} />
           </div>
           <div>
             <label htmlFor="reserve-phone" className="mb-1.5 block text-sm font-medium text-stone-700">
-              Телефон
+              {t.reserve.phone}
             </label>
             <input
               id="reserve-phone"
@@ -161,15 +162,15 @@ export function ReserveSheet({ product, size, viewer, onClose }: ReserveSheetPro
               placeholder="+7 701 123 45 67"
               className={inputClass}
             />
-            <p className="mt-1 text-xs text-stone-500">Магазин может позвонить или написать, если что-то уточнить</p>
+            <p className="mt-1 text-xs text-stone-500">{t.reserve.phoneHint}</p>
           </div>
           <fieldset>
-            <legend className="mb-1.5 block text-sm font-medium text-stone-700">Когда придёте</legend>
+            <legend className="mb-1.5 block text-sm font-medium text-stone-700">{t.reserve.whenTitle}</legend>
             <div className="grid grid-cols-2 gap-2">
               {(
                 [
-                  ["today", "Сегодня"],
-                  ["tomorrow", "Завтра"],
+                  ["today", t.reserve.today],
+                  ["tomorrow", t.reserve.tomorrow],
                 ] as const
               ).map(([value, label]) => (
                 <button
@@ -189,9 +190,9 @@ export function ReserveSheet({ product, size, viewer, onClose }: ReserveSheetPro
           </fieldset>
           <div>
             <label htmlFor="reserve-comment" className="mb-1.5 block text-sm font-medium text-stone-700">
-              Комментарий <span className="font-normal text-stone-400">(необязательно)</span>
+              {t.reserve.comment} <span className="font-normal text-stone-400">{t.reserve.optional}</span>
             </label>
-            <input id="reserve-comment" name="comment" maxLength={300} placeholder="Например: приду после 18:00" className={inputClass} />
+            <input id="reserve-comment" name="comment" maxLength={300} placeholder={t.reserve.commentPlaceholder} className={inputClass} />
           </div>
         </div>
 
@@ -206,10 +207,10 @@ export function ReserveSheet({ product, size, viewer, onClose }: ReserveSheetPro
           disabled={pending}
           className="mt-5 min-h-12 w-full rounded-xl bg-rose-600 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:opacity-60"
         >
-          {pending ? "Отправляем…" : "Отложить"}
+          {pending ? t.reserve.sending : t.reserve.submit}
         </button>
         <p className="mt-3 text-center text-xs text-stone-500">
-          Бесплатно и ни к чему не обязывает. Оплата — в магазине, после примерки.
+          {t.reserve.freeNote}
         </p>
       </form>
     </div>

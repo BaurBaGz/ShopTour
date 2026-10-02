@@ -2,17 +2,20 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useT } from "@/lib/i18n/client";
 import { canGoBackInApp } from "@/lib/navigation-history";
 
 type BackLinkProps = {
   /** Куда вести, если страницу открыли по прямой ссылке */
   fallbackHref: string;
-  fallbackLabel: string;
+  /** Больше не показывается: подпись одна — «Назад» на языке сайта */
+  fallbackLabel?: string;
 };
 
 /** «Назад» как в браузере — к фильтрам и месту в списке; без истории — по ссылке */
-export function BackLink({ fallbackHref, fallbackLabel }: BackLinkProps) {
+export function BackLink({ fallbackHref }: BackLinkProps) {
   const router = useRouter();
+  const t = useT();
 
   return (
     <Link
@@ -28,7 +31,7 @@ export function BackLink({ fallbackHref, fallbackLabel }: BackLinkProps) {
         <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
       </svg>
       {/* Подпись одна и та же на сервере и в браузере — без «прыжка» текста */}
-      Назад<span className="sr-only">{` (${fallbackLabel})`}</span>
+      {t.common.back}
     </Link>
   );
 }

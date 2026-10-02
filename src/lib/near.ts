@@ -1,5 +1,6 @@
 // «Рядом со мной»: точка покупателя, радиус в минутах пешком, расстояния до магазинов.
 // Без серверных импортов — используется и на сервере, и в браузере.
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { distanceKm, type Point } from "@/lib/utils/route";
 
 /** Сколько минут пешком можно выбрать; пусто — без ограничения, только сортировка */
@@ -49,8 +50,9 @@ export function distanceToStore(
 }
 
 /** «850 м · 12 мин пешком» */
-export function formatNearDistance(km: number): string {
-  const distance = km < 1 ? `${Math.max(10, Math.round((km * 1000) / 10) * 10)} м` : `${km.toFixed(1).replace(".", ",")} км`;
+export function formatNearDistance(km: number, t: Dictionary): string {
+  const distance =
+    km < 1 ? t.near.meters(Math.max(10, Math.round((km * 1000) / 10) * 10)) : t.near.kilometers(km.toFixed(1).replace(".", ","));
   const minutes = walkMinutesTo(km);
-  return minutes <= 60 ? `${distance} · ${minutes} мин пешком` : distance;
+  return minutes <= 60 ? t.near.walk(distance, minutes) : distance;
 }

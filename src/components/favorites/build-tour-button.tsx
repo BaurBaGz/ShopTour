@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useT } from "@/lib/i18n/client";
 import { createClient } from "@/lib/supabase/client";
 import { MAX_TOUR_STOPS, tour, useTourIds } from "@/lib/tour";
 import { optimizeOrder } from "@/lib/utils/route";
@@ -11,16 +12,10 @@ type BuildTourButtonProps = {
   storeIds: string[];
 };
 
-function storesWord(count: number): string {
-  const mod10 = count % 10;
-  const mod100 = count % 100;
-  if (mod10 === 1 && mod100 !== 11) return "магазину";
-  return "магазинам";
-}
-
 /** Собирает маршрут по магазинам с избранным и открывает карту с ним */
 export function BuildTourButton({ storeIds }: BuildTourButtonProps) {
   const router = useRouter();
+  const t = useT();
   const tourIds = useTourIds();
   const [status, setStatus] = useState<"idle" | "confirm" | "loading" | "error">("idle");
 
@@ -74,29 +69,29 @@ export function BuildTourButton({ storeIds }: BuildTourButtonProps) {
           />
         </svg>
         {status === "loading"
-          ? "Строим маршрут…"
+          ? t.tour.building
           : status === "confirm"
-            ? "Да, заменить маршрут"
-            : "Построить маршрут"}
+            ? t.tour.confirmReplace
+            : t.tour.build}
       </button>
 
       {status === "confirm" ? (
         <p className="text-xs text-stone-500">
-          В маршруте уже {tourIds.length} ост. — новый заменит его.{" "}
+          {t.tour.alreadyHas(tourIds.length)}{" "}
           <button
             type="button"
             onClick={() => setStatus("idle")}
             className="font-medium text-stone-700 underline underline-offset-2 hover:text-stone-900"
           >
-            Отмена
+            {t.common.cancel}
           </button>
         </p>
       ) : status === "error" ? (
-        <p className="text-xs text-red-600">Не удалось построить маршрут. Попробуйте ещё раз.</p>
+        <p className="text-xs text-red-600">{t.tour.buildFailed}</p>
       ) : (
         <p className="text-xs text-stone-500">
-          Маршрут по {uniqueIds.length} {storesWord(uniqueIds.length)} с вашим избранным
-          {uniqueIds.length > MAX_TOUR_STOPS && ` (на карте — первые ${MAX_TOUR_STOPS})`}
+          {t.tour.buildHint(uniqueIds.length)}
+          {uniqueIds.length > MAX_TOUR_STOPS && t.tour.firstOnMap(MAX_TOUR_STOPS)}
         </p>
       )}
     </div>

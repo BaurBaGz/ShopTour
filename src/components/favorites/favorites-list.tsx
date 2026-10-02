@@ -8,7 +8,8 @@ import { PRODUCT_SELECT } from "@/lib/data/selects";
 import type { ProductWithRelations } from "@/lib/data/types";
 import { pruneFavorites, useFavoriteIds } from "@/lib/favorites";
 import { createClient } from "@/lib/supabase/client";
-import { formatProductCount } from "@/lib/utils/format";
+import { localizeProductCategory } from "@/lib/i18n/categories";
+import { useLocale, useT } from "@/lib/i18n/client";
 
 type LoadState =
   | { status: "loading" }
@@ -16,6 +17,8 @@ type LoadState =
   | { status: "ready"; products: ProductWithRelations[] };
 
 export function FavoritesList() {
+  const t = useT();
+  const locale = useLocale();
   const ids = useFavoriteIds();
   const [state, setState] = useState<LoadState>({ status: "loading" });
   // Товары подгружаем, когда появляются новые id; удалённые просто скрываем из списка
@@ -49,13 +52,13 @@ export function FavoritesList() {
   }, [idsKey]);
 
   if (state.status === "loading" && ids.length > 0) {
-    return <p className="text-sm text-stone-500">Загружаем избранное…</p>;
+    return <p className="text-sm text-stone-500">{t.favoritesPage.loading}</p>;
   }
 
   if (state.status === "error") {
     return (
       <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">
-        Не удалось загрузить избранное. Обновите страницу.
+        {t.favoritesPage.loadFailed}
       </p>
     );
   }
@@ -66,20 +69,21 @@ export function FavoritesList() {
   );
   const products = ids
     .map((id) => byId.get(id))
-    .filter((p): p is ProductWithRelations => Boolean(p));
+    .filter((p): p is ProductWithRelations => Boolean(p))
+    .map((p) => localizeProductCategory(p, locale));
 
   if (products.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-stone-300 bg-white px-6 py-20 text-center">
-        <p className="text-lg font-medium text-stone-800">В избранном пока пусто</p>
+        <p className="text-lg font-medium text-stone-800">{t.favoritesPage.emptyTitle}</p>
         <p className="mt-2 max-w-sm text-sm text-stone-500">
-          Нажмите на сердечко на карточке товара, чтобы сохранить его здесь.
+          {t.favoritesPage.emptyText}
         </p>
         <Link
           href="/catalog"
           className="mt-6 rounded-xl bg-stone-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-600"
         >
-          Перейти в каталог
+          {t.notFound.goToCatalog}
         </Link>
       </div>
     );
@@ -88,7 +92,7 @@ export function FavoritesList() {
   return (
     <>
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-stone-500">{formatProductCount(products.length)}</p>
+        <p className="text-sm text-stone-500">{t.catalog.productCount(products.length)}</p>
         <BuildTourButton storeIds={products.map((p) => p.store_id)} />
       </div>
       <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">

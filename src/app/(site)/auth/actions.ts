@@ -5,6 +5,8 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { accountHome, safeNext } from "@/lib/auth/home";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 
 export type AuthActionState = {
@@ -16,18 +18,19 @@ export async function loginAction(
   _prev: AuthActionState,
   formData: FormData,
 ): Promise<AuthActionState> {
+  const t = await getT();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
   if (!email || !password) {
-    return { error: "Введите email и пароль" };
+    return { error: t.auth.errorCredentialsRequired };
   }
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    if (error.code === "invalid_credentials") return { error: "Неверный email или пароль" };
+    if (error.code === "invalid_credentials") return { error: t.auth.errorInvalidCredentials };
     if (error.code === "email_not_confirmed") {
       // Письмо могло потеряться — отправляем ещё раз (не чаще раза в минуту, это ограничивает Supabase)
       await supabase.auth.resend({
@@ -35,9 +38,7 @@ export async function loginAction(
         email,
         options: { emailRedirectTo: `${await requestOrigin()}/auth/confirm` },
       });
-      return {
-        error: `Email ещё не подтверждён. Мы отправили письмо на ${email} — нажмите ссылку в нём. Проверьте и папку «Спам».`,
-      };
+      return { error: t.auth.errorNotConfirmed(email) };
     }
     return { error: error.message };
   }
@@ -53,12 +54,13 @@ export async function signupAction(
   _prev: AuthActionState,
   formData: FormData,
 ): Promise<AuthActionState> {
+  const t = await getT();
   const name = String(formData.get("name") ?? "").trim().slice(0, 60);
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "Введите email" };
-  if (password.length < 8) return { error: "Пароль должен быть не короче 8 символов" };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: t.auth.errorEmail };
+  if (password.length < 8) return { error: t.auth.errorPasswordShort };
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
@@ -70,11 +72,11 @@ export async function signupAction(
     },
   });
 
-  const problem = signUpProblem(error, data.user);
+  const problem = signUpProblem(error, data.user, t);
   if (problem) return { error: problem };
 
   if (!data.session) {
-    return { success: confirmEmailMessage(email) };
+    return { success: t.auth.confirmSent(email) };
   }
 
   revalidatePath("/", "layout");
@@ -85,6 +87,7 @@ export async function registerAction(
   _prev: AuthActionState,
   formData: FormData,
 ): Promise<AuthActionState> {
+  const t = await getT();
   // Те же пределы длины, что и в настройках магазина в кабинете
   const text = (key: string, max: number, fallback = "") => String(formData.get(key) ?? fallback).trim().slice(0, max);
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
@@ -97,12 +100,12 @@ export async function registerAction(
   const description = text("description", 1000);
 
   if (!email || !password || !storeName || !address) {
-    return { error: "Заполните обязательные поля" };
+    return { error: t.auth.errorRequired };
   }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "Введите email" };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: t.auth.errorEmail };
 
   if (password.length < 8) {
-    return { error: "Пароль должен быть не короче 8 символов" };
+    return { error: t.auth.errorPasswordShort };
   }
 
   const supabase = await createClient();
@@ -113,7 +116,7 @@ export async function registerAction(
     options: { emailRedirectTo: `${await requestOrigin()}/auth/confirm` },
   });
 
-  const problem = signUpProblem(signUpError, authData.user);
+  const problem = signUpProblem(signUpError, authData.user, t);
   if (problem) return { error: problem };
   const user = authData.user!;
 
@@ -134,15 +137,15 @@ export async function registerAction(
     const { data: existing } = await admin.from("stores").select("id").eq("owner_id", user.id).maybeSingle();
     if (!existing) {
       const { error: storeError } = await admin.from("stores").insert({ ...store, status: "draft" });
-      if (storeError) return { error: `Магазин не создан: ${storeError.message}` };
+      if (storeError) return { error: t.auth.errorStore(storeError.message) };
     }
-    return { success: confirmEmailMessage(email) };
+    return { success: t.auth.confirmSent(email) };
   }
 
   const { error: storeError } = await supabase.from("stores").insert(store);
 
   if (storeError) {
-    return { error: `Магазин не создан: ${storeError.message}` };
+    return { error: t.auth.errorStore(storeError.message) };
   }
 
   revalidatePath("/", "layout");
@@ -153,27 +156,24 @@ export async function registerAction(
 function signUpProblem(
   error: { code?: string; status?: number; message: string } | null,
   user: { identities?: unknown[] } | null,
+  t: Dictionary,
 ): string | null {
   if (error) {
     if (error.code === "user_already_exists" || /already registered/i.test(error.message)) {
-      return "С этим email уже есть аккаунт. Войдите или восстановите пароль.";
+      return t.auth.errorExists;
     }
-    if (error.code === "weak_password") return "Слишком простой пароль — придумайте сложнее";
+    if (error.code === "weak_password") return t.auth.errorWeakPassword;
     if (error.status === 429 || /rate limit|seconds/i.test(error.message)) {
-      return "Слишком много попыток. Подождите минуту и попробуйте снова.";
+      return t.auth.errorRateLimit;
     }
     return error.message;
   }
-  if (!user) return "Не удалось зарегистрироваться. Попробуйте ещё раз.";
+  if (!user) return t.auth.errorSignup;
   // При включённом подтверждении Supabase не сообщает, что email занят, — только пустым списком identities
   if (Array.isArray(user.identities) && user.identities.length === 0) {
-    return "С этим email уже есть аккаунт. Войдите или восстановите пароль.";
+    return t.auth.errorExists;
   }
   return null;
-}
-
-function confirmEmailMessage(email: string) {
-  return `Почти готово! Мы отправили письмо на ${email}. Нажмите ссылку в нём, чтобы подтвердить email, — после этого вы сразу войдёте. Проверьте и папку «Спам».`;
 }
 
 export async function logoutAction() {
@@ -196,9 +196,10 @@ export async function forgotPasswordAction(
   _prev: AuthActionState,
   formData: FormData,
 ): Promise<AuthActionState> {
+  const t = await getT();
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return { error: "Введите email, с которым входите в ShopTour" };
+    return { error: t.auth.errorForgotEmail };
   }
 
   const supabase = await createClient();
@@ -208,14 +209,12 @@ export async function forgotPasswordAction(
 
   if (error) {
     if (error.status === 429 || /seconds|rate limit/i.test(error.message)) {
-      return { error: "Письмо уже отправлено недавно. Подождите минуту и попробуйте снова." };
+      return { error: t.auth.errorForgotRecent };
     }
     console.error("[auth] resetPasswordForEmail:", error.message);
-    return { error: "Не удалось отправить письмо. Попробуйте позже." };
+    return { error: t.auth.errorForgotFailed };
   }
 
   // Одинаковый ответ для любых адресов — чтобы по форме нельзя было узнать, чей email зарегистрирован
-  return {
-    success: `Если аккаунт с адресом ${email} существует, мы отправили на него письмо со ссылкой для нового пароля. Проверьте и папку «Спам».`,
-  };
+  return { success: t.auth.forgotSent(email) };
 }

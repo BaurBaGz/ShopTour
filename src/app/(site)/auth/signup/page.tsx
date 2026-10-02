@@ -5,16 +5,18 @@ import { signupAction } from "@/app/(site)/auth/actions";
 import { AuthForm } from "@/components/auth/auth-form";
 import { accountHome, safeNext } from "@/lib/auth/home";
 import { getSessionUser } from "@/lib/auth/session";
+import { getT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Регистрация — ShopTour",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT()).auth.signupMeta };
+}
 
 type SignupPageProps = {
   searchParams: Promise<{ next?: string | string[] }>;
 };
 
 export default async function SignupPage({ searchParams }: SignupPageProps) {
+  const t = await getT();
   const next = safeNext((await searchParams).next);
 
   const user = await getSessionUser();
@@ -23,24 +25,24 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
   return (
     <main className="px-4 py-16 sm:py-20">
       <AuthForm
-        title="Регистрация"
-        subtitle="Избранное, маршруты и недавно просмотренное будут с вами на телефоне и компьютере. То, что вы уже сохранили в этом браузере, перенесётся в аккаунт."
-        submitLabel="Создать аккаунт"
+        title={t.auth.signupTitle}
+        subtitle={t.auth.signupSubtitle}
+        submitLabel={t.auth.createAccount}
         action={signupAction}
         hiddenFields={next ? { next } : undefined}
         fields={[
-          { name: "name", label: "Имя (необязательно)", placeholder: "Как к вам обращаться" },
-          { name: "email", label: "Email", type: "email", placeholder: "you@example.com", required: true },
-          { name: "password", label: "Пароль (не короче 8 символов)", type: "password", required: true },
+          { name: "name", label: t.auth.nameOptional, placeholder: t.auth.namePlaceholder },
+          { name: "email", label: t.auth.email, type: "email", placeholder: "you@example.com", required: true },
+          { name: "password", label: t.auth.passwordMin, type: "password", required: true },
         ]}
         footer={
           <>
-            <span className="text-stone-500">Уже есть аккаунт? </span>
+            <span className="text-stone-500">{t.auth.haveAccount} </span>
             <Link
               href={next ? `/auth/login?next=${encodeURIComponent(next)}` : "/auth/login"}
               className="inline-flex min-h-11 items-center font-medium text-rose-600 hover:text-rose-700"
             >
-              Войти
+              {t.nav.login}
             </Link>
           </>
         }

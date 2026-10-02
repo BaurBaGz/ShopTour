@@ -1,8 +1,11 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { FavoriteButton } from "@/components/favorites/favorite-button";
 import type { ProductWithRelations } from "@/lib/data/types";
-import { AUDIENCE_BADGE } from "@/lib/audience";
+import { AUDIENCE_COLOR } from "@/lib/audience";
+import { useT } from "@/lib/i18n/client";
 import { formatNearDistance } from "@/lib/near";
 import { formatPrice } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
@@ -13,12 +16,14 @@ type ProductCardProps = {
   className?: string;
 };
 
+/** Карточка товара. Клиентский компонент: подписи берёт из словаря выбранного языка */
 export function ProductCard({ product, className }: ProductCardProps) {
   const imageUrl = product.images?.[0];
   const store = product.stores;
   const discount = getDiscountPercent(product);
   const availableSizes = getAvailableSizes(product);
-  const deadline = formatDiscountDeadline(product);
+  const t = useT();
+  const deadline = formatDiscountDeadline(product, t);
 
   return (
     <article
@@ -56,7 +61,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
                   d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
-              <span className="text-xs">Нет фото</span>
+              <span className="text-xs">{t.product.noPhoto}</span>
             </div>
           )}
           {product.categories?.name && (
@@ -80,10 +85,10 @@ export function ProductCard({ product, className }: ProductCardProps) {
       <div className="flex flex-1 flex-col gap-2 p-4">
         {product.audience && (
           <p
-            className={cn("-mb-1 text-[11px] font-semibold uppercase tracking-wide", AUDIENCE_BADGE[product.audience].className)}
-            title={AUDIENCE_BADGE[product.audience].hint}
+            className={cn("-mb-1 text-[11px] font-semibold uppercase tracking-wide", AUDIENCE_COLOR[product.audience])}
+            title={t.audience[product.audience].hint}
           >
-            {AUDIENCE_BADGE[product.audience].label}
+            {t.audience[product.audience].label}
           </p>
         )}
         <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-stone-900">
@@ -122,14 +127,14 @@ export function ProductCard({ product, className }: ProductCardProps) {
         )}
 
         {product.distanceKm != null && (
-          <p className="-mt-1 text-xs font-medium text-rose-700">📍 {formatNearDistance(product.distanceKm)}</p>
+          <p className="-mt-1 text-xs font-medium text-rose-700">📍 {formatNearDistance(product.distanceKm, t)}</p>
         )}
 
         {product.sizes?.length > 0 && (
           <p className="mt-auto text-xs text-stone-500">
             {availableSizes.length > 0
-              ? `Размеры: ${availableSizes.join(", ")}`
-              : "Нет в наличии"}
+              ? t.product.sizes(availableSizes.join(", "))
+              : t.product.outOfStock}
           </p>
         )}
       </div>

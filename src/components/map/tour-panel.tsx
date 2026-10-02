@@ -2,6 +2,7 @@
 
 import { SaveTourButton } from "@/components/account/save-tour-button";
 import type { MapStore } from "@/lib/data/catalog";
+import { useT } from "@/lib/i18n/client";
 import { MAX_TOUR_STOPS, tour } from "@/lib/tour";
 import { cn } from "@/lib/utils/cn";
 import {
@@ -44,6 +45,7 @@ export function TourPanel({
   onSelect,
   onClose,
 }: TourPanelProps) {
+  const t = useT();
   const points = stops.map(toPoint);
   const legs = routeLegs(points);
   const totalKm = legs.reduce((sum, leg) => sum + leg, 0);
@@ -55,19 +57,19 @@ export function TourPanel({
 
   return (
     <section
-      aria-label="Маршрут"
+      aria-label={t.tour.title}
       style={{ "--tour-max-h": `${maxHeight}px` } as React.CSSProperties}
       className="flex flex-col rounded-3xl border border-stone-200/80 bg-white p-5 lg:max-h-[var(--tour-max-h)] lg:overflow-y-auto"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-stone-900">Маршрут</h2>
-          <p className="text-sm text-stone-500">Магазины по порядку обхода</p>
+          <h2 className="text-lg font-semibold text-stone-900">{t.tour.title}</h2>
+          <p className="text-sm text-stone-500">{t.tour.subtitle}</p>
         </div>
         <button
           type="button"
           onClick={onClose}
-          aria-label="Скрыть маршрут"
+          aria-label={t.tour.hide}
           className="rounded-full p-2 text-stone-500 transition hover:bg-stone-100 hover:text-stone-900"
         >
           <svg
@@ -90,13 +92,13 @@ export function TourPanel({
       {stops.length === 0 ? (
         <div className="mt-4 rounded-2xl bg-stone-50 p-4 text-sm text-stone-600">
           <p>
-            Выберите магазин на карте и нажмите{" "}
-            <span className="font-medium text-stone-900">«+ В маршрут»</span>{" "}
-            — он станет остановкой маршрута.
+            {t.tour.emptyBefore}{" "}
+            <span className="font-medium text-stone-900">{t.tour.emptyButton}</span>{" "}
+            {t.tour.emptyAfter}
           </p>
           {favoriteStores.length > 0 && (
             <p className="mt-2">
-              Или соберите тур из магазинов с вашим избранным.
+              {t.tour.emptyFavorites}
             </p>
           )}
         </div>
@@ -107,8 +109,8 @@ export function TourPanel({
               <li key={store.id}>
                 {index > 0 && (
                   <p className="py-1 pl-12 text-xs text-stone-500">
-                    ↓ {formatDistance(legs[index - 1])} ·{" "}
-                    {formatDuration(walkingMinutes(legs[index - 1]))}
+                    ↓ {formatDistance(legs[index - 1], t)} ·{" "}
+                    {formatDuration(walkingMinutes(legs[index - 1]), t)}
                   </p>
                 )}
                 <div
@@ -148,7 +150,7 @@ export function TourPanel({
                       type="button"
                       onClick={() => tour.move(store.id, -1)}
                       disabled={index === 0}
-                      aria-label={`Поднять ${store.name} выше`}
+                      aria-label={t.tour.moveUp(store.name)}
                       className={smallButton}
                     >
                       ↑
@@ -157,7 +159,7 @@ export function TourPanel({
                       type="button"
                       onClick={() => tour.move(store.id, 1)}
                       disabled={index === stops.length - 1}
-                      aria-label={`Опустить ${store.name} ниже`}
+                      aria-label={t.tour.moveDown(store.name)}
                       className={smallButton}
                     >
                       ↓
@@ -165,7 +167,7 @@ export function TourPanel({
                     <button
                       type="button"
                       onClick={() => tour.remove(store.id)}
-                      aria-label={`Убрать ${store.name} из маршрута`}
+                      aria-label={t.tour.remove(store.name)}
                       className={smallButton}
                     >
                       ✕
@@ -178,29 +180,23 @@ export function TourPanel({
 
           <p className="mt-4 text-sm text-stone-600">
             <span className="font-semibold text-stone-900">
-              {stops.length}{" "}
-              {stops.length === 1
-                ? "остановка"
-                : stops.length < 5
-                  ? "остановки"
-                  : "остановок"}
+              {t.tour.stops(stops.length)}
             </span>
             {stops.length > 1 && (
               <>
                 {" "}
-                · {formatDistance(totalKm)} · ~
-                {formatDuration(walkingMinutes(totalKm))} пешком
+                · {formatDistance(totalKm, t)} · {t.tour.onFoot(formatDuration(walkingMinutes(totalKm), t))}
               </>
             )}
           </p>
           {stops.length > 1 && (
             <p className="text-xs text-stone-500">
-              Расстояние по прямой, по улицам будет чуть больше
+              {t.tour.straightLine}
             </p>
           )}
           {stops.length >= MAX_TOUR_STOPS && (
             <p className="mt-1 text-xs text-amber-700">
-              Максимум {MAX_TOUR_STOPS} остановок — столько принимают навигаторы
+              {t.tour.maxStops(MAX_TOUR_STOPS)}
             </p>
           )}
 
@@ -211,7 +207,7 @@ export function TourPanel({
               rel="noopener noreferrer"
               className="rounded-xl bg-stone-900 px-4 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-rose-600"
             >
-              Открыть в Google Картах
+              {t.tour.openGoogle}
             </a>
             <a
               href={yandexMapsRouteUrl(points)}
@@ -219,10 +215,10 @@ export function TourPanel({
               rel="noopener noreferrer"
               className="rounded-xl px-4 py-2.5 text-center text-sm font-semibold text-stone-800 ring-1 ring-stone-200 transition hover:bg-stone-50"
             >
-              Открыть в Яндекс Картах
+              {t.tour.openYandex}
             </a>
             <p className="text-center text-xs text-stone-500">
-              Google начнёт маршрут от вашего местоположения
+              {t.tour.googleNote}
             </p>
           </div>
         </>
@@ -236,7 +232,7 @@ export function TourPanel({
             onClick={optimize}
             className="rounded-full px-3 py-1.5 font-medium text-stone-700 ring-1 ring-stone-200 transition hover:bg-stone-50"
           >
-            Оптимальный порядок
+            {t.tour.optimize}
           </button>
         )}
         {favoriteStores.length > 0 && (
@@ -245,7 +241,7 @@ export function TourPanel({
             onClick={buildFromFavorites}
             className="rounded-full px-3 py-1.5 font-medium text-rose-600 ring-1 ring-rose-200 transition hover:bg-rose-50"
           >
-            ♥ Собрать из избранного
+            {t.tour.fromFavorites}
           </button>
         )}
         {stops.length > 0 && (
@@ -254,7 +250,7 @@ export function TourPanel({
             onClick={() => tour.clear()}
             className="rounded-full px-3 py-1.5 font-medium text-stone-500 transition hover:bg-stone-100 hover:text-stone-900"
           >
-            Очистить
+            {t.tour.clear}
           </button>
         )}
       </div>
