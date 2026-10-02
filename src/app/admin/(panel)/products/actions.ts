@@ -55,7 +55,8 @@ export async function updateProductPriceAction(id: string, price: number) {
   const supabase = await createClient();
   const { data: current } = await supabase.from("products").select("old_price").eq("id", id).maybeSingle();
   const oldPrice = current?.old_price != null && current.old_price > price ? current.old_price : null;
-  const { error: updateError } = await supabase.from("products").update({ price, old_price: oldPrice }).eq("id", id);
+  const { error: updateError } = await supabase.from("products").update({ price, old_price: oldPrice, ...(oldPrice === null ? { discount_until: null } : {}) })
+    .eq("id", id);
   if (updateError) return { error: updateError.message };
   revalidateProducts([id]);
   return { error: null };
@@ -89,15 +90,16 @@ export async function bulkProductsAction(ids: string[], op: BulkOp, percent?: nu
   let count = 0;
   for (const row of rows ?? []) {
     const base = row.old_price && row.old_price > row.price ? row.old_price : row.price;
-    let update: { price: number; old_price: number | null };
+    // Новая или снятая скидка — прежний срок больше не действует
+    let update: { price: number; old_price: number | null; discount_until: null };
     if (op === "clear-discount") {
       if (!row.old_price) continue;
-      update = { price: base, old_price: null };
+      update = { price: base, old_price: null, discount_until: null };
     } else {
       if (!percent || percent < 1 || percent > 90) return { error: "Скидка — от 1 до 90%", count };
       // Округляем до 100 ₸ — цены на сайте «круглые»
       const discounted = Math.max(100, Math.round((base * (1 - percent / 100)) / 100) * 100);
-      update = { price: discounted, old_price: base };
+      update = { price: discounted, old_price: base, discount_until: null };
     }
     const { error: e } = await supabase.from("products").update(update).eq("id", row.id);
     if (e) return { error: e.message, count };

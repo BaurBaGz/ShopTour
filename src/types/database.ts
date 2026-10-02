@@ -97,6 +97,7 @@ export interface Database {
           description: string | null;
           price: number;
           old_price: number | null;
+          discount_until: string | null;
           category_id: string;
           sizes: string[];
           images: string[];
@@ -113,6 +114,7 @@ export interface Database {
           description?: string | null;
           price: number;
           old_price?: number | null;
+          discount_until?: string | null;
           category_id: string;
           sizes?: string[];
           images?: string[];
@@ -129,6 +131,7 @@ export interface Database {
           description?: string | null;
           price?: number;
           old_price?: number | null;
+          discount_until?: string | null;
           category_id?: string;
           sizes?: string[];
           images?: string[];

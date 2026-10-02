@@ -138,6 +138,21 @@ export function ProductForm({ categories, product, storeId }: ProductFormProps) 
             <p className="mt-1 text-xs text-stone-500">Больше цены — покупатель увидит скидку</p>
           </div>
           <div>
+            <label htmlFor="product-discount-until" className={labelClass}>
+              Скидка действует до
+            </label>
+            <input
+              id="product-discount-until"
+              name="discountUntil"
+              type="date"
+              defaultValue={product?.discount_until ?? ""}
+              className={inputClass}
+            />
+            <p className="mt-1 text-xs text-stone-500">
+              Необязательно. После этой даты вернётся старая цена. Пусто — скидка без срока
+            </p>
+          </div>
+          <div>
             <label htmlFor="product-description" className={labelClass}>
               Описание
             </label>

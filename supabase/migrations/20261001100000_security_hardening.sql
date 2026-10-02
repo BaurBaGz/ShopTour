@@ -31,8 +31,8 @@ alter table public.stores
     and char_length(coalesce(instagram, '')) <= 100
     and char_length(coalesce(logo_url, '')) <= 500
   ),
-  add constraint stores_logo_https check (logo_url is null or logo_url ~ '^https://'),
-  add constraint stores_slug_format check (slug ~ '^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$');
+  add constraint stores_logo_https check (logo_url is null or logo_url ~ '^https://');
+-- формат slug уже проверяет stores_slug_format из миграции 20260930130000_store_slug
 
 alter table public.products
   add constraint products_text_limits check (

@@ -6,6 +6,7 @@ import { getStaffMember } from "@/lib/auth/staff";
 
 const nav = [
   { href: "/catalog", label: "Каталог" },
+  { href: "/sale", label: "Скидки", desktopOnly: true },
   { href: "/stores", label: "Магазины на карте", shortLabel: "Карта" },
 ];
 

@@ -6,7 +6,7 @@ import { AUDIENCE_BADGE } from "@/lib/audience";
 import { formatNearDistance } from "@/lib/near";
 import { formatPrice } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
-import { getAvailableSizes, getDiscountPercent } from "@/lib/utils/product";
+import { formatDiscountDeadline, getAvailableSizes, getDiscountPercent } from "@/lib/utils/product";
 
 type ProductCardProps = {
   product: ProductWithRelations;
@@ -18,6 +18,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
   const store = product.stores;
   const discount = getDiscountPercent(product);
   const availableSizes = getAvailableSizes(product);
+  const deadline = formatDiscountDeadline(product);
 
   return (
     <article
@@ -108,6 +109,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
             </span>
           )}
         </p>
+        {deadline && <p className="-mt-1 text-xs font-medium text-rose-700">{deadline}</p>}
 
         {store && (
           <Link

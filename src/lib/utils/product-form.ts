@@ -1,5 +1,6 @@
 // Разбор формы товара — общий для кабинета магазина и админки
 import { parseAudience } from "@/lib/audience";
+import { almatyToday } from "@/lib/utils/product";
 import type { ProductAudience } from "@/types/database";
 
 // Пределы — чтобы в базу нельзя было записать мусор огромного размера
@@ -54,6 +55,7 @@ export type ProductFields = {
   description: string | null;
   price: number;
   old_price: number | null;
+  discount_until: string | null;
   category_id: string;
   sizes: string[];
   size_stock: Record<string, number>;
@@ -88,12 +90,23 @@ export function parseProductForm(formData: FormData): { fields: ProductFields } 
     return { error: "Старая цена должна быть больше текущей — иначе это не скидка" };
   }
 
+  // Срок скидки имеет смысл только вместе со старой ценой
+  const untilRaw = String(formData.get("discountUntil") ?? "").trim();
+  const discountUntil = oldPrice !== null && untilRaw ? untilRaw : null;
+  if (discountUntil !== null) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(discountUntil) || Number.isNaN(Date.parse(discountUntil))) {
+      return { error: "Проверьте дату окончания скидки" };
+    }
+    if (discountUntil < almatyToday()) return { error: "Дата окончания скидки уже прошла" };
+  }
+
   return {
     fields: {
       name,
       description: description || null,
       price,
       old_price: oldPrice,
+      discount_until: discountUntil,
       category_id: categoryId,
       sizes: sizeStock.sizes,
       size_stock: sizeStock.sizeStock,

@@ -6,7 +6,7 @@ import {
 import type { PostgrestError } from "@supabase/supabase-js";
 import { PRODUCT_SELECT, PUBLISHED_PRODUCT_SELECT } from "@/lib/data/selects";
 import { distanceToStore, maxKmForWalk } from "@/lib/near";
-import { isSizeAvailable } from "@/lib/utils/product";
+import { isOnSale, isSizeAvailable } from "@/lib/utils/product";
 import type { Point } from "@/lib/utils/route";
 import type { ProductAudience } from "@/types/database";
 import type {
@@ -92,6 +92,8 @@ export async function getProductsWithError(options?: {
   walkMinutes?: number | null;
   /** Раздел «Для кого»: товары этих аудиторий */
   audiences?: ProductAudience[] | null;
+  /** Только товары с действующей скидкой — для вкладки «Скидки» */
+  onSale?: boolean;
 }): Promise<DataResult<ProductWithRelations[]>> {
   const envError = checkSupabaseEnv();
   if (envError) {
@@ -138,6 +140,11 @@ export async function getProductsWithError(options?: {
     query = query.eq("store_id", options.storeId);
   }
 
+  if (options?.onSale) {
+    // Сравнить две колонки в запросе нельзя — «старая цена больше новой» и срок проверяем ниже
+    query = query.not("old_price", "is", null);
+  }
+
   if (options?.size) {
     query = query.contains("sizes", [options.size]);
   }
@@ -172,6 +179,10 @@ export async function getProductsWithError(options?: {
   if (options?.size) {
     const size = options.size;
     products = products.filter((p) => isSizeAvailable(p, size));
+  }
+
+  if (options?.onSale) {
+    products = products.filter((p) => isOnSale(p));
   }
 
   const near = options?.near;

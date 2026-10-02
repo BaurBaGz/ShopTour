@@ -71,6 +71,11 @@ export function AdminProductForm({ action, product, stores, categories, defaultS
               <label htmlFor="ap-old" className={label}>Старая цена, ₸</label>
               <input id="ap-old" name="oldPrice" type="number" min={0} step={100} defaultValue={product?.old_price ?? ""} placeholder="Для скидки" className={field} />
             </div>
+            <div className="sm:col-span-2">
+              <label htmlFor="ap-until" className={label}>Скидка действует до</label>
+              <input id="ap-until" name="discountUntil" type="date" defaultValue={product?.discount_until ?? ""} className={field} />
+              <p className="mt-1 text-xs text-stone-500">Необязательно. После этой даты вернётся старая цена. Пусто — скидка без срока.</p>
+            </div>
           </div>
         </section>
 

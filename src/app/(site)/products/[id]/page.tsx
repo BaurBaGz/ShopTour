@@ -15,7 +15,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { getProductById, getProducts } from "@/lib/data/catalog";
 import { formatPrice } from "@/lib/utils/format";
 import { buildInstagramUrl } from "@/lib/utils/instagram";
-import { getDiscountPercent } from "@/lib/utils/product";
+import { formatDiscountDeadline, getDiscountPercent } from "@/lib/utils/product";
 
 type ProductPageProps = {
   params: Promise<{ id: string }>;
@@ -173,6 +173,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
             {discount && product.old_price && (
               <p className="mt-1 text-sm text-rose-700">
                 Экономия {formatPrice(product.old_price - product.price)}
+                {formatDiscountDeadline(product) ? ` · ${formatDiscountDeadline(product)}` : ""}
               </p>
             )}
           </div>

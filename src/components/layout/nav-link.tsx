@@ -9,10 +9,12 @@ type NavLinkProps = {
   label: string;
   /** Короткая подпись для телефона */
   shortLabel?: string;
+  /** На телефоне в шапке тесно — пункт виден только на широком экране */
+  desktopOnly?: boolean;
 };
 
 /** Пункт меню шапки; текущий раздел выделен (и объявлен экранным читалкам) */
-export function NavLink({ href, label, shortLabel }: NavLinkProps) {
+export function NavLink({ href, label, shortLabel, desktopOnly }: NavLinkProps) {
   const pathname = usePathname();
   // /stores — только сама карта; страница отдельного магазина — это не раздел «Карта»
   const active = href === "/stores" ? pathname === "/stores" : pathname.startsWith(href);
@@ -23,6 +25,7 @@ export function NavLink({ href, label, shortLabel }: NavLinkProps) {
       aria-current={active ? "page" : undefined}
       className={cn(
         "whitespace-nowrap rounded-full px-2 py-2 text-[13px] font-medium transition sm:px-4 sm:text-sm", "relative after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
+        desktopOnly && "hidden sm:inline-block",
         active
           ? "bg-stone-100 text-stone-900"
           : "text-stone-600 hover:bg-stone-100 hover:text-stone-900",

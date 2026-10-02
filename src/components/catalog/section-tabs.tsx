@@ -1,12 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 import { isKidsSection, KIDS_SECTIONS, SECTION_COOKIE, SECTIONS, type Section } from "@/lib/audience";
 import { cn } from "@/lib/utils/cn";
 
 /** «Все · Женщинам · Мужчинам · Детям» над каталогом. Выбор запоминается. */
-export function SectionTabs({ current }: { current: Section | null }) {
+export function SectionTabs({ current, saleLink = false }: { current: Section | null; saleLink?: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -40,6 +41,14 @@ export function SectionTabs({ current }: { current: Section | null }) {
             {s.label}
           </button>
         ))}
+        {saleLink && (
+          <Link
+            href={current ? `/sale?for=${current}` : "/sale"}
+            className="flex min-h-10 shrink-0 items-center rounded-full bg-rose-600 px-4 text-sm font-semibold text-white transition hover:bg-rose-700"
+          >
+            % Скидки
+          </Link>
+        )}
       </div>
       {isKidsSection(current) && (
         <div className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0">

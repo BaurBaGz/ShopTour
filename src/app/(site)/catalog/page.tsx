@@ -104,7 +104,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
       )}
 
       <div className="mb-4">
-        <SectionTabs current={section} />
+        <SectionTabs current={section} saleLink />
       </div>
 
       <div className="mb-5">
