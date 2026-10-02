@@ -4,11 +4,13 @@ import Link from "next/link";
 import { ActiveFilterChips } from "@/components/catalog/active-filter-chips";
 import { CatalogFilters } from "@/components/catalog/catalog-filters";
 import { ProductCard } from "@/components/catalog/product-card";
+import { PromotionCards } from "@/components/promotions/promotion-list";
 import { SectionTabs } from "@/components/catalog/section-tabs";
 import { SupabaseErrorBanner } from "@/components/catalog/supabase-error-banner";
 import { parseSection, SECTION_AUDIENCES, SECTION_COOKIE } from "@/lib/audience";
 import { buildFilterChips, buildFilterHref, parsePrice, parseSort, readFilterValues } from "@/lib/catalog-filters";
 import { getCatalogFilterOptions, getCategoriesWithError, getProductsWithError } from "@/lib/data/catalog";
+import { getActivePromotions } from "@/lib/data/promotions";
 import { parseNear, parseWalk } from "@/lib/near";
 import { formatProductCount } from "@/lib/utils/format";
 import { getDiscountDaysLeft, getDiscountPercent } from "@/lib/utils/product";
@@ -30,7 +32,7 @@ export default async function SalePage({ searchParams }: SalePageProps) {
   const section =
     values.for === "all" ? null : (parseSection(values.for) ?? parseSection((await cookies()).get(SECTION_COOKIE)?.value));
 
-  const [categoriesResult, productsResult, filterOptions] = await Promise.all([
+  const [categoriesResult, productsResult, filterOptions, promotions] = await Promise.all([
     getCategoriesWithError(),
     getProductsWithError({
       categoryId: values.category,
@@ -46,6 +48,7 @@ export default async function SalePage({ searchParams }: SalePageProps) {
       onSale: true,
     }),
     getCatalogFilterOptions(),
+    getActivePromotions(),
   ]);
 
   const products = productsResult.data;
@@ -69,7 +72,7 @@ export default async function SalePage({ searchParams }: SalePageProps) {
       <div className="mb-4">
         <h1 className="text-2xl font-semibold tracking-tight text-stone-900 sm:text-3xl">Скидки</h1>
         <p className="mt-1 text-sm text-stone-500">
-          Вещи со скидкой в магазинах города. У скидок со сроком указано, до какого дня они действуют.
+          Акции магазинов и вещи со скидкой. Если у скидки есть срок — указано, до какого дня она действует.
         </p>
       </div>
 
@@ -96,6 +99,9 @@ export default async function SalePage({ searchParams }: SalePageProps) {
         </div>
       )}
 
+      {/* Акции относятся к магазину целиком — с фильтрами по товарам их не показываем */}
+      {chips.length === 0 && <PromotionCards promotions={promotions} />}
+
       {products.length > 0 ? (
         <>
           <p className="mb-4 text-sm text-stone-500">{formatProductCount(products.length)} со скидкой</p>
@@ -108,7 +114,7 @@ export default async function SalePage({ searchParams }: SalePageProps) {
       ) : (
         <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-stone-300 bg-white px-6 py-20 text-center">
           <p className="text-lg font-medium text-stone-800">
-            {chips.length > 0 || section ? "Скидок по этим условиям нет" : "Сейчас скидок нет"}
+            {chips.length > 0 || section ? "Товаров со скидкой по этим условиям нет" : "Товаров со скидкой сейчас нет"}
           </p>
           <p className="mt-2 max-w-sm text-sm text-stone-500">
             {chips.length > 0 || section

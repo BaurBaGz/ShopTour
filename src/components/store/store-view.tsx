@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { TrackView } from "@/components/analytics/track-view";
+import { StorePromotions } from "@/components/promotions/promotion-list";
 import { StoreHero } from "@/components/store/store-hero";
 import { StoreProducts } from "@/components/store/store-products";
 import { BackLink } from "@/components/ui/back-link";
 import { getProducts } from "@/lib/data/catalog";
+import { getStorePromotions } from "@/lib/data/promotions";
 import type { Store } from "@/lib/data/types";
 import { getAvailableSizes, getDiscountPercent } from "@/lib/utils/product";
 
@@ -18,10 +20,13 @@ export function storeMetadata(store: Store | null): Metadata {
 /** Витрина магазина: /stores/<id> и короткий адрес /s/<slug> (для шапки Instagram) */
 export async function StoreView({ store }: { store: Store }) {
   const id = store.id;
-  const all = await getProducts({
-    storeId: id,
-    includeOutOfStock: true,
-  });
+  const [all, promotions] = await Promise.all([
+    getProducts({
+      storeId: id,
+      includeOutOfStock: true,
+    }),
+    getStorePromotions(id),
+  ]);
   // Что можно купить — сначала, закончившееся — в конце витрины
   const soldOut = (p: (typeof all)[number]) => !p.in_stock || (p.sizes.length > 0 && getAvailableSizes(p).length === 0);
   const products = [...all.filter((p) => !soldOut(p)), ...all.filter(soldOut)];
@@ -43,6 +48,7 @@ export async function StoreView({ store }: { store: Store }) {
       <StoreHero store={store} stats={stats} />
 
       <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8" aria-label="Товары магазина">
+        <StorePromotions promotions={promotions} className="mb-6 max-w-2xl" />
         {products.length > 0 ? (
           <StoreProducts products={products} />
         ) : (

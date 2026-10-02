@@ -1,3 +1,5 @@
+import { PromotionsPanel } from "@/components/promotions/promotions-panel";
+import { getStorePromotions } from "@/lib/data/promotions";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { updatePartnerAction } from "@/app/admin/(panel)/partners/actions";
@@ -25,6 +27,7 @@ export default async function AdminPartnerPage({ params, searchParams }: PagePro
   const partner = await getPartner(id);
   if (!partner) notFound();
   const { store, ownerEmail, products, stats } = partner;
+  const promotions = await getStorePromotions(store.id, { includeExpired: true });
   const hasLocation = store.latitude !== null && store.longitude !== null;
 
   const statCards = [
@@ -92,6 +95,7 @@ export default async function AdminPartnerPage({ params, searchParams }: PagePro
         <div className="flex min-w-0 flex-col gap-6">
           <PartnerForm action={updatePartnerAction.bind(null, store.id)} store={store} storeId={store.id} submitLabel="Сохранить" allowLogoUrl />
           <OwnerPanel storeId={store.id} ownerEmail={ownerEmail} />
+          <PromotionsPanel promotions={promotions} />
         </div>
         <div className="flex min-w-0 flex-col gap-6">
           <PartnerStatusControl storeId={store.id} status={store.status} hasLocation={hasLocation} />

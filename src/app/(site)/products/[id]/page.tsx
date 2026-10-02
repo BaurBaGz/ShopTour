@@ -1,3 +1,5 @@
+import { StorePromotions } from "@/components/promotions/promotion-list";
+import { getStorePromotions } from "@/lib/data/promotions";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -71,6 +73,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
     : null;
   const reserveOnOpen = (await searchParams).reserve?.slice(0, 20) ?? null;
   const discount = getDiscountPercent(product);
+  const promotions = store ? await getStorePromotions(store.id) : [];
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
@@ -177,6 +180,8 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
               </p>
             )}
           </div>
+
+          <StorePromotions promotions={promotions} />
 
           <ProductPurchase
             product={product}

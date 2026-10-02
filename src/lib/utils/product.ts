@@ -20,19 +20,9 @@ export function almatyToday(now = Date.now()): string {
   return new Date(now + ALMATY_OFFSET_MS).toISOString().slice(0, 10);
 }
 
-type DiscountedProduct = PricedProduct & { discount_until?: string | null };
-
-/** Сколько дней осталось до конца скидки (0 — последний день, меньше 0 — срок прошёл); null — срока нет */
-export function getDiscountDaysLeft(product: DiscountedProduct, today = almatyToday()): number | null {
-  if (!product.discount_until || getDiscountPercent(product) === null) return null;
-  return Math.round((Date.parse(product.discount_until) - Date.parse(today)) / DAY_MS);
-}
-
-/** Скидка есть и её срок не прошёл */
-export function isOnSale(product: DiscountedProduct, today = almatyToday()): boolean {
-  if (getDiscountPercent(product) === null) return false;
-  const daysLeft = getDiscountDaysLeft(product, today);
-  return daysLeft === null || daysLeft >= 0;
+/** Сколько дней до даты (0 — сегодня последний день, меньше 0 — прошла) */
+export function daysUntil(date: string, today = almatyToday()): number {
+  return Math.round((Date.parse(date) - Date.parse(today)) / DAY_MS);
 }
 
 function pluralDays(n: number) {
@@ -43,14 +33,36 @@ function pluralDays(n: number) {
   return "дней";
 }
 
-/** «до 5 ноября», «до 5 ноября · осталось 2 дня», «только сегодня»; null — срока нет или он прошёл */
-export function formatDiscountDeadline(product: DiscountedProduct, today = almatyToday()): string | null {
-  const daysLeft = getDiscountDaysLeft(product, today);
-  if (daysLeft === null || daysLeft < 0) return null;
-  if (daysLeft === 0) return "Скидка только сегодня";
-  const [, month, day] = product.discount_until!.split("-").map(Number);
-  const until = `Скидка до ${day} ${MONTHS[month - 1]}`;
+/** «до 5 ноября», «до 5 ноября · осталось 2 дня», «только сегодня»; null — срок прошёл */
+export function formatUntil(date: string, today = almatyToday()): string | null {
+  const daysLeft = daysUntil(date, today);
+  if (daysLeft < 0) return null;
+  if (daysLeft === 0) return "только сегодня";
+  const [, month, day] = date.split("-").map(Number);
+  const until = `до ${day} ${MONTHS[month - 1]}`;
   return daysLeft <= 3 ? `${until} · ${daysLeft === 1 ? "остался" : "осталось"} ${daysLeft} ${pluralDays(daysLeft)}` : until;
+}
+
+type DiscountedProduct = PricedProduct & { discount_until?: string | null };
+
+/** Сколько дней осталось до конца скидки (0 — последний день, меньше 0 — срок прошёл); null — срока нет */
+export function getDiscountDaysLeft(product: DiscountedProduct, today = almatyToday()): number | null {
+  if (!product.discount_until || getDiscountPercent(product) === null) return null;
+  return daysUntil(product.discount_until, today);
+}
+
+/** Скидка есть и её срок не прошёл */
+export function isOnSale(product: DiscountedProduct, today = almatyToday()): boolean {
+  if (getDiscountPercent(product) === null) return false;
+  const daysLeft = getDiscountDaysLeft(product, today);
+  return daysLeft === null || daysLeft >= 0;
+}
+
+/** «Скидка до 5 ноября», «Скидка только сегодня»; null — срока нет или он прошёл */
+export function formatDiscountDeadline(product: DiscountedProduct, today = almatyToday()): string | null {
+  if (getDiscountDaysLeft(product, today) === null) return null;
+  const until = formatUntil(product.discount_until!, today);
+  return until ? `Скидка ${until}` : null;
 }
 
 /**

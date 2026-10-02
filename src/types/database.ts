@@ -268,6 +268,40 @@ export interface Database {
         Update: { user_id?: string; kind?: UserListKind; ids?: string[]; updated_at?: string };
         Relationships: [];
       };
+      promotions: {
+        Row: {
+          id: string;
+          store_id: string;
+          title: string;
+          description: string | null;
+          ends_on: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          store_id: string;
+          title: string;
+          description?: string | null;
+          ends_on?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          store_id?: string;
+          title?: string;
+          description?: string | null;
+          ends_on?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "promotions_store_id_fkey";
+            columns: ["store_id"];
+            referencedRelation: "stores";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       saved_tours: {
         Row: { id: string; user_id: string; name: string; store_ids: string[]; created_at: string; updated_at: string };
         Insert: {

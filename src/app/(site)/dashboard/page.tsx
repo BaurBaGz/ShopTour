@@ -6,6 +6,8 @@ import { DailyChart, PeriodTabs, StatCards, TopProductsTable } from "@/component
 import { ProductsManager, type ManagedProduct } from "@/components/dashboard/products-manager";
 import { ReservationsPanel, type DashboardReservation } from "@/components/dashboard/reservations-panel";
 import { StorefrontCard } from "@/components/dashboard/storefront-card";
+import { PromotionsPanel } from "@/components/promotions/promotions-panel";
+import { getStorePromotions } from "@/lib/data/promotions";
 import { getCategories, getProductsWithError } from "@/lib/data/catalog";
 import { getSessionUser, getStoreForOwner } from "@/lib/auth/session";
 import { getStoreAnalytics, parsePeriod } from "@/lib/data/analytics";
@@ -30,7 +32,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const period = parsePeriod((await searchParams).period);
   const supabase = await createClient();
   const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-  const [{ data: products, errorMessage }, categories, stats, reservationsResult, notifyResult] = await Promise.all([
+  const [{ data: products, errorMessage }, categories, stats, reservationsResult, notifyResult, promotions] = await Promise.all([
     getProductsWithError({ storeId: store.id, includeOutOfStock: true, includeHidden: true }),
     getCategories(),
     getStoreAnalytics(store.id, period),
@@ -42,6 +44,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       .order("created_at", { ascending: false })
       .limit(100),
     supabase.from("store_notifications").select("telegram_chat_id, telegram_name, daily_summary").eq("store_id", store.id).maybeSingle(),
+    getStorePromotions(store.id),
   ]);
 
   // Сначала ждут ответа, затем отложенные, затем закрытые — новые выше
@@ -139,6 +142,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       <ReservationsPanel reservations={reservations} telegram={telegram} />
 
       <StorefrontCard slug={store.slug} published={store.status === "published"} />
+
+      <PromotionsPanel promotions={promotions} canAdd />
 
       <section aria-labelledby="products-title" className="flex flex-col gap-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
