@@ -7,7 +7,7 @@ type NewProductPageProps = { searchParams: Promise<{ added?: string }> };
 
 export default async function NewProductPage({ searchParams }: NewProductPageProps) {
   const { added } = await searchParams;
-  const { store } = await requireCabinetPage();
+  const { store } = await requireCabinetPage({ permission: "products" });
   const categories = await getCategories();
 
   return (

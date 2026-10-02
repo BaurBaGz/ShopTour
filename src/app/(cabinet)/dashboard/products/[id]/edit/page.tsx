@@ -13,7 +13,7 @@ type EditProductPageProps = {
 
 export default async function EditProductPage({ params }: EditProductPageProps) {
   const { id } = await params;
-  const { store, role } = await requireCabinetPage();
+  const { store, permissions } = await requireCabinetPage({ permission: "products" });
   if (!isUuid(id)) notFound();
 
   const supabase = await createClient();
@@ -35,8 +35,8 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
       </Link>
       <h2 className="text-xl font-semibold text-stone-900">{product.name}</h2>
       <ProductForm categories={categories} product={product} storeId={store.id} />
-      {/* Удаляет только владелец; продавец убирает товар в черновик */}
-      {role === "owner" && (
+      {/* Удаление — отдельный доступ; без него товар убирают в черновик */}
+      {permissions.includes("products_delete") && (
         <div className="border-t border-stone-200 pt-4">
           <DeleteProductButton productId={product.id} productName={product.name} />
         </div>

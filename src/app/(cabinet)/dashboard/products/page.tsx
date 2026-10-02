@@ -4,7 +4,7 @@ import { requireCabinetPage } from "@/lib/auth/session";
 import { getCategories, getProductsWithError } from "@/lib/data/catalog";
 
 export default async function DashboardProductsPage() {
-  const { store } = await requireCabinetPage();
+  const { store } = await requireCabinetPage({ permission: "products" });
   const [{ data: products, errorMessage }, categories] = await Promise.all([
     getProductsWithError({ storeId: store.id, includeOutOfStock: true, includeHidden: true }),
     getCategories(),

@@ -37,7 +37,7 @@ async function applyNewPassword(formData: FormData): Promise<string | null> {
     if (flagError) return flagError.message;
   }
 
-  // Продавец магазина задал свой пароль вместо временного (свою запись он менять не может — пишет сервер)
+  // Сотрудник магазина задал свой пароль вместо временного (свою запись он менять не может — пишет сервер)
   const { error: memberError } = await createAdminClient()
     .from("store_members")
     .update({ must_change_password: false })

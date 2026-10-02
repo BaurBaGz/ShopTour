@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { telegramConfigured } from "@/lib/telegram";
 
 export default async function DashboardReservationsPage() {
-  const { store, role } = await requireCabinetPage();
+  const { store, permissions } = await requireCabinetPage({ permission: "reservations" });
   const supabase = await createClient();
   const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
   const [reservationsResult, notifyResult] = await Promise.all([
@@ -26,8 +26,8 @@ export default async function DashboardReservationsPage() {
     .map((r) => ({ ...r, phone_label: formatPhone(r.customer_phone), visit_label: VISIT_LABELS[r.visit] }))
     .sort((a, b) => order[a.status] - order[b.status]);
   const telegram = {
-    // Подключением Telegram управляет владелец
-    configured: role === "owner" && telegramConfigured(),
+    // Подключение Telegram — часть доступа «Профиль магазина»
+    configured: permissions.includes("store") && telegramConfigured(),
     connectedAs: notifyResult.data?.telegram_chat_id ? (notifyResult.data.telegram_name ?? "подключено") : null,
     dailySummary: notifyResult.data?.daily_summary ?? true,
   };

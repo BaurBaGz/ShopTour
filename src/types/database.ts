@@ -278,6 +278,8 @@ export interface Database {
           email: string;
           name: string | null;
           must_change_password: boolean;
+          role: "admin" | "marketing" | "seller";
+          permissions: string[];
           invited_by: string | null;
           created_at: string;
         };
@@ -287,6 +289,8 @@ export interface Database {
           email: string;
           name?: string | null;
           must_change_password?: boolean;
+          role?: "admin" | "marketing" | "seller";
+          permissions?: string[];
           invited_by?: string | null;
           created_at?: string;
         };
@@ -296,6 +300,8 @@ export interface Database {
           email?: string;
           name?: string | null;
           must_change_password?: boolean;
+          role?: "admin" | "marketing" | "seller";
+          permissions?: string[];
           invited_by?: string | null;
           created_at?: string;
         };

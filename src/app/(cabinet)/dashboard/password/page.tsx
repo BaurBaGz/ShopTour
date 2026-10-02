@@ -1,5 +1,6 @@
 import { ChangePasswordForm } from "@/components/admin/change-password-form";
-import { CABINET_ROLE_LABELS, requireCabinetPage } from "@/lib/auth/session";
+import { ROLE_LABELS } from "@/lib/auth/permissions";
+import { requireCabinetPage } from "@/lib/auth/session";
 
 export default async function DashboardAccountPage() {
   const { user, store, role } = await requireCabinetPage();
@@ -19,7 +20,7 @@ export default async function DashboardAccountPage() {
           </div>
           <div>
             <dt className="text-stone-500">Роль</dt>
-            <dd className="font-medium text-stone-900">{CABINET_ROLE_LABELS[role]}</dd>
+            <dd className="font-medium text-stone-900">{ROLE_LABELS[role]}</dd>
           </div>
         </dl>
       </section>

@@ -5,7 +5,7 @@ import { getStoreAnalytics, parsePeriod } from "@/lib/data/analytics";
 type PageProps = { searchParams: Promise<{ period?: string }> };
 
 export default async function DashboardAnalyticsPage({ searchParams }: PageProps) {
-  const { store } = await requireCabinetPage();
+  const { store } = await requireCabinetPage({ permission: "analytics" });
   const period = parsePeriod((await searchParams).period);
   const stats = await getStoreAnalytics(store.id, period);
 

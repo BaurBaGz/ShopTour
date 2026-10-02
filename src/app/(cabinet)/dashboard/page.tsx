@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { StorefrontCard } from "@/components/dashboard/storefront-card";
+import type { Permission } from "@/lib/auth/permissions";
 import { requireCabinetPage } from "@/lib/auth/session";
 import { getStoreAnalytics } from "@/lib/data/analytics";
 import { getStorePromotions } from "@/lib/data/promotions";
@@ -17,8 +18,8 @@ function plural(n: number, one: string, few: string, many: string) {
 
 // Главная кабинета: сводка и то, что требует внимания; сами зоны — на своих страницах в меню
 export default async function DashboardHomePage() {
-  const { store, role } = await requireCabinetPage();
-  const owner = role === "owner";
+  const { store, permissions } = await requireCabinetPage();
+  const can = (permission: Permission) => permissions.includes(permission);
   const supabase = await createClient();
   const [productsResult, waitingResult, notifyResult, stats, promotions] = await Promise.all([
     supabase.from("products").select("id, images, sizes, size_stock, in_stock").eq("store_id", store.id),
@@ -33,47 +34,48 @@ export default async function DashboardHomePage() {
   const withoutPhoto = products.filter((p) => !p.images?.length).length;
   const waiting = waitingResult.count ?? 0;
 
+  // Карточки и замечания — только по тем зонам, куда у пользователя есть доступ
   const cards = [
-    { label: "Брони ждут ответа", value: waiting, note: "ответьте в течение часа", href: "/dashboard/reservations" },
-    { label: "Товары", value: products.length, note: `в наличии: ${products.length - soldOut}`, href: "/dashboard/products" },
-    { label: "Посетители", value: stats.totals.visitors, note: "за 7 дней", href: "/dashboard/analytics" },
-    { label: "Акции", value: promotions.length, note: "действуют сейчас", href: "/dashboard/promotions" },
-  ];
+    { show: can("reservations"), label: "Брони ждут ответа", value: waiting, note: "ответьте в течение часа", href: "/dashboard/reservations" },
+    { show: can("products"), label: "Товары", value: products.length, note: `в наличии: ${products.length - soldOut}`, href: "/dashboard/products" },
+    { show: can("analytics"), label: "Посетители", value: stats.totals.visitors, note: "за 7 дней", href: "/dashboard/analytics" },
+    { show: can("promotions"), label: "Акции", value: promotions.length, note: "действуют сейчас", href: "/dashboard/promotions" },
+  ].filter((card) => card.show);
 
   // Что требует внимания — показываем только ненулевое
   const attention = [
     {
-      count: waiting,
+      count: can("reservations") ? waiting : 0,
       text: `${plural(waiting, "бронь", "брони", "броней")} ${plural(waiting, "ждёт", "ждут", "ждут")} ответа`,
       hint: "Покупатель видит ответ сразу — чем быстрее, тем чаще приходят",
       href: "/dashboard/reservations",
     },
     {
-      count: products.length === 0 ? 1 : 0,
+      count: can("products") && products.length === 0 ? 1 : 0,
       text: "Добавьте первый товар",
       hint: "Сфотографируйте вещь, укажите цену и размеры — это займёт минуту",
       href: "/dashboard/products/new",
     },
     {
-      count: owner && store.latitude === null ? 1 : 0,
+      count: can("store") && store.latitude === null ? 1 : 0,
       text: "Поставьте точку на карте",
       hint: "Без неё покупатели не найдут вас в «Рядом со мной» и в маршрутах",
       href: "/dashboard/settings",
     },
     {
-      count: withoutPhoto,
+      count: can("products") ? withoutPhoto : 0,
       text: `${plural(withoutPhoto, "товар", "товара", "товаров")} без фото`,
       hint: "Карточку без фото почти не открывают",
       href: "/dashboard/products",
     },
     {
-      count: soldOut,
+      count: can("products") ? soldOut : 0,
       text: `${plural(soldOut, "товар", "товара", "товаров")} нет в наличии`,
       hint: "Все размеры закончились или товар снят с продажи",
       href: "/dashboard/products",
     },
     {
-      count: owner && telegramConfigured() && !notifyResult.data?.telegram_chat_id ? 1 : 0,
+      count: can("store") && can("reservations") && telegramConfigured() && !notifyResult.data?.telegram_chat_id ? 1 : 0,
       text: "Подключите Telegram",
       hint: "Брони будут приходить в чат, отвечать можно одной кнопкой",
       href: "/dashboard/reservations",
@@ -102,15 +104,17 @@ export default async function DashboardHomePage() {
         </div>
       )}
 
-      <section aria-label="Сводка" className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        {cards.map((card) => (
-          <Link key={card.label} href={card.href} className="rounded-2xl border border-stone-200 bg-white p-5 transition hover:border-stone-300">
-            <p className="text-sm text-stone-500">{card.label}</p>
-            <p className="mt-1 text-3xl font-semibold tabular-nums text-stone-900">{card.value}</p>
-            <p className="mt-1 text-xs text-stone-500">{card.note}</p>
-          </Link>
-        ))}
-      </section>
+{cards.length > 0 && (
+              <section aria-label="Сводка" className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          {cards.map((card) => (
+            <Link key={card.label} href={card.href} className="rounded-2xl border border-stone-200 bg-white p-5 transition hover:border-stone-300">
+              <p className="text-sm text-stone-500">{card.label}</p>
+              <p className="mt-1 text-3xl font-semibold tabular-nums text-stone-900">{card.value}</p>
+              <p className="mt-1 text-xs text-stone-500">{card.note}</p>
+            </Link>
+          ))}
+        </section>
+      )}
 
       <section className="rounded-2xl border border-stone-200 bg-white p-5 sm:p-6">
         <h2 className="text-lg font-semibold text-stone-900">Требует внимания</h2>
@@ -136,7 +140,7 @@ export default async function DashboardHomePage() {
         )}
       </section>
 
-      <StorefrontCard slug={store.slug} published={store.status === "published"} canEdit={owner} />
+      <StorefrontCard slug={store.slug} published={store.status === "published"} canEdit={can("store")} />
     </div>
   );
 }

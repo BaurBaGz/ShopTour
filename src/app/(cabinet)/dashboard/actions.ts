@@ -3,7 +3,8 @@
 import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireStoreMember, requireStoreOwner } from "@/lib/auth/session";
+import type { Permission } from "@/lib/auth/permissions";
+import { requireStorePermission } from "@/lib/auth/session";
 import { isStoreMediaUrl } from "@/lib/media-url";
 import { canMove, refreshTelegramMessage } from "@/lib/reservations";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -22,7 +23,7 @@ export async function saveProductAction(
 ): Promise<ProductActionState> {
   let store;
   try {
-    ({ store } = await requireStoreMember());
+    ({ store } = await requireStorePermission("products"));
   } catch {
     redirect("/auth/login");
   }
@@ -71,11 +72,11 @@ export async function saveProductAction(
   redirect(!productId && formData.get("then") === "new" ? "/dashboard/products/new?added=1" : "/dashboard/products");
 }
 
-/** Удаляет только владелец; продавец убирает товар в черновик */
+/** Удаление — отдельный доступ; без него товар можно только убрать в черновик */
 export async function deleteProductAction(productId: string) {
   let store;
   try {
-    ({ store } = await requireStoreOwner());
+    ({ store } = await requireStorePermission("products_delete"));
   } catch {
     redirect("/auth/login");
   }
@@ -94,23 +95,16 @@ export async function deleteProductAction(productId: string) {
 
 type QuickResult = { error?: string };
 
-/** Магазин текущего владельца или продавца */
-async function memberStoreId(): Promise<string | null> {
+/** Магазин текущего пользователя, если у него есть доступ к этой зоне кабинета */
+async function storeIdFor(permission: Permission): Promise<string | null> {
   try {
-    return (await requireStoreMember()).store.id;
+    return (await requireStorePermission(permission)).store.id;
   } catch {
     return null;
   }
 }
 
-/** Магазин текущего владельца: настройки, которые продавцу не доступны */
-async function ownerStoreId(): Promise<string | null> {
-  try {
-    return (await requireStoreOwner()).store.id;
-  } catch {
-    return null;
-  }
-}
+const NO_ACCESS = "Нет доступа — обратитесь к владельцу магазина";
 
 function revalidateStore(storeId: string, slug?: string) {
   revalidatePath("/dashboard", "layout");
@@ -124,8 +118,8 @@ function revalidateStore(storeId: string, slug?: string) {
  * Для кнопок «−»/«+» и «нет/есть» в кабинете на телефоне.
  */
 export async function setSizeStockAction(productId: string, size: string, stock: number | null): Promise<QuickResult> {
-  const storeId = await memberStoreId();
-  if (!storeId) return { error: "Войдите в аккаунт магазина" };
+  const storeId = await storeIdFor("products");
+  if (!storeId) return { error: NO_ACCESS };
   if (stock !== null && (!Number.isInteger(stock) || stock < 0 || stock > 9999)) return { error: "Неверный остаток" };
 
   const supabase = await createClient();
@@ -156,8 +150,8 @@ export async function setSizeStockAction(productId: string, size: string, stock:
 
 /** Весь товар «в наличии» / «нет в наличии» одним касанием */
 export async function setInStockAction(productId: string, inStock: boolean): Promise<QuickResult> {
-  const storeId = await memberStoreId();
-  if (!storeId) return { error: "Войдите в аккаунт магазина" };
+  const storeId = await storeIdFor("products");
+  if (!storeId) return { error: NO_ACCESS };
   const supabase = await createClient();
   const { error } = await supabase
     .from("products")
@@ -175,9 +169,9 @@ export type SlugState = { error?: string; success?: string };
 export async function updateSlugAction(_prev: SlugState, formData: FormData): Promise<SlugState> {
   let store;
   try {
-    ({ store } = await requireStoreOwner());
+    ({ store } = await requireStorePermission("store"));
   } catch {
-    return { error: "Войдите в аккаунт магазина" };
+    return { error: NO_ACCESS };
   }
   const slug = String(formData.get("slug") ?? "").trim().toLowerCase();
   if (!/^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$/.test(slug)) {
@@ -198,8 +192,8 @@ export async function updateSlugAction(_prev: SlugState, formData: FormData): Pr
 
 /** Ответ магазина на бронь из кабинета (то же, что кнопки в Telegram) */
 export async function respondReservationAction(id: string, status: ReservationStatus): Promise<QuickResult> {
-  const storeId = await memberStoreId();
-  if (!storeId) return { error: "Войдите в аккаунт магазина" };
+  const storeId = await storeIdFor("reservations");
+  if (!storeId) return { error: NO_ACCESS };
   const supabase = await createClient();
   const { data: current } = await supabase
     .from("reservations")
@@ -226,8 +220,8 @@ export async function respondReservationAction(id: string, status: ReservationSt
 
 /** Ссылка «Подключить Telegram»: одноразовый код на 30 минут */
 export async function createTelegramLinkAction(): Promise<{ url?: string; error?: string }> {
-  const storeId = await ownerStoreId();
-  if (!storeId) return { error: "Войдите в аккаунт магазина" };
+  const storeId = await storeIdFor("store");
+  if (!storeId) return { error: NO_ACCESS };
   if (!telegramConfigured()) return { error: "Telegram пока не настроен" };
   const code = randomBytes(12).toString("base64url");
   const { error } = await createAdminClient()
@@ -238,8 +232,8 @@ export async function createTelegramLinkAction(): Promise<{ url?: string; error?
 }
 
 export async function unlinkTelegramAction(): Promise<QuickResult> {
-  const storeId = await ownerStoreId();
-  if (!storeId) return { error: "Войдите в аккаунт магазина" };
+  const storeId = await storeIdFor("store");
+  if (!storeId) return { error: NO_ACCESS };
   const { error } = await createAdminClient()
     .from("store_notifications")
     .update({ telegram_chat_id: null, telegram_name: null, linked_at: null, link_code: null, link_code_expires_at: null })
@@ -255,9 +249,9 @@ export type StoreProfileState = { error?: string; success?: string };
 export async function updateOwnStoreAction(_prev: StoreProfileState, formData: FormData): Promise<StoreProfileState> {
   let store;
   try {
-    ({ store } = await requireStoreOwner());
+    ({ store } = await requireStorePermission("store"));
   } catch {
-    return { error: "Войдите в аккаунт магазина" };
+    return { error: NO_ACCESS };
   }
   const text = (key: string, max: number) => String(formData.get(key) ?? "").trim().slice(0, max);
   const logo = text("logo_url", 500);
@@ -286,9 +280,9 @@ export async function updateOwnStoreAction(_prev: StoreProfileState, formData: F
 export async function updateOwnLocationAction(latitude: number | null, longitude: number | null) {
   let store;
   try {
-    ({ store } = await requireStoreOwner());
+    ({ store } = await requireStorePermission("store"));
   } catch {
-    return { error: "Войдите в аккаунт магазина" };
+    return { error: NO_ACCESS };
   }
   const valid = (v: number | null, min: number, max: number) => v === null || (Number.isFinite(v) && v >= min && v <= max);
   if ((latitude === null) !== (longitude === null) || !valid(latitude, 35, 60) || !valid(longitude, 40, 95)) {
@@ -304,8 +298,8 @@ export async function updateOwnLocationAction(latitude: number | null, longitude
 
 /** Включить/выключить утреннюю сводку в Telegram */
 export async function setDailySummaryAction(enabled: boolean): Promise<QuickResult> {
-  const storeId = await ownerStoreId();
-  if (!storeId) return { error: "Войдите в аккаунт магазина" };
+  const storeId = await storeIdFor("store");
+  if (!storeId) return { error: NO_ACCESS };
   const { error } = await createAdminClient().from("store_notifications").update({ daily_summary: enabled }).eq("store_id", storeId);
   if (error) return { error: error.message };
   return {};

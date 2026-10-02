@@ -4,7 +4,7 @@ import { PartnerForm } from "@/components/admin/partner-form";
 import { requireCabinetPage } from "@/lib/auth/session";
 
 export default async function StoreSettingsPage() {
-  const { store } = await requireCabinetPage({ ownerOnly: true });
+  const { store } = await requireCabinetPage({ permission: "store" });
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6">

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getSessionUser, requireStoreMember } from "@/lib/auth/session";
+import { getSessionUser, requireStorePermission } from "@/lib/auth/session";
 import { isUuid } from "@/lib/catalog-filters";
 import { createClient } from "@/lib/supabase/server";
 import { almatyToday } from "@/lib/utils/product";
@@ -18,13 +18,13 @@ function revalidatePromotions(storeId: string, slug?: string | null) {
   if (slug) revalidatePath(`/s/${slug}`);
 }
 
-/** Владелец или продавец добавляет акцию своего магазина */
+/** Акцию добавляет владелец или сотрудник с доступом «Акции» */
 export async function addPromotionAction(_prev: PromotionState, formData: FormData): Promise<PromotionState> {
   let store;
   try {
-    ({ store } = await requireStoreMember());
+    ({ store } = await requireStorePermission("promotions"));
   } catch {
-    return { error: "Войдите в аккаунт магазина" };
+    return { error: "Нет доступа к акциям — обратитесь к владельцу магазина" };
   }
 
   const title = String(formData.get("title") ?? "").trim();
