@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/lib/i18n/client";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import {
@@ -22,20 +23,20 @@ export type DashboardReservation = {
   customer_phone: string;
   phone_label: string;
   visit_label: string;
+  visit: "today" | "tomorrow";
   comment: string | null;
   status: ReservationStatus;
   created_at: string;
 };
 
-const STATUS: Record<ReservationStatus, { label: string; className: string }> = {
-  new: { label: "Ждёт ответа", className: "bg-amber-100 text-amber-900" },
-  confirmed: { label: "Отложили", className: "bg-emerald-100 text-emerald-800" },
-  declined: { label: "Нет в наличии", className: "bg-stone-100 text-stone-600" },
-  completed: { label: "Забрали", className: "bg-emerald-50 text-emerald-700" },
-  no_show: { label: "Не пришли", className: "bg-stone-100 text-stone-600" },
+// Подписи статусов — в словаре (t.cabinet.reservations.status)
+const STATUS_CLASS: Record<ReservationStatus, string> = {
+  new: "bg-amber-100 text-amber-900",
+  confirmed: "bg-emerald-100 text-emerald-800",
+  declined: "bg-stone-100 text-stone-600",
+  completed: "bg-emerald-50 text-emerald-700",
+  no_show: "bg-stone-100 text-stone-600",
 };
-
-const timeFormat = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Almaty" });
 
 type Props = {
   reservations: DashboardReservation[];
@@ -45,6 +46,9 @@ type Props = {
 /** Брони покупателей и подключение Telegram-уведомлений */
 export function ReservationsPanel({ reservations: initial, telegram }: Props) {
   const router = useRouter();
+  const t = useT();
+  const c = t.cabinet.reservations;
+  const timeFormat = new Intl.DateTimeFormat(t.intl, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Almaty" });
   const [items, setItems] = useState(initial);
   const [linkUrl, setLinkUrl] = useState<string | null>(null);
   const [summary, setSummary] = useState(telegram.dailySummary);
@@ -80,7 +84,7 @@ export function ReservationsPanel({ reservations: initial, telegram }: Props) {
       const result = await createTelegramLinkAction();
       if (result.error || !result.url) {
         tab?.close();
-        showToast({ message: result.error ?? "Не получилось" });
+        showToast({ message: result.error ?? c.failed });
         return;
       }
       setLinkUrl(result.url);
@@ -100,9 +104,9 @@ export function ReservationsPanel({ reservations: initial, telegram }: Props) {
     <section aria-labelledby="reservations-title" className="flex flex-col gap-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="reservations-title" className="text-xl font-semibold tracking-tight text-stone-900">
-          Брони {waiting > 0 && <span className="ml-1 rounded-full bg-rose-600 px-2 py-0.5 align-middle text-sm text-white">{waiting}</span>}
+          {c.title} {waiting > 0 && <span className="ml-1 rounded-full bg-rose-600 px-2 py-0.5 align-middle text-sm text-white">{waiting}</span>}
         </h2>
-        <p className="text-sm text-stone-500">Покупатели просят отложить размер и приходят примерить</p>
+        <p className="text-sm text-stone-500">{c.subtitle}</p>
       </div>
 
       {telegram.configured && (
@@ -110,10 +114,10 @@ export function ReservationsPanel({ reservations: initial, telegram }: Props) {
           {telegram.connectedAs ? (
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-sky-900">
-                ✈️ Брони приходят в Telegram: <span className="font-medium">{telegram.connectedAs}</span>
+                {c.telegramConnected} <span className="font-medium">{telegram.connectedAs}</span>
               </p>
               <button type="button" onClick={disconnect} disabled={pending} className="min-h-11 text-sm font-medium text-sky-800 hover:text-sky-950">
-                Отключить
+                {c.disconnect}
               </button>
               <label className="flex min-h-11 w-full items-center gap-3 border-t border-sky-200 pt-2 text-sky-900">
                 <input
@@ -123,16 +127,14 @@ export function ReservationsPanel({ reservations: initial, telegram }: Props) {
                   className="h-5 w-5 rounded border-sky-300 text-sky-600 focus:ring-sky-500"
                 />
                 <span>
-                  <span className="font-medium">Утренняя сводка</span> — около 9:00: сколько людей смотрели магазин вчера, брони,
-                  советы
+                  <span className="font-medium">{c.summaryTitle}</span> {c.summaryText}
                 </span>
               </label>
             </div>
           ) : (
             <div className="flex flex-col gap-2">
               <p className="text-sky-900">
-                <span className="font-semibold">Получайте брони в Telegram</span> и отвечайте одной кнопкой — «Отложили» или
-                «Нет в наличии».
+                <span className="font-semibold">{c.telegramPromoTitle}</span> {c.telegramPromoText}
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <button
@@ -141,17 +143,17 @@ export function ReservationsPanel({ reservations: initial, telegram }: Props) {
                   disabled={pending}
                   className="min-h-11 rounded-xl bg-sky-600 px-4 font-semibold text-white transition hover:bg-sky-700 disabled:opacity-60"
                 >
-                  Подключить Telegram
+                  {c.connectTelegram}
                 </button>
                 {linkUrl && (
                   <span className="text-sky-900">
-                    Нажмите «Start» в боте, затем{" "}
+                    {c.pressStart}{" "}
                     <button type="button" onClick={() => router.refresh()} className="font-medium underline">
-                      обновите страницу
+                      {c.refreshPage}
                     </button>
-                    . Бот не открылся?{" "}
+                    {c.botNotOpened}{" "}
                     <a href={linkUrl} target="_blank" rel="noopener noreferrer" className="font-medium underline">
-                      Открыть
+                      {c.openBot}
                     </a>
                   </span>
                 )}
@@ -163,8 +165,8 @@ export function ReservationsPanel({ reservations: initial, telegram }: Props) {
 
       {items.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-stone-300 bg-white px-5 py-6 text-center text-sm text-stone-500">
-          Броней пока нет. Когда покупатель нажмёт «Отложить» на вашем товаре, бронь появится здесь
-          {telegram.connectedAs ? " и придёт в Telegram" : ""}.
+          {c.empty}
+          {telegram.connectedAs ? c.emptyTelegram : ""}.
         </p>
       ) : (
         <ul className="flex flex-col gap-3">
@@ -177,10 +179,10 @@ export function ReservationsPanel({ reservations: initial, telegram }: Props) {
                     {r.size ? `, ${r.size}` : ""}
                   </p>
                   <p className="text-sm text-stone-500">
-                    {formatPrice(r.price)} · придёт {r.visit_label} · {timeFormat.format(new Date(r.created_at))}
+                    {formatPrice(r.price)} · {c.comes[r.visit]} · {timeFormat.format(new Date(r.created_at))}
                   </p>
                 </div>
-                <span className={cn("rounded-full px-2.5 py-1 text-xs font-medium", STATUS[r.status].className)}>{STATUS[r.status].label}</span>
+                <span className={cn("rounded-full px-2.5 py-1 text-xs font-medium", STATUS_CLASS[r.status])}>{c.status[r.status]}</span>
               </div>
               <p className="mt-2 text-sm text-stone-700">
                 {r.customer_name} ·{" "}
@@ -199,19 +201,19 @@ export function ReservationsPanel({ reservations: initial, telegram }: Props) {
                   {r.status === "new" ? (
                     <>
                       <button type="button" onClick={() => respond(r, "confirmed")} className="min-h-11 flex-1 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white hover:bg-emerald-700 sm:flex-none">
-                        ✅ Отложили
+                        {c.confirm}
                       </button>
                       <button type="button" onClick={() => respond(r, "declined")} className="min-h-11 flex-1 rounded-xl px-4 text-sm font-medium text-stone-700 ring-1 ring-stone-200 hover:bg-stone-50 sm:flex-none">
-                        Нет в наличии
+                        {c.decline}
                       </button>
                     </>
                   ) : (
                     <>
                       <button type="button" onClick={() => respond(r, "completed")} className="min-h-11 flex-1 rounded-xl bg-stone-900 px-4 text-sm font-semibold text-white hover:bg-rose-600 sm:flex-none">
-                        Забрали
+                        {c.completed}
                       </button>
                       <button type="button" onClick={() => respond(r, "no_show")} className="min-h-11 flex-1 rounded-xl px-4 text-sm font-medium text-stone-700 ring-1 ring-stone-200 hover:bg-stone-50 sm:flex-none">
-                        Не пришли
+                        {c.noShow}
                       </button>
                     </>
                   )}

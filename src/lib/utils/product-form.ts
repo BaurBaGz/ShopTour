@@ -1,5 +1,6 @@
 // Разбор формы товара — общий для кабинета магазина и админки
 import { parseAudience } from "@/lib/audience";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { almatyToday } from "@/lib/utils/product";
 import type { ProductAudience } from "@/types/database";
 
@@ -65,7 +66,7 @@ export type ProductFields = {
 };
 
 /** Поля товара из формы с проверками; ошибка — понятным текстом для формы */
-export function parseProductForm(formData: FormData): { fields: ProductFields } | { error: string } {
+export function parseProductForm(formData: FormData, c: Dictionary["cabinet"]["productForm"]): { fields: ProductFields } | { error: string } {
   const name = String(formData.get("name") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
   const price = Number(formData.get("price"));
@@ -75,19 +76,19 @@ export function parseProductForm(formData: FormData): { fields: ProductFields } 
   const oldPrice = oldPriceRaw === "" ? null : Number(oldPriceRaw);
 
   if (!name || !categoryId || Number.isNaN(price) || price < 0) {
-    return { error: "Заполните название, категорию и цену" };
+    return { error: c.errorRequired };
   }
-  if (name.length > MAX_NAME_LENGTH) return { error: `Название — не длиннее ${MAX_NAME_LENGTH} символов` };
-  if (description.length > MAX_DESCRIPTION_LENGTH) return { error: `Описание — не длиннее ${MAX_DESCRIPTION_LENGTH} символов` };
-  if (price > MAX_PRICE || (oldPrice !== null && oldPrice > MAX_PRICE)) return { error: "Слишком большая цена" };
+  if (name.length > MAX_NAME_LENGTH) return { error: c.errorNameLong(MAX_NAME_LENGTH) };
+  if (description.length > MAX_DESCRIPTION_LENGTH) return { error: c.errorDescriptionLong(MAX_DESCRIPTION_LENGTH) };
+  if (price > MAX_PRICE || (oldPrice !== null && oldPrice > MAX_PRICE)) return { error: c.errorPriceHigh };
   const audience = parseAudience(formData.get("audience"));
-  if (!audience) return { error: "Выберите, для кого товар: женское, мужское, унисекс или детское" };
-  if (!sizeStock) return { error: "Остаток по размеру должен быть целым числом от 0" };
+  if (!audience) return { error: c.errorAudience };
+  if (!sizeStock) return { error: c.errorStock };
   if (oldPrice !== null && (Number.isNaN(oldPrice) || oldPrice < 0)) {
-    return { error: "Старая цена должна быть числом от 0" };
+    return { error: c.errorOldPrice };
   }
   if (oldPrice !== null && oldPrice <= price) {
-    return { error: "Старая цена должна быть больше текущей — иначе это не скидка" };
+    return { error: c.errorOldPriceLow };
   }
 
   // Срок скидки имеет смысл только вместе со старой ценой
@@ -95,9 +96,9 @@ export function parseProductForm(formData: FormData): { fields: ProductFields } 
   const discountUntil = oldPrice !== null && untilRaw ? untilRaw : null;
   if (discountUntil !== null) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(discountUntil) || Number.isNaN(Date.parse(discountUntil))) {
-      return { error: "Проверьте дату окончания скидки" };
+      return { error: c.errorDiscountDate };
     }
-    if (discountUntil < almatyToday()) return { error: "Дата окончания скидки уже прошла" };
+    if (discountUntil < almatyToday()) return { error: c.errorDiscountPast };
   }
 
   return {

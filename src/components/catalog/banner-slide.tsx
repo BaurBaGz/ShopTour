@@ -15,6 +15,8 @@ export type BannerData = {
   cta_href: string | null;
   image_url: string | null;
   theme: BannerTheme;
+  /** Переводы текстов (kk, en) — см. lib/i18n/banners */
+  i18n?: unknown;
 };
 
 const THEMES: Record<BannerTheme, { box: string; title: string; accent: string; body: string; cta: string }> = {

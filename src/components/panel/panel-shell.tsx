@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/lib/i18n/client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
@@ -61,6 +62,7 @@ const subscribeCollapsed = (l: () => void) => {
 /** Общий каркас админки и кабинета магазина: меню слева, шапка с заголовком раздела и аккаунтом */
 export function PanelShell({ homeHref, brand, nav: items, titles, fallbackTitle, siteLink, account, collapsedKey, children }: PanelShellProps) {
   const pathname = usePathname();
+  const shell = useT().cabinet.shell;
   const collapsed = useSyncExternalStore(subscribeCollapsed, () => readCollapsed(collapsedKey), () => false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -71,7 +73,7 @@ export function PanelShell({ homeHref, brand, nav: items, titles, fallbackTitle,
   const initial = account.name.trim().charAt(0).toUpperCase();
 
   const nav = (compact: boolean) => (
-    <nav className="flex flex-1 flex-col gap-1 p-3" aria-label="Разделы">
+    <nav className="flex flex-1 flex-col gap-1 p-3" aria-label={shell.sections}>
       {items.map((item) => {
         const active = item.href === homeHref ? pathname === homeHref : pathname.startsWith(item.href);
         const Icon = item.icon;
@@ -84,7 +86,7 @@ export function PanelShell({ homeHref, brand, nav: items, titles, fallbackTitle,
             {!compact && <span className="truncate">{item.label}</span>}
             {!compact && item.soon && (
               <span className="ml-auto rounded-full bg-stone-100 px-2 py-0.5 text-[11px] font-medium text-stone-500">
-                скоро
+                {shell.soon}
               </span>
             )}
             {!compact && !!item.badge && (
@@ -101,7 +103,7 @@ export function PanelShell({ homeHref, brand, nav: items, titles, fallbackTitle,
           item.soon && "cursor-default text-stone-400 hover:bg-transparent",
         );
         return item.soon ? (
-          <span key={item.href} className={className} title={compact ? `${item.label} — скоро` : undefined} aria-disabled>
+          <span key={item.href} className={className} title={compact ? shell.soonTitle(item.label) : undefined} aria-disabled>
             {content}
           </span>
         ) : (
@@ -162,8 +164,8 @@ export function PanelShell({ homeHref, brand, nav: items, titles, fallbackTitle,
           <button
             type="button"
             onClick={() => setCollapsed(collapsedKey, !collapsed)}
-            aria-label={collapsed ? "Развернуть меню" : "Свернуть меню"}
-            title={collapsed ? "Развернуть меню" : "Свернуть меню"}
+            aria-label={collapsed ? shell.expandMenu : shell.collapseMenu}
+            title={collapsed ? shell.expandMenu : shell.collapseMenu}
             className="flex h-11 w-11 items-center justify-center rounded-xl text-stone-500 transition hover:bg-stone-100 hover:text-stone-900"
           >
             <PanelIcon className="h-5 w-5" />
@@ -174,12 +176,12 @@ export function PanelShell({ homeHref, brand, nav: items, titles, fallbackTitle,
 
       {/* Меню: телефон — выезжает слева */}
       {drawerOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Меню">
+        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label={shell.menu}>
           <button
             type="button"
             className="absolute inset-0 bg-stone-900/40"
             onClick={() => setDrawerOpen(false)}
-            aria-label="Закрыть меню"
+            aria-label={shell.closeMenu}
           />
           <aside className="relative flex h-full w-72 max-w-[85%] flex-col bg-white shadow-xl">
             <div className="flex h-16 items-center justify-between border-b border-stone-100 px-4">
@@ -187,7 +189,7 @@ export function PanelShell({ homeHref, brand, nav: items, titles, fallbackTitle,
               <button
                 type="button"
                 onClick={() => setDrawerOpen(false)}
-                aria-label="Закрыть меню"
+                aria-label={shell.closeMenu}
                 className="flex h-11 w-11 items-center justify-center rounded-xl text-stone-500 hover:bg-stone-100"
               >
                 <CloseIcon className="h-5 w-5" />
@@ -204,7 +206,7 @@ export function PanelShell({ homeHref, brand, nav: items, titles, fallbackTitle,
             <button
               type="button"
               onClick={() => setDrawerOpen(true)}
-              aria-label="Открыть меню"
+              aria-label={shell.openMenu}
               className="-ml-2 flex h-11 w-11 items-center justify-center rounded-xl text-stone-600 hover:bg-stone-100 lg:hidden"
             >
               <MenuIcon className="h-5 w-5" />
@@ -216,7 +218,7 @@ export function PanelShell({ homeHref, brand, nav: items, titles, fallbackTitle,
             <Link
               href={account.href}
               className="flex min-h-11 items-center gap-3 rounded-xl px-2 transition hover:bg-stone-100"
-              title="Мой аккаунт"
+              title={shell.account}
             >
               <span className="hidden text-right sm:block">
                 <span className="block max-w-48 truncate text-sm font-medium text-stone-900">{account.name}</span>
@@ -234,7 +236,7 @@ export function PanelShell({ homeHref, brand, nav: items, titles, fallbackTitle,
                 type="submit"
                 className="min-h-11 rounded-xl px-3 text-sm font-medium text-stone-500 transition hover:bg-stone-100 hover:text-stone-900"
               >
-                Выйти
+                {shell.logout}
               </button>
             </form>
           </div>

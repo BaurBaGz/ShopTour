@@ -1,11 +1,15 @@
+"use client";
+
+import { useT } from "@/lib/i18n/client";
 import { AUDIENCE_OPTIONS } from "@/lib/audience";
 import type { ProductAudience } from "@/types/database";
 
 /** «Для кого» в форме товара: одно касание вместо списка */
 export function AudienceField({ defaultValue }: { defaultValue?: ProductAudience | null }) {
+  const c = useT().cabinet.productForm;
   return (
     <fieldset>
-      <legend className="mb-1.5 block text-sm font-medium text-stone-700">Для кого *</legend>
+      <legend className="mb-1.5 block text-sm font-medium text-stone-700">{c.audience}</legend>
       <div className="grid grid-cols-3 gap-2">
         {AUDIENCE_OPTIONS.map((option) => (
           <label
@@ -20,11 +24,11 @@ export function AudienceField({ defaultValue }: { defaultValue?: ProductAudience
               defaultChecked={defaultValue === option.id}
               className="sr-only"
             />
-            {option.label}
+            {c.audienceOptions[option.id]}
           </label>
         ))}
       </div>
-      <p className="mt-1 text-xs text-stone-500">Унисекс увидят и в разделе «Женщинам», и в «Мужчинам»</p>
+      <p className="mt-1 text-xs text-stone-500">{c.audienceHint}</p>
     </fieldset>
   );
 }

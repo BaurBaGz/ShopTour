@@ -1,15 +1,8 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { botMessages } from "@/lib/i18n/bot";
 import { esc, sendMessage } from "@/lib/telegram";
 
 // Утренняя сводка магазину в Telegram: что было вчера на ShopTour
-
-function plural(n: number, one: string, few: string, many: string) {
-  const mod10 = n % 10;
-  const mod100 = n % 100;
-  if (mod10 === 1 && mod100 !== 11) return one;
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
-  return many;
-}
 
 const ALMATY_OFFSET_MS = 5 * 60 * 60 * 1000;
 
@@ -38,7 +31,7 @@ export async function buildSummaries(onlyStoreId?: string): Promise<StoreSummary
   const admin = createAdminClient();
   let linksQuery = admin
     .from("store_notifications")
-    .select("store_id, telegram_chat_id, daily_summary")
+    .select("store_id, telegram_chat_id, daily_summary, locale")
     .not("telegram_chat_id", "is", null)
     .eq("daily_summary", true);
   if (onlyStoreId) linksQuery = linksQuery.eq("store_id", onlyStoreId);
@@ -100,34 +93,34 @@ export async function buildSummaries(onlyStoreId?: string): Promise<StoreSummary
 
     const own = (products ?? []).filter((p) => p.store_id === link.store_id && p.in_stock);
     const noPhoto = own.filter((p) => !p.images?.length).length;
-    const name = (stores ?? []).find((s) => s.id === link.store_id)?.name ?? "Ваш магазин";
+    // Сводка — на языке магазина
+    const m = botMessages(link.locale).summary;
+    const name = (stores ?? []).find((s) => s.id === link.store_id)?.name ?? m.storeFallback;
 
-    const lines: string[] = [`☀️ Доброе утро! <b>${esc(name)}</b> вчера на ShopTour:`, ""];
+    const lines: string[] = [m.hello(esc(name)), ""];
     if (visitors > 0) {
-      lines.push(`👀 ${visitors} ${plural(visitors, "человек смотрел", "человека смотрели", "человек смотрели")} ваш магазин`);
-      lines.push(
-        `👁 ${productViews} ${plural(productViews, "просмотр", "просмотра", "просмотров")} товаров · ❤️ ${favorites} в избранное`,
-      );
+      lines.push(m.visitors(visitors));
+      lines.push(m.views(productViews, favorites));
     } else {
-      lines.push("👀 Вчера посетителей не было");
+      lines.push(m.noVisitors);
     }
     if (newYesterday > 0 || pending > 0) {
-      const parts = [`🛍 ${newYesterday} ${plural(newYesterday, "бронь", "брони", "броней")}`];
-      if (pending > 0) parts.push(`(${pending} ${plural(pending, "ждёт", "ждут", "ждут")} ответа)`);
+      const parts = [m.reservations(newYesterday)];
+      if (pending > 0) parts.push(m.waiting(pending));
       lines.push(parts.join(" "));
     }
     if (top && top[1] > 1) {
-      lines.push("", `🔥 Чаще всего смотрели: ${esc(productName.get(top[0]) ?? "товар")} — ${top[1]} ${plural(top[1], "раз", "раза", "раз")}`);
+      lines.push("", m.top(esc(productName.get(top[0]) ?? m.productFallback), top[1]));
     }
     if (weekVisitors > visitors) {
-      lines.push(`За 7 дней: ${weekVisitors} ${plural(weekVisitors, "человек", "человека", "человек")}`);
+      lines.push(m.week(weekVisitors));
     }
     if (noPhoto > 0) {
-      lines.push("", `💡 ${noPhoto} ${plural(noPhoto, "товар", "товара", "товаров")} без фото — их почти не смотрят`);
+      lines.push("", m.noPhoto(noPhoto));
     } else if (own.length < 5) {
-      lines.push("", "💡 Добавьте больше товаров — витрина с 10+ вещами собирает заметно больше просмотров");
+      lines.push("", m.addMore);
     }
-    lines.push("", '<a href="https://www.shoptour.kz/dashboard">Открыть кабинет</a>');
+    lines.push("", `<a href="https://www.shoptour.kz/dashboard">${m.openCabinet}</a>`);
 
     return {
       storeId: link.store_id,

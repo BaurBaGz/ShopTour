@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/lib/i18n/client";
 import { useActionState, useState } from "react";
 import { updateSlugAction, type SlugState } from "@/app/(cabinet)/dashboard/actions";
 import { showToast } from "@/lib/toast";
@@ -8,6 +9,8 @@ import { submitKeepingValues } from "@/lib/form-submit";
 /** Ссылка на витрину магазина для шапки Instagram: скопировать, открыть, сменить адрес */
 export function StorefrontCard({ slug, published, canEdit = true }: { slug: string; published: boolean; canEdit?: boolean }) {
   const [editing, setEditing] = useState(false);
+  const t = useT();
+  const c = t.cabinet.storefront;
   const [state, action, pending] = useActionState<SlugState, FormData>(async (prev, formData) => {
     const result = await updateSlugAction(prev, formData);
     // Сохранили — закрываем форму, новый адрес уже придёт с обновлённой страницей
@@ -21,7 +24,7 @@ export function StorefrontCard({ slug, published, canEdit = true }: { slug: stri
     const url = `https://www.${host}${path}`;
     try {
       await navigator.clipboard.writeText(url);
-      showToast({ message: "Ссылка скопирована — вставьте её в шапку Instagram" });
+      showToast({ message: c.copied });
     } catch {
       showToast({ message: url });
     }
@@ -30,11 +33,10 @@ export function StorefrontCard({ slug, published, canEdit = true }: { slug: stri
   return (
     <section aria-labelledby="storefront-title" className="rounded-3xl border border-stone-200 bg-white p-5 sm:p-6">
       <h2 id="storefront-title" className="text-lg font-semibold text-stone-900">
-        Ваша витрина
+        {c.title}
       </h2>
       <p className="mt-1 text-sm text-stone-500">
-        Все ваши товары, наличие размеров, адрес на карте и кнопка WhatsApp — на одной странице. Поставьте ссылку в
-        шапку Instagram вместо Taplink.
+        {c.text}
       </p>
 
       <div className="mt-4 flex flex-col gap-2 rounded-2xl bg-stone-50 p-3 sm:flex-row sm:items-center">
@@ -48,7 +50,7 @@ export function StorefrontCard({ slug, published, canEdit = true }: { slug: stri
             onClick={() => void copy()}
             className="min-h-11 flex-1 rounded-xl bg-stone-900 px-4 text-sm font-semibold text-white transition hover:bg-rose-600 sm:flex-none"
           >
-            Скопировать
+            {c.copy}
           </button>
           <a
             href={path}
@@ -56,21 +58,21 @@ export function StorefrontCard({ slug, published, canEdit = true }: { slug: stri
             rel="noopener noreferrer"
             className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl px-4 text-sm font-medium text-stone-700 ring-1 ring-stone-200 transition hover:bg-white sm:flex-none"
           >
-            Открыть
+            {c.open}
           </a>
         </div>
       </div>
 
       {!published && (
         <p className="mt-2 text-xs text-amber-800">
-          Пока магазин на проверке, витрину видите только вы. Ссылку можно добавить в Instagram заранее.
+          {c.onReview}
         </p>
       )}
 
       {editing ? (
         <form onSubmit={submitKeepingValues(action)} className="mt-4 flex flex-col gap-2">
           <label htmlFor="slug" className="text-sm font-medium text-stone-700">
-            Адрес витрины
+            {c.address}
           </label>
           <div className="flex items-center gap-1 rounded-xl border border-stone-200 bg-white pl-3 focus-within:border-rose-300 focus-within:ring-4 focus-within:ring-rose-500/15">
             <span className="shrink-0 text-sm text-stone-500">{host}/s/</span>
@@ -86,7 +88,7 @@ export function StorefrontCard({ slug, published, canEdit = true }: { slug: stri
               className="min-h-11 min-w-0 flex-1 bg-transparent pr-3 text-sm outline-none"
             />
           </div>
-          <p className="text-xs text-stone-500">Латинские буквы, цифры и дефис. Например: fus-store</p>
+          <p className="text-xs text-stone-500">{c.addressHint}</p>
           {state.error && (
             <p role="alert" className="text-sm text-red-700">
               {state.error}
@@ -98,10 +100,10 @@ export function StorefrontCard({ slug, published, canEdit = true }: { slug: stri
               disabled={pending}
               className="min-h-11 rounded-xl bg-stone-900 px-4 text-sm font-semibold text-white transition hover:bg-rose-600 disabled:opacity-60"
             >
-              {pending ? "Сохраняем…" : "Сохранить"}
+              {pending ? c.saving : c.save}
             </button>
             <button type="button" onClick={() => setEditing(false)} className="min-h-11 px-3 text-sm font-medium text-stone-500 hover:text-stone-900">
-              Отмена
+              {t.common.cancel}
             </button>
           </div>
         </form>
@@ -109,7 +111,7 @@ export function StorefrontCard({ slug, published, canEdit = true }: { slug: stri
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1">
 {canEdit && (
                       <button type="button" onClick={() => setEditing(true)} className="inline-flex min-h-11 items-center text-sm font-medium text-rose-600 hover:text-rose-700">
-              Изменить адрес
+              {c.change}
             </button>
           )}
           {state.success && (

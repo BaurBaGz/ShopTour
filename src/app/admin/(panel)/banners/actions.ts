@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getStaffForAction } from "@/lib/auth/staff";
 import { isUuid } from "@/lib/catalog-filters";
+import { BANNER_LOCALES, BANNER_TEXT_FIELDS, parseBannerI18n } from "@/lib/i18n/banners";
 import { createClient } from "@/lib/supabase/server";
 import type { BannerTheme } from "@/types/database";
 
@@ -29,6 +30,10 @@ function readBanner(formData: FormData) {
     image_url: text("image_url").split("\n")[0] || null,
     theme: THEMES.includes(theme) ? theme : "rose",
     is_active: formData.get("is_active") === "on",
+    // Переводы: поля формы вида kk_title, en_body; пустые не сохраняем
+    i18n: parseBannerI18n(
+      Object.fromEntries(BANNER_LOCALES.map((locale) => [locale, Object.fromEntries(BANNER_TEXT_FIELDS.map((f) => [f, text(`${locale}_${f}`)]))])),
+    ),
   };
 }
 

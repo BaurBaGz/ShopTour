@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/lib/i18n/client";
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
@@ -42,6 +43,7 @@ export function ProductsManager({ products: initial }: { products: ManagedProduc
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
   const [, startTransition] = useTransition();
+  const c = useT().cabinet.products;
 
   const counts = useMemo(
     () => ({
@@ -66,7 +68,7 @@ export function ProductsManager({ products: initial }: { products: ManagedProduc
       const result = await save();
       if (result.error && before) {
         setProducts((list) => list.map((p) => (p.id === id ? before : p)));
-        showToast({ message: `Не сохранилось: ${result.error}` });
+        showToast({ message: c.notSaved(result.error) });
       }
     });
   };
@@ -85,22 +87,22 @@ export function ProductsManager({ products: initial }: { products: ManagedProduc
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <label htmlFor="product-search" className="sr-only">
-          Поиск товара
+          {c.search}
         </label>
         <input
           id="product-search"
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Найти товар…"
+          placeholder={c.searchPlaceholder}
           className="min-h-11 w-full rounded-xl border border-stone-200 bg-white px-3 text-sm outline-none focus:border-rose-300 focus:ring-4 focus:ring-rose-500/15 sm:max-w-xs"
         />
-        <div className="flex gap-1 overflow-x-auto" role="group" aria-label="Показать">
+        <div className="flex gap-1 overflow-x-auto" role="group" aria-label={c.show}>
           {(
             [
-              ["all", "Все"],
-              ["available", "В продаже"],
-              ["sold", "Закончились"],
+              ["all", c.filterAll],
+              ["available", c.filterAvailable],
+              ["sold", c.filterSold],
             ] as [Filter, string][]
           ).map(([id, label]) => (
             <button
@@ -119,7 +121,7 @@ export function ProductsManager({ products: initial }: { products: ManagedProduc
         </div>
       </div>
 
-      {visible.length === 0 && <p className="py-6 text-center text-sm text-stone-500">Ничего не найдено.</p>}
+      {visible.length === 0 && <p className="py-6 text-center text-sm text-stone-500">{c.nothingFound}</p>}
 
       <ul className="flex flex-col gap-3">
         {visible.map((p) => {
@@ -132,7 +134,7 @@ export function ProductsManager({ products: initial }: { products: ManagedProduc
                   {p.images[0] ? (
                     <Image src={p.images[0]} alt="" fill sizes="64px" className={cn("object-cover", !available && "opacity-50")} />
                   ) : (
-                    <span className="flex h-full items-center justify-center text-[10px] text-stone-400">нет фото</span>
+                    <span className="flex h-full items-center justify-center text-[10px] text-stone-400">{c.noPhoto}</span>
                   )}
                 </Link>
                 <div className="min-w-0 flex-1">
@@ -148,12 +150,12 @@ export function ProductsManager({ products: initial }: { products: ManagedProduc
                       href={`/dashboard/products/${p.id}/edit`}
                       className="inline-flex min-h-11 shrink-0 items-center px-1 text-sm font-medium text-rose-600 hover:text-rose-700 sm:min-h-0"
                     >
-                      Изменить
+                      {c.edit}
                     </Link>
                   </div>
-                  {p.is_hidden && <p className="mt-1 text-xs text-amber-700">Скрыт администрацией ShopTour</p>}
-                  {p.is_draft && <p className="mt-1 text-xs font-medium text-stone-500">Черновик — покупатели не видят</p>}
-                  {!p.images[0] && <p className="mt-1 text-xs text-amber-700">Добавьте фото — без него товар почти не смотрят</p>}
+                  {p.is_hidden && <p className="mt-1 text-xs text-amber-700">{c.hiddenByAdmin}</p>}
+                  {p.is_draft && <p className="mt-1 text-xs font-medium text-stone-500">{c.draft}</p>}
+                  {!p.images[0] && <p className="mt-1 text-xs text-amber-700">{c.addPhoto}</p>}
                 </div>
               </div>
 
@@ -168,10 +170,10 @@ export function ProductsManager({ products: initial }: { products: ManagedProduc
                         key={size}
                         type="button"
                         onClick={() => setSize(p, size, 0)}
-                        title="Нажмите, если размер закончился"
+                        title={c.tapIfSoldOut}
                         className="flex min-h-11 items-center gap-1.5 rounded-xl px-3 text-sm ring-1 ring-emerald-200 bg-emerald-50 text-emerald-800 transition hover:bg-emerald-100"
                       >
-                        <span className="font-semibold">{size}</span> есть
+                        <span className="font-semibold">{size}</span> {c.sizeAvailable}
                       </button>
                     ) : (
                       <div
@@ -185,18 +187,18 @@ export function ProductsManager({ products: initial }: { products: ManagedProduc
                           type="button"
                           onClick={() => setSize(p, size, Math.max(0, left - 1))}
                           disabled={out}
-                          aria-label={`Размер ${size}: продали один`}
+                          aria-label={c.sizeSoldOne(size)}
                           className="flex h-11 w-10 items-center justify-center rounded-l-xl text-lg font-semibold text-stone-600 transition hover:bg-stone-100 disabled:opacity-30"
                         >
                           −
                         </button>
                         <span className="min-w-12 text-center text-sm">
-                          <span className="font-semibold">{size}</span> {out ? "нет" : `${left} шт`}
+                          <span className="font-semibold">{size}</span> {out ? c.sizeNone : c.pieces(left)}
                         </span>
                         <button
                           type="button"
                           onClick={() => setSize(p, size, left + 1)}
-                          aria-label={`Размер ${size}: привезли ещё`}
+                          aria-label={c.sizeAddOne(size)}
                           className="flex h-11 w-10 items-center justify-center rounded-r-xl text-lg font-semibold text-stone-600 transition hover:bg-stone-100"
                         >
                           +
@@ -209,7 +211,7 @@ export function ProductsManager({ products: initial }: { products: ManagedProduc
 
               <div className="mt-3 flex items-center justify-between gap-3 border-t border-stone-100 pt-3">
                 <span className={cn("text-sm font-medium", available ? "text-emerald-700" : "text-stone-500")}>
-                  {available ? "В продаже" : p.in_stock ? "Все размеры закончились" : "Нет в наличии"}
+                  {available ? c.onSale : p.in_stock ? c.allSizesOut : c.outOfStock}
                 </span>
                 <button
                   type="button"
@@ -219,7 +221,7 @@ export function ProductsManager({ products: initial }: { products: ManagedProduc
                     p.in_stock ? "text-stone-600 ring-stone-200 hover:bg-stone-50" : "bg-stone-900 text-white ring-stone-900 hover:bg-rose-600",
                   )}
                 >
-                  {p.in_stock ? "Снять с продажи" : "Вернуть в продажу"}
+                  {p.in_stock ? c.takeOff : c.putBack}
                 </button>
               </div>
             </li>

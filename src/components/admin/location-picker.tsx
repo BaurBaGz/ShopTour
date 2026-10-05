@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/lib/i18n/client";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useRef, useState, useTransition } from "react";
 import type { Map as LeafletMap, Marker } from "leaflet";
@@ -27,6 +28,11 @@ export function LocationPicker({ storeId, latitude, longitude, address, onSave }
   const [point, setPoint] = useState<[number, number] | null>(
     latitude !== null && longitude !== null ? [latitude, longitude] : null,
   );
+  const t = useT();
+  const c = t.cabinet.location;
+  // Подпись метки нужна внутри эффекта карты, который создаётся один раз
+  const markerTitle = useRef(c.marker);
+  markerTitle.current = c.marker;
   const [saved, setSaved] = useState<[number, number] | null>(point);
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
   const [searching, setSearching] = useState(false);
@@ -52,7 +58,7 @@ export function LocationPicker({ storeId, latitude, longitude, address, onSave }
         if (marker.current) {
           marker.current.setLatLng(latlng);
         } else {
-          marker.current = L.marker(latlng, { icon, draggable: true, keyboard: true, title: "Точка магазина" }).addTo(map);
+          marker.current = L.marker(latlng, { icon, draggable: true, keyboard: true, title: markerTitle.current }).addTo(map);
           marker.current.on("dragend", () => {
             const { lat, lng } = marker.current!.getLatLng();
             setPoint([lat, lng]);
@@ -86,19 +92,19 @@ export function LocationPicker({ storeId, latitude, longitude, address, onSave }
     setMessage(null);
     try {
       // OpenStreetMap Nominatim: бесплатный поиск адресов, ограничиваем Казахстаном
-      const params = new URLSearchParams({ q: address, format: "json", limit: "1", countrycodes: "kz", "accept-language": "ru" });
+      const params = new URLSearchParams({ q: address, format: "json", limit: "1", countrycodes: "kz", "accept-language": t.intl.slice(0, 2) });
       const response = await fetch(`https://nominatim.openstreetmap.org/search?${params}`);
       const results: { lat: string; lon: string; display_name: string }[] = await response.json();
       if (!results.length) {
-        setMessage({ kind: "error", text: "Адрес не найден — поставьте точку на карте вручную" });
+        setMessage({ kind: "error", text: c.notFound });
         return;
       }
       const found: [number, number] = [Number(results[0].lat), Number(results[0].lon)];
       placeAndFocus.current?.(found);
       setPoint(found);
-      setMessage({ kind: "ok", text: `Найдено: ${results[0].display_name}. Проверьте метку и сохраните.` });
+      setMessage({ kind: "ok", text: c.found(results[0].display_name) });
     } catch {
-      setMessage({ kind: "error", text: "Поиск по адресу недоступен — поставьте точку вручную" });
+      setMessage({ kind: "error", text: c.searchUnavailable });
     } finally {
       setSearching(false);
     }
@@ -119,7 +125,7 @@ export function LocationPicker({ storeId, latitude, longitude, address, onSave }
         marker.current = null;
         setPoint(null);
       }
-      setMessage({ kind: "ok", text: next ? "Точка сохранена" : "Точка убрана" });
+      setMessage({ kind: "ok", text: next ? c.saved : c.removed });
     });
 
   const changed = point?.[0] !== saved?.[0] || point?.[1] !== saved?.[1];
@@ -128,8 +134,8 @@ export function LocationPicker({ storeId, latitude, longitude, address, onSave }
     <section className="rounded-2xl border border-stone-200 bg-white p-5 sm:p-6" aria-labelledby="loc-title">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 id="loc-title" className="text-lg font-semibold text-stone-900">Точка на карте</h2>
-          <p className="text-sm text-stone-500">Кликните по карте или перетащите метку</p>
+          <h2 id="loc-title" className="text-lg font-semibold text-stone-900">{c.title}</h2>
+          <p className="text-sm text-stone-500">{c.hint}</p>
         </div>
         <button
           type="button"
@@ -137,7 +143,7 @@ export function LocationPicker({ storeId, latitude, longitude, address, onSave }
           disabled={searching || !address.trim()}
           className="min-h-11 rounded-xl px-4 text-sm font-medium text-stone-700 ring-1 ring-stone-200 transition hover:bg-stone-50 disabled:opacity-50"
         >
-          {searching ? "Ищем…" : "Найти по адресу"}
+          {searching ? c.searching : c.findByAddress}
         </button>
       </div>
       <div ref={mapRef} className="mt-4 h-72 w-full overflow-hidden rounded-xl sm:h-80" />
@@ -148,7 +154,7 @@ export function LocationPicker({ storeId, latitude, longitude, address, onSave }
           disabled={!point || !changed || pending}
           className="min-h-11 rounded-xl bg-stone-900 px-5 text-sm font-semibold text-white transition hover:bg-rose-600 disabled:opacity-40"
         >
-          {pending ? "Сохраняем…" : "Сохранить точку"}
+          {pending ? c.saving : c.save}
         </button>
         {saved && (
           <button
@@ -157,12 +163,12 @@ export function LocationPicker({ storeId, latitude, longitude, address, onSave }
             disabled={pending}
             className="min-h-11 rounded-xl px-4 text-sm font-medium text-stone-500 hover:bg-stone-100 hover:text-stone-900"
           >
-            Убрать точку
+            {c.remove}
           </button>
         )}
         <span className="text-xs tabular-nums text-stone-500">
-          {point ? `${point[0].toFixed(5)}, ${point[1].toFixed(5)}` : "Точка не задана"}
-          {changed && point && " · не сохранено"}
+          {point ? `${point[0].toFixed(5)}, ${point[1].toFixed(5)}` : c.notSet}
+          {changed && point && c.unsaved}
         </span>
       </div>
       {message && (

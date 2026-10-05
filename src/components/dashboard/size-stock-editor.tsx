@@ -1,18 +1,12 @@
 "use client";
 
+import { useT } from "@/lib/i18n/client";
 import { useState } from "react";
 import { getSizeStock } from "@/lib/utils/product";
 import type { Json } from "@/types/database";
 
 type Row = { key: number; size: string; stock: string };
 
-const PRESETS: [string, string[]][] = [
-  ["XS–XL", ["XS", "S", "M", "L", "XL"]],
-  ["42–52", ["42", "44", "46", "48", "50", "52"]],
-  ["Обувь 36–41", ["36", "37", "38", "39", "40", "41"]],
-  ["Обувь 40–45", ["40", "41", "42", "43", "44", "45"]],
-  ["Один размер", ["One size"]],
-];
 
 type SizeStockEditorProps = {
   sizes?: string[];
@@ -24,6 +18,14 @@ const inputClass =
 
 /** Размеры и остаток по каждому. Отправляется одним полем sizeStock (JSON). */
 export function SizeStockEditor({ sizes = [], sizeStock = {} }: SizeStockEditorProps) {
+  const c = useT().cabinet.productForm;
+  const PRESETS: [string, string[]][] = [
+    ["XS–XL", ["XS", "S", "M", "L", "XL"]],
+    ["42–52", ["42", "44", "46", "48", "50", "52"]],
+    [c.presetShoesSmall, ["36", "37", "38", "39", "40", "41"]],
+    [c.presetShoesLarge, ["40", "41", "42", "43", "44", "45"]],
+    [c.presetOneSize, ["One size"]],
+  ];
   const [rows, setRows] = useState<Row[]>(() => {
     const initial = sizes.map((size, index) => {
       const stock = getSizeStock({ sizes, size_stock: sizeStock }, size);
@@ -65,10 +67,10 @@ export function SizeStockEditor({ sizes = [], sizeStock = {} }: SizeStockEditorP
   return (
     <fieldset>
       <legend className="mb-1.5 block text-sm font-medium text-stone-700">
-        Размеры и остатки
+        {c.sizesTitle}
       </legend>
       <p className="mb-3 text-xs text-stone-500">
-        Пустой остаток — просто «в наличии», 0 — размер закончился.
+        {c.sizesHint}
       </p>
       <input type="hidden" name="sizeStock" value={payload} />
 
@@ -91,8 +93,8 @@ export function SizeStockEditor({ sizes = [], sizeStock = {} }: SizeStockEditorP
             <input
               value={row.size}
               onChange={(e) => update(row.key, { size: e.target.value })}
-              placeholder="Размер, напр. M"
-              aria-label="Размер"
+              placeholder={c.sizePlaceholder}
+              aria-label={c.size}
               className={inputClass}
             />
             <input
@@ -102,14 +104,14 @@ export function SizeStockEditor({ sizes = [], sizeStock = {} }: SizeStockEditorP
               min={0}
               step={1}
               inputMode="numeric"
-              placeholder="Остаток, шт."
-              aria-label={`Остаток размера ${row.size || ""}`.trim()}
+              placeholder={c.stockPlaceholder}
+              aria-label={c.stockOf(row.size || "")}
               className={inputClass}
             />
             <button
               type="button"
               onClick={() => removeRow(row.key)}
-              aria-label={`Удалить размер ${row.size || ""}`.trim()}
+              aria-label={c.removeSize(row.size || "")}
               className="shrink-0 rounded-full p-2 text-stone-500 transition hover:bg-stone-100 hover:text-stone-900"
             >
               ✕
@@ -123,7 +125,7 @@ export function SizeStockEditor({ sizes = [], sizeStock = {} }: SizeStockEditorP
         onClick={addRow}
         className="mt-3 text-sm font-medium text-rose-600 hover:text-rose-700"
       >
-        + Добавить размер
+        {c.addSize}
       </button>
     </fieldset>
   );

@@ -1,5 +1,6 @@
 "use server";
 
+import { getT } from "@/lib/i18n/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getStaffForAction } from "@/lib/auth/staff";
@@ -27,7 +28,7 @@ export async function saveAdminProductAction(
   if (!staff) return { error };
   const storeId = String(formData.get("storeId") ?? "");
   if (!isUuid(storeId)) return { error: "Выберите магазин" };
-  const parsed = parseProductForm(formData);
+  const parsed = parseProductForm(formData, (await getT()).cabinet.productForm);
   if ("error" in parsed) return { error: parsed.error };
 
   const payload = { ...parsed.fields, store_id: storeId, is_hidden: formData.get("isHidden") === "on" };

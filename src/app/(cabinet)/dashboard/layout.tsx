@@ -1,13 +1,13 @@
+import { getT } from "@/lib/i18n/server";
 import type { Metadata } from "next";
 import { ChangePasswordForm } from "@/components/admin/change-password-form";
 import { CabinetShell } from "@/components/dashboard/cabinet-shell";
 import { requireCabinetPage } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = {
-  title: "Кабинет магазина — ShopTour",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT()).cabinet.shell.metaTitle, robots: { index: false, follow: false } };
+}
 
 // Каждый запрос проверяет вход и магазин на сервере; права на данные — ещё и в базе (RLS)
 export default async function CabinetLayout({ children }: { children: React.ReactNode }) {

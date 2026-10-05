@@ -31,13 +31,15 @@ export async function addCategoryAction(_prev: CategoryState, formData: FormData
   return { success: `Категория «${name}» добавлена` };
 }
 
-export async function renameCategoryAction(id: string, name: string) {
+/** Название и переводы категории; пустой перевод — на этом языке покажется русское название */
+export async function renameCategoryAction(id: string, name: string, nameKk = "", nameEn = "") {
   const { staff, error } = await getStaffForAction();
   if (!staff) return { error };
   const trimmed = name.trim();
   if (!isUuid(id) || !trimmed) return { error: "Введите название" };
   const supabase = await createClient();
-  const { error: updateError } = await supabase.from("categories").update({ name: trimmed }).eq("id", id);
+  const { error: updateError } = await supabase.from("categories").update({ name: trimmed, name_kk: nameKk.trim().slice(0, 60) || null, name_en: nameEn.trim().slice(0, 60) || null })
+    .eq("id", id);
   if (updateError) return { error: uniqueError(updateError.message) };
   revalidateCategories();
   return { error: null };

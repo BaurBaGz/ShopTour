@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/lib/i18n/client";
 import Link from "next/link";
 import { useActionState, useEffect, useRef } from "react";
 import {
@@ -33,6 +34,8 @@ const labelClass = "mb-1.5 block text-sm font-medium text-stone-700";
 export function ProductForm({ categories, product, storeId }: ProductFormProps) {
   const [state, formAction, pending] = useActionState(saveProductAction, initialState);
   const categoryRef = useRef<HTMLSelectElement>(null);
+  const t = useT();
+  const c = t.cabinet.productForm;
 
   useEffect(() => {
     if (product) return;
@@ -62,15 +65,15 @@ export function ProductForm({ categories, product, storeId }: ProductFormProps) 
 
       <div>
         <label htmlFor="product-name" className={labelClass}>
-          Название *
+          {c.name}
         </label>
-        <input id="product-name" name="name" defaultValue={product?.name} required placeholder="Например: Платье миди льняное" className={inputClass} />
+        <input id="product-name" name="name" defaultValue={product?.name} required placeholder={c.namePlaceholder} className={inputClass} />
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-5">
         <div>
           <label htmlFor="product-price" className={labelClass}>
-            Цена, ₸ *
+            {c.price}
           </label>
           <input
             id="product-price"
@@ -86,7 +89,7 @@ export function ProductForm({ categories, product, storeId }: ProductFormProps) 
         </div>
         <div>
           <label htmlFor="product-category" className={labelClass}>
-            Категория *
+            {c.category}
           </label>
           <select
             id="product-category"
@@ -97,7 +100,7 @@ export function ProductForm({ categories, product, storeId }: ProductFormProps) 
             className={inputClass}
           >
             <option value="" disabled>
-              Выберите
+              {c.choose}
             </option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
@@ -114,7 +117,7 @@ export function ProductForm({ categories, product, storeId }: ProductFormProps) 
 
       <details open={hasExtras} className="group rounded-2xl border border-stone-200">
         <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between px-4 text-sm font-medium text-stone-700">
-          Скидка, описание, наличие, черновик
+          {c.extras}
           <span className="text-stone-400 transition group-open:rotate-180" aria-hidden>
             ▾
           </span>
@@ -122,7 +125,7 @@ export function ProductForm({ categories, product, storeId }: ProductFormProps) 
         <div className="space-y-5 px-4 pb-4">
           <div>
             <label htmlFor="product-old-price" className={labelClass}>
-              Старая цена, ₸
+              {c.oldPrice}
             </label>
             <input
               id="product-old-price"
@@ -132,14 +135,14 @@ export function ProductForm({ categories, product, storeId }: ProductFormProps) 
               min={0}
               step={100}
               defaultValue={product?.old_price ?? ""}
-              placeholder="Для скидки"
+              placeholder={c.oldPricePlaceholder}
               className={inputClass}
             />
-            <p className="mt-1 text-xs text-stone-500">Больше цены — покупатель увидит скидку</p>
+            <p className="mt-1 text-xs text-stone-500">{c.oldPriceHint}</p>
           </div>
           <div>
             <label htmlFor="product-discount-until" className={labelClass}>
-              Скидка действует до
+              {c.discountUntil}
             </label>
             <input
               id="product-discount-until"
@@ -149,19 +152,19 @@ export function ProductForm({ categories, product, storeId }: ProductFormProps) 
               className={inputClass}
             />
             <p className="mt-1 text-xs text-stone-500">
-              Необязательно. После этой даты вернётся старая цена. Пусто — скидка без срока
+              {c.discountUntilHint}
             </p>
           </div>
           <div>
             <label htmlFor="product-description" className={labelClass}>
-              Описание
+              {c.description}
             </label>
             <textarea
               id="product-description"
               name="description"
               rows={3}
               defaultValue={product?.description ?? ""}
-              placeholder="Ткань, посадка, с чем носить"
+              placeholder={c.descriptionPlaceholder}
               className={inputClass}
             />
           </div>
@@ -172,7 +175,7 @@ export function ProductForm({ categories, product, storeId }: ProductFormProps) 
               defaultChecked={product?.in_stock ?? true}
               className="h-5 w-5 rounded border-stone-300 text-rose-600 focus:ring-rose-500"
             />
-            <span className="text-sm text-stone-700">В наличии</span>
+            <span className="text-sm text-stone-700">{c.inStock}</span>
           </label>
           <label className="flex min-h-11 items-center gap-3">
             <input
@@ -182,7 +185,7 @@ export function ProductForm({ categories, product, storeId }: ProductFormProps) 
               className="h-5 w-5 rounded border-stone-300 text-rose-600 focus:ring-rose-500"
             />
             <span className="text-sm text-stone-700">
-              Черновик <span className="text-stone-500">— убрать с сайта, не удаляя</span>
+              {c.draft} <span className="text-stone-500">{c.draftHint}</span>
             </span>
           </label>
         </div>
@@ -204,7 +207,7 @@ export function ProductForm({ categories, product, storeId }: ProductFormProps) 
             pending && "opacity-60",
           )}
         >
-          {pending ? "Сохранение…" : "Сохранить"}
+          {pending ? c.saving : c.save}
         </button>
         {!product && (
           <button
@@ -214,14 +217,14 @@ export function ProductForm({ categories, product, storeId }: ProductFormProps) 
             disabled={pending}
             className="min-h-12 flex-1 rounded-xl px-4 text-sm font-semibold text-stone-800 ring-1 ring-stone-200 hover:bg-stone-50 disabled:opacity-60 sm:flex-none"
           >
-            Сохранить и добавить ещё
+            {c.saveAndAdd}
           </button>
         )}
         <Link
           href="/dashboard/products"
           className="hidden min-h-12 items-center rounded-xl px-5 text-sm font-medium text-stone-600 hover:bg-stone-50 sm:inline-flex"
         >
-          Отмена
+          {t.common.cancel}
         </Link>
       </div>
     </form>

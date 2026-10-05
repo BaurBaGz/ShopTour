@@ -21,7 +21,7 @@ export default async function DashboardReservationsPage() {
 
   // Сначала ждут ответа, затем отложенные, затем закрытые — новые выше
   const order = { new: 0, confirmed: 1, declined: 2, completed: 2, no_show: 2 } as const;
-  type Row = Omit<DashboardReservation, "phone_label" | "visit_label"> & { visit: keyof typeof VISIT_LABELS };
+  type Row = Omit<DashboardReservation, "phone_label" | "visit_label">;
   const reservations: DashboardReservation[] = ((reservationsResult.data ?? []) as Row[])
     .map((r) => ({ ...r, phone_label: formatPhone(r.customer_phone), visit_label: VISIT_LABELS[r.visit] }))
     .sort((a, b) => order[a.status] - order[b.status]);

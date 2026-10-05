@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { canMove, refreshTelegramMessage } from "@/lib/reservations";
+import { botMessages } from "@/lib/i18n/bot";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { answerCallback, esc, sendMessage, webhookSecret } from "@/lib/telegram";
 import type { ReservationStatus } from "@/types/database";
@@ -11,13 +12,6 @@ type Update = {
 
 const ok = () => NextResponse.json({ ok: true });
 const STATUSES: ReservationStatus[] = ["confirmed", "declined", "completed", "no_show"];
-const ANSWERS: Record<string, string> = {
-  confirmed: "Отлично! Покупатель увидит, что вещь отложена",
-  declined: "Понятно, покупатель увидит, что вещи нет",
-  completed: "Отмечено: забрали",
-  no_show: "Отмечено: не пришли",
-};
-
 /** Бот ShopTour: привязка магазина (/start <код>) и ответы на брони кнопками */
 export async function POST(request: NextRequest) {
   if (request.headers.get("x-telegram-bot-api-secret-token") !== webhookSecret()) {
@@ -33,19 +27,17 @@ export async function POST(request: NextRequest) {
     const code = message.text.split(/\s+/)[1];
     const chat = message.chat;
     if (!code) {
-      await sendMessage(
-        chat.id,
-        "Здравствуйте! Это бот ShopTour для магазинов.\n\nЧтобы получать брони, откройте кабинет магазина на shoptour.kz и нажмите «Подключить Telegram».",
-      );
+      // Язык неизвестен: магазин ещё не подключён — отвечаем по-русски
+      await sendMessage(chat.id, botMessages("ru").startNoCode);
       return ok();
     }
     const { data: link } = await admin
       .from("store_notifications")
-      .select("store_id, link_code_expires_at")
+      .select("store_id, link_code_expires_at, locale")
       .eq("link_code", code)
       .maybeSingle();
     if (!link || !link.link_code_expires_at || Date.parse(link.link_code_expires_at) < Date.now()) {
-      await sendMessage(chat.id, "Ссылка устарела. Откройте кабинет магазина и нажмите «Подключить Telegram» ещё раз.");
+      await sendMessage(chat.id, botMessages(link?.locale).linkExpired);
       return ok();
     }
     await admin
@@ -59,10 +51,7 @@ export async function POST(request: NextRequest) {
       })
       .eq("store_id", link.store_id);
     const { data: store } = await admin.from("stores").select("name").eq("id", link.store_id).maybeSingle();
-    await sendMessage(
-      chat.id,
-      `Готово! Брони магазина <b>${esc(store?.name ?? "")}</b> будут приходить сюда.\n\nНа каждую бронь отвечайте кнопками «✅ Отложили» или «❌ Нет в наличии» — покупатель сразу увидит ответ на сайте.`,
-    );
+    await sendMessage(chat.id, botMessages(link.locale).linked(esc(store?.name ?? "")));
     return ok();
   }
 
@@ -74,15 +63,15 @@ export async function POST(request: NextRequest) {
     const { data: reservation } = await admin.from("reservations").select("*").eq("id", id).maybeSingle();
     // Отвечать может только чат этого магазина
     const { data: link } = reservation
-      ? await admin.from("store_notifications").select("telegram_chat_id").eq("store_id", reservation.store_id).maybeSingle()
+      ? await admin.from("store_notifications").select("telegram_chat_id, locale").eq("store_id", reservation.store_id).maybeSingle()
       : { data: null };
     if (!reservation || !STATUSES.includes(status) || !link || link.telegram_chat_id !== chatId) {
-      await answerCallback(callback.id, "Бронь не найдена");
+      await answerCallback(callback.id, botMessages(link?.locale).notFound);
       return ok();
     }
     if (!canMove(reservation.status, status)) {
       await refreshTelegramMessage(reservation);
-      await answerCallback(callback.id, "Эта бронь уже отмечена");
+      await answerCallback(callback.id, botMessages(link.locale).alreadyMarked);
       return ok();
     }
     const { data: updated } = await admin
@@ -92,7 +81,7 @@ export async function POST(request: NextRequest) {
       .select("*")
       .single();
     if (updated) await refreshTelegramMessage(updated);
-    await answerCallback(callback.id, ANSWERS[status]);
+    await answerCallback(callback.id, status === "new" ? undefined : botMessages(link.locale).answers[status]);
     return ok();
   }
 

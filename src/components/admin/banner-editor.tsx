@@ -4,6 +4,7 @@ import { useActionState, useState, useTransition } from "react";
 import { deleteBannerAction, type BannerState } from "@/app/admin/(panel)/banners/actions";
 import { ImagesInput } from "@/components/admin/images-input";
 import { BannerSlide, type BannerData } from "@/components/catalog/banner-slide";
+import { BANNER_LOCALES, BANNER_TEXT_FIELDS, parseBannerI18n, type BannerTextField } from "@/lib/i18n/banners";
 import { cn } from "@/lib/utils/cn";
 import type { BannerTheme } from "@/types/database";
 import { submitKeepingValues } from "@/lib/form-submit";
@@ -25,6 +26,13 @@ const THEMES: { id: BannerTheme; label: string; swatch: string }[] = [
   { id: "light", label: "Белый", swatch: "bg-white ring-1 ring-stone-300" },
 ];
 
+const TEXT_FIELD_LABELS: Record<BannerTextField, string> = {
+  title: "Заголовок",
+  accent: "Выделенная строка",
+  body: "Текст",
+  cta_label: "Текст кнопки",
+};
+
 /** Редактор баннера с превью, которое меняется по мере ввода */
 export function BannerEditor({ action, banner, canDelete, submitLabel }: BannerEditorProps) {
   const [state, formAction, pending] = useActionState(action, {});
@@ -35,6 +43,7 @@ export function BannerEditor({ action, banner, canDelete, submitLabel }: BannerE
   const [deleting, startDeleting] = useTransition();
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const isSteps = draft.kind === "steps";
+  const translations = parseBannerI18n(banner?.i18n);
   const set = (patch: Partial<BannerData>) => setDraft((d) => ({ ...d, ...patch }));
 
   return (
@@ -77,6 +86,38 @@ export function BannerEditor({ action, banner, canDelete, submitLabel }: BannerE
             </p>
           </div>
         )}
+        {/* Переводы: пустое поле — на этом языке показывается русский текст */}
+        <details className="group rounded-xl border border-stone-200" open={Object.keys(translations).length > 0}>
+          <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between px-3 text-sm font-medium text-stone-700">
+            Перевод: казахский и английский
+            <span className="text-stone-400 transition group-open:rotate-180" aria-hidden>
+              ▾
+            </span>
+          </summary>
+          <div className="flex flex-col gap-4 px-3 pb-3">
+            <p className="text-xs text-stone-500">Пустое поле — покупатель на этом языке увидит русский текст. В превью справа показан русский вариант.</p>
+            {BANNER_LOCALES.map((locale) => (
+              <fieldset key={locale} className="flex flex-col gap-2">
+                <legend className={label}>{locale === "kk" ? "Қазақша" : "English"}</legend>
+                {BANNER_TEXT_FIELDS.filter((f) => !isSteps || f === "title" || f === "body").map((f) => (
+                  <div key={f}>
+                    <label htmlFor={`b-${locale}-${f}`} className="sr-only">
+                      {TEXT_FIELD_LABELS[f]} ({locale})
+                    </label>
+                    <input
+                      id={`b-${locale}-${f}`}
+                      name={`${locale}_${f}`}
+                      lang={locale}
+                      defaultValue={translations[locale]?.[f] ?? ""}
+                      placeholder={TEXT_FIELD_LABELS[f]}
+                      className={field}
+                    />
+                  </div>
+                ))}
+              </fieldset>
+            ))}
+          </div>
+        </details>
         <fieldset>
           <legend className={label}>Оформление</legend>
           <div className="grid grid-cols-3 gap-2">

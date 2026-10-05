@@ -6,7 +6,7 @@ export default async function AdminCategoriesPage() {
   const staff = await requireStaff();
   const supabase = await createClient();
   const [{ data: categories }, { data: products }] = await Promise.all([
-    supabase.from("categories").select("id, name").order("sort_order").order("name"),
+    supabase.from("categories").select("id, name, name_kk, name_en").order("sort_order").order("name"),
     supabase.from("products").select("category_id"),
   ]);
   const counts = new Map<string, number>();
@@ -15,7 +15,7 @@ export default async function AdminCategoriesPage() {
   return (
     <div className="mx-auto max-w-3xl">
       <CategoriesManager
-        rows={(categories ?? []).map((c) => ({ ...c, productCount: counts.get(c.id) ?? 0 }))}
+        rows={(categories ?? []).map((c) => ({ id: c.id, name: c.name, nameKk: c.name_kk ?? "", nameEn: c.name_en ?? "", productCount: counts.get(c.id) ?? 0 }))}
         canDelete={staff.role === "admin"}
       />
     </div>

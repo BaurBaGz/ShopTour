@@ -24,6 +24,7 @@ export function PromotionsPanel({ promotions, canAdd = false, maxActive = 3 }: P
   const [removing, startRemoving] = useTransition();
   const [removeError, setRemoveError] = useState<string | null>(null);
   const t = useT();
+  const c = t.cabinet.promotions;
 
   const remove = (id: string) =>
     startRemoving(async () => {
@@ -34,11 +35,11 @@ export function PromotionsPanel({ promotions, canAdd = false, maxActive = 3 }: P
   return (
     <section aria-labelledby="promotions-title" className="rounded-3xl border border-stone-200 bg-white p-5 sm:p-6">
       <h2 id="promotions-title" className="text-xl font-semibold tracking-tight text-stone-900">
-        Акции
+        {c.title}
       </h2>
       {canAdd && (
         <p className="mt-1 text-sm text-stone-500">
-          «2+1», «−20% на всё» — акция видна на вашей витрине и во вкладке «Скидки». Когда срок выйдет, она исчезнет сама.
+          {c.intro}
         </p>
       )}
 
@@ -57,37 +58,37 @@ export function PromotionsPanel({ promotions, canAdd = false, maxActive = 3 }: P
                 onClick={() => remove(promotion.id)}
                 className="min-h-11 shrink-0 rounded-xl px-3 text-sm font-medium text-red-700 ring-1 ring-stone-200 hover:bg-red-50 disabled:opacity-60"
               >
-                Снять
+                {c.remove}
               </button>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="mt-4 text-sm text-stone-500">Акций пока нет.</p>
+        <p className="mt-4 text-sm text-stone-500">{c.empty}</p>
       )}
       {removeError && <p role="alert" className="mt-2 text-sm text-red-700">{removeError}</p>}
 
       {canAdd &&
         (promotions.length >= maxActive ? (
-          <p className="mt-4 text-sm text-stone-500">Одновременно можно вести до {maxActive} акций — снимите одну, чтобы добавить новую.</p>
+          <p className="mt-4 text-sm text-stone-500">{c.limit(maxActive)}</p>
         ) : (
           <form onSubmit={submitKeepingValues(formAction)} className="mt-5 grid gap-4 border-t border-stone-100 pt-5 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <label htmlFor="promo-title" className={label}>Что за акция *</label>
-              <input id="promo-title" name="title" required minLength={3} maxLength={80} placeholder="Например: 2+1 на все футболки" className={field} />
+              <label htmlFor="promo-title" className={label}>{c.what}</label>
+              <input id="promo-title" name="title" required minLength={3} maxLength={80} placeholder={c.whatPlaceholder} className={field} />
             </div>
             <div className="sm:col-span-2">
-              <label htmlFor="promo-description" className={label}>Условия</label>
-              <textarea id="promo-description" name="description" rows={2} maxLength={300} placeholder="Третья вещь в подарок — самая недорогая из трёх" className={field} />
+              <label htmlFor="promo-description" className={label}>{c.terms}</label>
+              <textarea id="promo-description" name="description" rows={2} maxLength={300} placeholder={c.termsPlaceholder} className={field} />
             </div>
             <div>
-              <label htmlFor="promo-ends" className={label}>Действует до</label>
+              <label htmlFor="promo-ends" className={label}>{c.until}</label>
               <input id="promo-ends" name="endsOn" type="date" className={field} />
-              <p className="mt-1 text-xs text-stone-500">Пусто — акция без срока</p>
+              <p className="mt-1 text-xs text-stone-500">{c.untilHint}</p>
             </div>
             <div className="flex items-end">
               <button type="submit" disabled={pending} className="min-h-11 w-full rounded-xl bg-stone-900 px-5 text-sm font-semibold text-white transition hover:bg-rose-600 disabled:opacity-60 sm:w-auto">
-                {pending ? "Добавляем…" : "Добавить акцию"}
+                {pending ? c.adding : c.add}
               </button>
             </div>
             {state.error && <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 sm:col-span-2">{state.error}</p>}

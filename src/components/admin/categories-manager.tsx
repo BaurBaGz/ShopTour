@@ -11,7 +11,7 @@ import {
 import { cn } from "@/lib/utils/cn";
 import { formatProductCount } from "@/lib/utils/format";
 
-type CategoryRow = { id: string; name: string; productCount: number };
+type CategoryRow = { id: string; name: string; nameKk: string; nameEn: string; productCount: number };
 
 const field =
   "min-h-11 w-full rounded-xl border border-stone-200 bg-white px-3 text-sm outline-none focus:border-rose-300 focus:ring-4 focus:ring-rose-500/15";
@@ -22,6 +22,8 @@ export function CategoriesManager({ rows, canDelete }: { rows: CategoryRow[]; ca
   const [state, addAction, adding] = useActionState<CategoryState, FormData>(addCategoryAction, {});
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
+  const [draftKk, setDraftKk] = useState("");
+  const [draftEn, setDraftEn] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -50,18 +52,25 @@ export function CategoriesManager({ rows, canDelete }: { rows: CategoryRow[]; ca
                   className="flex min-w-0 flex-1 flex-wrap gap-2"
                   onSubmit={(e) => {
                     e.preventDefault();
-                    run(() => renameCategoryAction(row.id, draft), () => setEditing(null));
+                    run(() => renameCategoryAction(row.id, draft, draftKk, draftEn), () => setEditing(null));
                   }}
                 >
                   <label htmlFor={`cat-${row.id}`} className="sr-only">Название</label>
-                  <input id={`cat-${row.id}`} value={draft} onChange={(e) => setDraft(e.target.value)} autoFocus className={cn(field, "max-w-sm flex-1")} />
+                  <input id={`cat-${row.id}`} value={draft} onChange={(e) => setDraft(e.target.value)} autoFocus placeholder="Название" className={cn(field, "max-w-sm flex-1")} />
+                  <label htmlFor={`cat-kk-${row.id}`} className="sr-only">Название на казахском</label>
+                  <input id={`cat-kk-${row.id}`} lang="kk" value={draftKk} onChange={(e) => setDraftKk(e.target.value)} placeholder="Қазақша" className={cn(field, "max-w-48 flex-1")} />
+                  <label htmlFor={`cat-en-${row.id}`} className="sr-only">Название на английском</label>
+                  <input id={`cat-en-${row.id}`} lang="en" value={draftEn} onChange={(e) => setDraftEn(e.target.value)} placeholder="English" className={cn(field, "max-w-48 flex-1")} />
                   <button type="submit" className="min-h-11 rounded-xl bg-stone-900 px-4 text-sm font-semibold text-white hover:bg-rose-600">Сохранить</button>
                   <button type="button" onClick={() => setEditing(null)} className="min-h-11 rounded-xl px-3 text-sm text-stone-600 hover:bg-stone-100">Отмена</button>
                 </form>
               ) : (
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-stone-900">{row.name}</p>
-                  <p className="text-xs text-stone-500">{formatProductCount(row.productCount)}</p>
+                  <p className="text-xs text-stone-500">
+                    {formatProductCount(row.productCount)}
+                    {row.nameKk || row.nameEn ? ` · ${[row.nameKk, row.nameEn].filter(Boolean).join(" · ")}` : " · без перевода"}
+                  </p>
                 </div>
               )}
               {editing !== row.id && (
@@ -70,10 +79,10 @@ export function CategoriesManager({ rows, canDelete }: { rows: CategoryRow[]; ca
                   <button type="button" disabled={index === rows.length - 1 || pending} onClick={() => run(() => moveCategoryAction(row.id, 1))} aria-label={`Опустить «${row.name}»`} className={iconButton}>↓</button>
                   <button
                     type="button"
-                    onClick={() => { setEditing(row.id); setDraft(row.name); setConfirmDelete(null); }}
+                    onClick={() => { setEditing(row.id); setDraft(row.name); setDraftKk(row.nameKk); setDraftEn(row.nameEn); setConfirmDelete(null); }}
                     className="min-h-11 rounded-xl px-3 text-sm font-medium text-stone-700 hover:bg-stone-100"
                   >
-                    Переименовать
+                    Название и перевод
                   </button>
                   {canDelete &&
                     (confirmDelete === row.id ? (

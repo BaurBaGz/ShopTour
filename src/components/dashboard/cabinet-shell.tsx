@@ -2,19 +2,8 @@
 
 import { BagIcon, ChartIcon, HomeIcon, PercentIcon, StoreIcon, TagIcon, UsersIcon } from "@/components/admin/admin-icons";
 import { PanelShell, type PanelNavItem } from "@/components/panel/panel-shell";
-import { ROLE_LABELS, type CabinetRole, type Permission } from "@/lib/auth/permissions";
-
-const TITLES: [string, string][] = [
-  ["/dashboard/reservations", "Брони"],
-  ["/dashboard/products/new", "Новый товар"],
-  ["/dashboard/products", "Товары"],
-  ["/dashboard/promotions", "Акции"],
-  ["/dashboard/analytics", "Статистика"],
-  ["/dashboard/settings", "Магазин"],
-  ["/dashboard/staff", "Сотрудники"],
-  ["/dashboard/password", "Мой аккаунт"],
-  ["/dashboard", "Главная"],
-];
+import type { CabinetRole, Permission } from "@/lib/auth/permissions";
+import { useT } from "@/lib/i18n/client";
 
 type CabinetShellProps = {
   store: { name: string; slug: string };
@@ -29,24 +18,36 @@ type CabinetShellProps = {
 
 /** Кабинет магазина — тот же каркас, что у админки: меню слева, у каждой зоны своя страница */
 export function CabinetShell({ store, email, role, permissions, waitingReservations, children }: CabinetShellProps) {
+  const shell = useT().cabinet;
+  const titles: [string, string][] = [
+    ["/dashboard/reservations", shell.shell.reservations],
+    ["/dashboard/products/new", shell.shell.newProduct],
+    ["/dashboard/products", shell.shell.products],
+    ["/dashboard/promotions", shell.shell.promotions],
+    ["/dashboard/analytics", shell.shell.analytics],
+    ["/dashboard/settings", shell.shell.store],
+    ["/dashboard/staff", shell.shell.staff],
+    ["/dashboard/password", shell.shell.account],
+    ["/dashboard", shell.shell.home],
+  ];
   const sections: (PanelNavItem & { permission?: Permission })[] = [
-    { href: "/dashboard", label: "Главная", icon: HomeIcon },
-    { href: "/dashboard/reservations", label: "Брони", icon: BagIcon, badge: waitingReservations, permission: "reservations" },
-    { href: "/dashboard/products", label: "Товары", icon: TagIcon, permission: "products" },
-    { href: "/dashboard/promotions", label: "Акции", icon: PercentIcon, permission: "promotions" },
-    { href: "/dashboard/analytics", label: "Статистика", icon: ChartIcon, permission: "analytics" },
-    { href: "/dashboard/settings", label: "Магазин", icon: StoreIcon, permission: "store" },
-    { href: "/dashboard/staff", label: "Сотрудники", icon: UsersIcon, permission: "staff" },
+    { href: "/dashboard", label: shell.shell.home, icon: HomeIcon },
+    { href: "/dashboard/reservations", label: shell.shell.reservations, icon: BagIcon, badge: waitingReservations, permission: "reservations" },
+    { href: "/dashboard/products", label: shell.shell.products, icon: TagIcon, permission: "products" },
+    { href: "/dashboard/promotions", label: shell.shell.promotions, icon: PercentIcon, permission: "promotions" },
+    { href: "/dashboard/analytics", label: shell.shell.analytics, icon: ChartIcon, permission: "analytics" },
+    { href: "/dashboard/settings", label: shell.shell.store, icon: StoreIcon, permission: "store" },
+    { href: "/dashboard/staff", label: shell.shell.staff, icon: UsersIcon, permission: "staff" },
   ];
   return (
     <PanelShell
       homeHref="/dashboard"
-      brand="Магазин"
+      brand={shell.shell.brand}
       nav={sections.filter((item) => !item.permission || permissions.includes(item.permission))}
-      titles={TITLES}
-      fallbackTitle="Кабинет"
-      siteLink={{ href: `/s/${store.slug}`, label: "Открыть витрину" }}
-      account={{ href: "/dashboard/password", name: store.name, note: `${ROLE_LABELS[role]} · ${email}` }}
+      titles={titles}
+      fallbackTitle={shell.shell.fallbackTitle}
+      siteLink={{ href: `/s/${store.slug}`, label: shell.shell.openStorefront }}
+      account={{ href: "/dashboard/password", name: store.name, note: `${shell.roles[role]} · ${email}` }}
       collapsedKey="shoptour:cabinet-sidebar-collapsed"
     >
       {children}

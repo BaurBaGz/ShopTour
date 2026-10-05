@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { DailyPoint, TopProduct } from "@/lib/data/analytics";
+import { getT } from "@/lib/i18n/server";
 import { cn } from "@/lib/utils/cn";
 
 const numberFormat = new Intl.NumberFormat("ru-RU");
@@ -9,9 +10,10 @@ export const formatNumber = (n: number) => numberFormat.format(n);
 const dayFormat = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "short", timeZone: "UTC" });
 export const formatDay = (day: string) => dayFormat.format(new Date(`${day}T00:00:00Z`));
 
-export function StatCards({ cards }: { cards: { label: string; value: number; note?: string }[] }) {
+export async function StatCards({ cards }: { cards: { label: string; value: number; note?: string }[] }) {
+  const c = (await getT()).cabinet.analytics;
   return (
-    <section aria-label="Итоги за период" className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+    <section aria-label={c.totals} className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
       {cards.map((card) => (
         <div key={card.label} className="rounded-2xl border border-stone-200 bg-white p-5">
           <p className="text-sm text-stone-500">{card.label}</p>
@@ -24,13 +26,14 @@ export function StatCards({ cards }: { cards: { label: string; value: number; no
 }
 
 type Metric = "visitors" | "productViews";
-const METRIC_LABELS: Record<Metric, string> = {
-  visitors: "Посетители",
-  productViews: "Просмотры товаров",
-};
 
 /** Столбики по дням; подробности дня — при наведении или нажатии */
-export function DailyChart({ daily, metric, title }: { daily: DailyPoint[]; metric: Metric; title: string }) {
+export async function DailyChart({ daily, metric, title }: { daily: DailyPoint[]; metric: Metric; title: string }) {
+  const t = await getT();
+  const c = t.cabinet.analytics;
+  const metricLabel = metric === "visitors" ? c.visitors : c.productViews;
+  const dayFormat = new Intl.DateTimeFormat(t.intl, { day: "numeric", month: "short", timeZone: "UTC" });
+  const formatDay = (day: string) => dayFormat.format(new Date(`${day}T00:00:00Z`));
   const peak = Math.max(0, ...daily.map((p) => p[metric]));
   // Масштаб столбиков; на пустом графике делить на 0 нельзя
   const max = Math.max(1, peak);
@@ -41,14 +44,15 @@ export function DailyChart({ daily, metric, title }: { daily: DailyPoint[]; metr
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-lg font-semibold text-stone-900">{title}</h2>
         <p className="text-xs text-stone-500">
-          {METRIC_LABELS[metric]} по дням{peak > 0 ? ` · максимум ${formatNumber(peak)}` : " · пока нет данных"}
+          {c.byDay(metricLabel)}
+          {peak > 0 ? c.peak(formatNumber(peak)) : c.noData}
         </p>
       </div>
 
       <div
         className={cn("mt-5 flex h-40 items-end", daily.length > 40 ? "gap-px" : "gap-1")}
         role="img"
-        aria-label={`${METRIC_LABELS[metric]} по дням: ${daily.map((p) => `${formatDay(p.day)} — ${p[metric]}`).join(", ")}`}
+        aria-label={`${c.byDay(metricLabel)}: ${daily.map((p) => `${formatDay(p.day)} — ${p[metric]}`).join(", ")}`}
       >
         {daily.map((point, index) => {
           const value = point[metric];
@@ -65,10 +69,10 @@ export function DailyChart({ daily, metric, title }: { daily: DailyPoint[]; metr
               />
               <div className={cn("pointer-events-none absolute bottom-full z-10 mb-2 hidden w-44 rounded-xl bg-stone-900 px-3 py-2 text-xs text-white shadow-lg group-hover:block group-focus:block", edge)}>
                 <p className="font-semibold">{formatDay(point.day)}</p>
-                <p>Посетители: {formatNumber(point.visitors)}</p>
-                {point.pageViews > 0 && <p>Просмотры страниц: {formatNumber(point.pageViews)}</p>}
-                <p>Просмотры товаров: {formatNumber(point.productViews)}</p>
-                <p>В избранное: {formatNumber(point.favorites)}</p>
+                <p>{c.visitors}: {formatNumber(point.visitors)}</p>
+                {point.pageViews > 0 && <p>{c.pageViews}: {formatNumber(point.pageViews)}</p>}
+                <p>{c.productViews}: {formatNumber(point.productViews)}</p>
+                <p>{c.favorites}: {formatNumber(point.favorites)}</p>
               </div>
             </div>
           );
@@ -83,7 +87,7 @@ export function DailyChart({ daily, metric, title }: { daily: DailyPoint[]; metr
   );
 }
 
-export function TopProductsTable({
+export async function TopProductsTable({
   products,
   title,
   hrefFor,
@@ -94,6 +98,7 @@ export function TopProductsTable({
   hrefFor: (id: string) => string;
   showStore?: boolean;
 }) {
+  const c = (await getT()).cabinet.analytics;
   return (
     <section className="rounded-2xl border border-stone-200 bg-white p-5 sm:p-6">
       <h2 className="text-lg font-semibold text-stone-900">{title}</h2>
@@ -104,10 +109,10 @@ export function TopProductsTable({
           <table className="w-full min-w-[320px] text-left text-sm">
             <thead className="text-xs text-stone-500">
               <tr>
-                <th className="py-2 pl-5 pr-2 font-medium sm:px-6">Товар</th>
-                <th className="px-2 py-2 text-right font-medium leading-tight sm:px-3">Просмотры</th>
-                <th className="hidden px-3 py-2 text-right font-medium leading-tight sm:table-cell">Посетители</th>
-                <th className="py-2 pl-2 pr-5 text-right font-medium leading-tight sm:px-6">В избранное</th>
+                <th className="py-2 pl-5 pr-2 font-medium sm:px-6">{c.product}</th>
+                <th className="px-2 py-2 text-right font-medium leading-tight sm:px-3">{c.views}</th>
+                <th className="hidden px-3 py-2 text-right font-medium leading-tight sm:table-cell">{c.visitors}</th>
+                <th className="py-2 pl-2 pr-5 text-right font-medium leading-tight sm:px-6">{c.favorites}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
@@ -138,13 +143,14 @@ export function TopProductsTable({
   );
 }
 
-export function EmptyNote({ text = "Пока нет данных за этот период." }: { text?: string }) {
-  return <p className="mt-2 text-sm text-stone-500">{text}</p>;
+export async function EmptyNote({ text }: { text?: string }) {
+  return <p className="mt-2 text-sm text-stone-500">{text ?? (await getT()).cabinet.analytics.emptyPeriod}</p>;
 }
 
-export function PeriodTabs({ current, hrefFor }: { current: number; hrefFor: (days: number) => string }) {
+export async function PeriodTabs({ current, hrefFor }: { current: number; hrefFor: (days: number) => string }) {
+  const c = (await getT()).cabinet.analytics;
   return (
-    <nav aria-label="Период" className="inline-flex rounded-xl border border-stone-200 bg-white p-1">
+    <nav aria-label={c.period} className="inline-flex rounded-xl border border-stone-200 bg-white p-1">
       {[7, 30, 90].map((days) => (
         <Link
           key={days}
@@ -156,7 +162,7 @@ export function PeriodTabs({ current, hrefFor }: { current: number; hrefFor: (da
             current === days ? "bg-stone-900 text-white" : "text-stone-600 hover:bg-stone-100",
           )}
         >
-          {days} дней
+          {c.days(days)}
         </Link>
       ))}
     </nav>

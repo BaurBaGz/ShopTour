@@ -16,7 +16,7 @@ export default async function AdminBannerPage({ params, searchParams }: PageProp
   const supabase = await createClient();
   const { data: banner } = await supabase
     .from("banners")
-    .select("id, kind, title, accent, body, cta_label, cta_href, image_url, theme, is_active")
+    .select("*")
     .eq("id", id)
     .maybeSingle();
   if (!banner) notFound();

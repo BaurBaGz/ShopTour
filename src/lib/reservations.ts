@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { botMessages, type BotMessages } from "@/lib/i18n/bot";
 import { editMessage, esc, sendMessage } from "@/lib/telegram";
 import { formatPrice } from "@/lib/utils/format";
 import type { Database, ReservationStatus } from "@/types/database";
@@ -31,43 +32,35 @@ export const STATUS_LABELS: Record<ReservationStatus, string> = {
   no_show: "Не пришли",
 };
 
-const STATUS_LINES: Record<ReservationStatus, string> = {
-  new: "",
-  confirmed: "✅ <b>Отложили</b> — покупатель видит это на сайте",
-  declined: "❌ <b>Нет в наличии</b> — покупатель видит это на сайте",
-  completed: "🛍 <b>Забрали</b>",
-  no_show: "⌛ <b>Не пришли</b>",
-};
-
 function siteUrl() {
   return process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.shoptour.kz";
 }
 
-/** Текст брони для магазина */
-export function reservationText(r: Reservation) {
+/** Текст брони для магазина — на его языке */
+export function reservationText(r: Reservation, m: BotMessages) {
   const lines = [
-    `🛍 <b>Бронь</b> — ${esc(r.product_name)}`,
-    r.size ? `Размер: <b>${esc(r.size)}</b>` : null,
-    `Цена: ${formatPrice(r.price)}`,
+    `🛍 <b>${m.reservation}</b> — ${esc(r.product_name)}`,
+    r.size ? m.size(esc(r.size)) : null,
+    m.price(formatPrice(r.price)),
     "",
-    `Покупатель: ${esc(r.customer_name)}`,
-    `Телефон: ${formatPhone(r.customer_phone)}`,
-    `Придёт: <b>${VISIT_LABELS[r.visit]}</b>`,
-    r.comment ? `Комментарий: ${esc(r.comment)}` : null,
-    STATUS_LINES[r.status] ? `\n${STATUS_LINES[r.status]}` : null,
+    m.customer(esc(r.customer_name)),
+    m.phone(formatPhone(r.customer_phone)),
+    m.comes[r.visit],
+    r.comment ? m.comment(esc(r.comment)) : null,
+    r.status !== "new" ? `\n${m.statusLine[r.status]}` : null,
   ];
   return lines.filter((line) => line !== null).join("\n");
 }
 
 /** Кнопки под сообщением: на новую бронь — ответить, на отложенную — отметить итог */
-export function reservationKeyboard(r: Reservation) {
+export function reservationKeyboard(r: Reservation, m: BotMessages) {
   const whatsapp = { text: "💬 WhatsApp", url: `https://wa.me/${r.customer_phone}` };
   if (r.status === "new") {
     return {
       inline_keyboard: [
         [
-          { text: "✅ Отложили", callback_data: `res:${r.id}:confirmed` },
-          { text: "❌ Нет в наличии", callback_data: `res:${r.id}:declined` },
+          { text: m.buttons.confirm, callback_data: `res:${r.id}:confirmed` },
+          { text: m.buttons.decline, callback_data: `res:${r.id}:declined` },
         ],
         [whatsapp],
       ],
@@ -77,8 +70,8 @@ export function reservationKeyboard(r: Reservation) {
     return {
       inline_keyboard: [
         [
-          { text: "🛍 Забрали", callback_data: `res:${r.id}:completed` },
-          { text: "⌛ Не пришли", callback_data: `res:${r.id}:no_show` },
+          { text: m.buttons.completed, callback_data: `res:${r.id}:completed` },
+          { text: m.buttons.noShow, callback_data: `res:${r.id}:no_show` },
         ],
         [whatsapp],
       ],
@@ -99,15 +92,16 @@ export async function notifyStore(r: Reservation) {
   const admin = createAdminClient();
   const { data: link } = await admin
     .from("store_notifications")
-    .select("telegram_chat_id")
+    .select("telegram_chat_id, locale")
     .eq("store_id", r.store_id)
     .maybeSingle();
   if (!link?.telegram_chat_id) return false;
+  const m = botMessages(link.locale);
 
   const sent = await sendMessage(
     link.telegram_chat_id,
-    `${reservationText(r)}\n\n<a href="${siteUrl()}/dashboard/reservations">Все брони в кабинете</a>`,
-    reservationKeyboard(r),
+    `${reservationText(r, m)}\n\n<a href="${siteUrl()}/dashboard/reservations">${m.allReservations}</a>`,
+    reservationKeyboard(r, m),
   );
   if (!sent) return false;
   await admin.from("reservations").update({ telegram_message_id: sent.message_id }).eq("id", r.id);
@@ -120,14 +114,15 @@ export async function refreshTelegramMessage(r: Reservation) {
   const admin = createAdminClient();
   const { data: link } = await admin
     .from("store_notifications")
-    .select("telegram_chat_id")
+    .select("telegram_chat_id, locale")
     .eq("store_id", r.store_id)
     .maybeSingle();
   if (!link?.telegram_chat_id) return;
+  const m = botMessages(link.locale);
   await editMessage(
     link.telegram_chat_id,
     r.telegram_message_id,
-    `${reservationText(r)}\n\n<a href="${siteUrl()}/dashboard/reservations">Все брони в кабинете</a>`,
-    reservationKeyboard(r),
+    `${reservationText(r, m)}\n\n<a href="${siteUrl()}/dashboard/reservations">${m.allReservations}</a>`,
+    reservationKeyboard(r, m),
   );
 }

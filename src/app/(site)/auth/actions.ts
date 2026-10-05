@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { accountHome, safeNext } from "@/lib/auth/home";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
-import { getT } from "@/lib/i18n/server";
+import { getLocale, getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 
 export type AuthActionState = {
@@ -62,12 +62,14 @@ export async function signupAction(
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: t.auth.errorEmail };
   if (password.length < 8) return { error: t.auth.errorPasswordShort };
 
+  const locale = await getLocale();
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      data: name ? { name } : undefined,
+      // Язык сайта — чтобы письма приходили на нём же (шаблоны писем в Supabase)
+      data: { ...(name ? { name } : {}), locale },
       emailRedirectTo: `${await requestOrigin()}/auth/confirm`,
     },
   });
@@ -113,7 +115,7 @@ export async function registerAction(
   const { data: authData, error: signUpError } = await supabase.auth.signUp({
     email,
     password,
-    options: { emailRedirectTo: `${await requestOrigin()}/auth/confirm` },
+    options: { emailRedirectTo: `${await requestOrigin()}/auth/confirm`, data: { locale: await getLocale() } },
   });
 
   const problem = signUpProblem(signUpError, authData.user, t);

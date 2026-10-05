@@ -5,6 +5,7 @@ import {
 } from "@/lib/supabase/log-error";
 import type { PostgrestError } from "@supabase/supabase-js";
 import { PRODUCT_SELECT, PUBLISHED_PRODUCT_SELECT } from "@/lib/data/selects";
+import { localizeBanner } from "@/lib/i18n/banners";
 import { localizedName, localizeProductCategory } from "@/lib/i18n/categories";
 import { getLocale } from "@/lib/i18n/server";
 import { distanceToStore, maxKmForWalk } from "@/lib/near";
@@ -358,12 +359,13 @@ export async function getActiveBanners() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("banners")
-    .select("id, kind, title, accent, body, cta_label, cta_href, image_url, theme")
+    .select("*")
     .eq("is_active", true)
     .order("sort_order")
     .order("created_at");
   logSupabaseError("getActiveBanners", error);
-  return data ?? [];
+  const locale = await getLocale();
+  return (data ?? []).map((banner) => localizeBanner(banner, locale));
 }
 
 /** Магазин по короткому адресу витрины (/s/<slug>) */

@@ -1,4 +1,5 @@
 // English.
+import cabinet from "./cabinet-en";
 import type { Dictionary } from "./ru";
 
 const s = (n: number, one: string, many: string) => (n === 1 ? one : many);
@@ -514,6 +515,9 @@ const en: Dictionary = {
     siteDescription: "A catalog of clothes from nearby stores: sizes in stock, discounts, addresses on the map. Reserve an item and come to try it on.",
     notFoundTitle: "Page not found — ShopTour",
   },
+
+  /** Кабинет магазина — отдельный словарь */
+  cabinet,
 
   notFound: {
     code: "Error 404",

@@ -207,6 +207,7 @@ export interface Database {
           image_url: string | null;
           theme: BannerTheme;
           is_active: boolean;
+          i18n?: Json;
           sort_order: number;
           created_at: string;
           updated_at: string;
@@ -222,6 +223,7 @@ export interface Database {
           image_url?: string | null;
           theme?: BannerTheme;
           is_active?: boolean;
+          i18n?: Json;
           sort_order?: number;
           created_at?: string;
           updated_at?: string;
@@ -237,6 +239,7 @@ export interface Database {
           image_url?: string | null;
           theme?: BannerTheme;
           is_active?: boolean;
+          i18n?: Json;
           sort_order?: number;
           created_at?: string;
           updated_at?: string;
@@ -427,6 +430,7 @@ export interface Database {
           link_code: string | null;
           link_code_expires_at: string | null;
           daily_summary: boolean;
+          locale?: string;
           last_summary_at: string | null;
         };
         Insert: {
@@ -437,6 +441,7 @@ export interface Database {
           link_code?: string | null;
           link_code_expires_at?: string | null;
           daily_summary?: boolean;
+          locale?: string;
           last_summary_at?: string | null;
         };
         Update: {
@@ -446,6 +451,7 @@ export interface Database {
           link_code?: string | null;
           link_code_expires_at?: string | null;
           daily_summary?: boolean;
+          locale?: string;
           last_summary_at?: string | null;
         };
         Relationships: [];

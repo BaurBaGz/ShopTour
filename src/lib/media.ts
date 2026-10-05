@@ -1,12 +1,16 @@
 "use client";
 
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { createClient } from "@/lib/supabase/client";
+
+/** Тексты ошибок загрузки — на языке сайта */
+type ImageMessages = Dictionary["cabinet"]["images"];
 
 const MAX_SIDE = 1600;
 const QUALITY = 0.85;
 
 /** Уменьшаем фото с телефона (часто 4000+ px и 5+ МБ) до 1600 px в WebP */
-async function compressImage(file: File): Promise<Blob> {
+async function compressImage(file: File, c: ImageMessages): Promise<Blob> {
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
   const width = Math.round(bitmap.width * scale);
@@ -17,7 +21,7 @@ async function compressImage(file: File): Promise<Blob> {
   canvas.getContext("2d")!.drawImage(bitmap, 0, 0, width, height);
   bitmap.close();
   const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", QUALITY));
-  if (!blob) throw new Error("Не удалось обработать фото");
+  if (!blob) throw new Error(c.processFailed);
   return blob;
 }
 
@@ -30,9 +34,10 @@ export async function uploadStoreImage(
   storeId: string,
   kind: "products" | "stores" | "banners",
   file: File,
+  c: ImageMessages,
 ): Promise<string> {
-  if (!file.type.startsWith("image/")) throw new Error(`«${file.name}» — не изображение`);
-  const blob = await compressImage(file);
+  if (!file.type.startsWith("image/")) throw new Error(c.notImage(file.name));
+  const blob = await compressImage(file, c);
   const path = `${kind}/${storeId}/${crypto.randomUUID()}.webp`;
   const supabase = createClient();
   const { error } = await supabase.storage

@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/lib/i18n/client";
 import { useActionState } from "react";
 import type { PartnerFormState } from "@/app/admin/(panel)/partners/actions";
 import { ImagesInput } from "@/components/admin/images-input";
@@ -22,29 +23,31 @@ const label = "mb-1.5 block text-sm font-medium text-stone-700";
 
 export function PartnerForm({ action, store, submitLabel, storeId, allowLogoUrl = false }: PartnerFormProps) {
   const [state, formAction, pending] = useActionState(action, {});
+  const cabinet = useT().cabinet;
+  const c = cabinet.storeForm;
 
   return (
     <form onSubmit={submitKeepingValues(formAction)} className="rounded-2xl border border-stone-200 bg-white p-5 sm:p-6">
-      <h2 className="text-lg font-semibold text-stone-900">Информация</h2>
+      <h2 className="text-lg font-semibold text-stone-900">{c.info}</h2>
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <label htmlFor="p-name" className={label}>Название *</label>
+          <label htmlFor="p-name" className={label}>{c.name}</label>
           <input id="p-name" name="name" required defaultValue={store?.name} className={field} />
         </div>
         <div className="sm:col-span-2">
-          <label htmlFor="p-description" className={label}>Описание</label>
-          <textarea id="p-description" name="description" rows={3} defaultValue={store?.description ?? ""} className={field} placeholder="Что продаёт, чем отличается" />
+          <label htmlFor="p-description" className={label}>{c.description}</label>
+          <textarea id="p-description" name="description" rows={3} defaultValue={store?.description ?? ""} className={field} placeholder={c.descriptionPlaceholder} />
         </div>
         <div>
-          <label htmlFor="p-city" className={label}>Город</label>
-          <input id="p-city" name="city" defaultValue={store?.city ?? "Алматы"} className={field} />
+          <label htmlFor="p-city" className={label}>{c.city}</label>
+          <input id="p-city" name="city" defaultValue={store?.city ?? c.defaultCity} className={field} />
         </div>
         <div>
-          <label htmlFor="p-address" className={label}>Адрес *</label>
-          <input id="p-address" name="address" required defaultValue={store?.address} className={field} placeholder="ул. Абая, 44" />
+          <label htmlFor="p-address" className={label}>{c.address}</label>
+          <input id="p-address" name="address" required defaultValue={store?.address} className={field} placeholder={c.addressPlaceholder} />
         </div>
         <div>
-          <label htmlFor="p-phone" className={label}>Телефон</label>
+          <label htmlFor="p-phone" className={label}>{c.phone}</label>
           <input id="p-phone" name="phone" type="tel" defaultValue={store?.phone ?? ""} className={field} placeholder="+7 727 000 00 00" />
         </div>
         <div>
@@ -58,14 +61,14 @@ export function PartnerForm({ action, store, submitLabel, storeId, allowLogoUrl 
         <div className="sm:col-span-2">
           <ImagesInput
             name="logo_url"
-            label="Логотип"
+            label={cabinet.images.logo}
             max={1}
             kind="stores"
             storeId={storeId ?? null}
             defaultValue={store?.logo_url ? [store.logo_url] : []}
             allowUrl={allowLogoUrl}
           />
-          {!storeId && allowLogoUrl && <p className="mt-1 text-xs text-stone-500">Загрузить файл можно после создания — или вставьте ссылку.</p>}
+          {!storeId && allowLogoUrl && <p className="mt-1 text-xs text-stone-500">{c.logoAfterCreate}</p>}
         </div>
       </div>
       {state.error && (
@@ -79,7 +82,7 @@ export function PartnerForm({ action, store, submitLabel, storeId, allowLogoUrl 
         disabled={pending}
         className="mt-5 min-h-11 rounded-xl bg-stone-900 px-5 text-sm font-semibold text-white transition hover:bg-rose-600 disabled:opacity-60"
       >
-        {pending ? "Сохраняем…" : submitLabel}
+        {pending ? c.saving : submitLabel}
       </button>
     </form>
   );

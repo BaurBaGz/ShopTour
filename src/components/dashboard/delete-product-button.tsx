@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/lib/i18n/client";
 import { useRouter } from "next/navigation";
 import { deleteProductAction } from "@/app/(cabinet)/dashboard/actions";
 
@@ -13,13 +14,14 @@ export function DeleteProductButton({
   productName,
 }: DeleteProductButtonProps) {
   const router = useRouter();
+  const c = useT().cabinet.products;
 
   return (
     <button
       type="button"
       onClick={async () => {
         if (
-          !confirm(`Удалить товар «${productName}»? Это действие нельзя отменить.`)
+          !confirm(c.deleteConfirm(productName))
         ) {
           return;
         }
@@ -29,7 +31,7 @@ export function DeleteProductButton({
       }}
       className="inline-flex min-h-11 items-center text-sm font-medium text-red-600 hover:text-red-700"
     >
-      Удалить товар
+      {c.delete}
     </button>
   );
 }
