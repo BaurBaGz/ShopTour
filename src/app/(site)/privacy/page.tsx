@@ -1,3 +1,4 @@
+import { SUPPORT_TELEGRAM, SUPPORT_WHATSAPP_LABEL, supportTelegramUrl, supportWhatsAppUrl } from "@/lib/support";
 import type { Metadata } from "next";
 import { PRIVACY } from "@/lib/i18n/content/privacy";
 import { getLocale, getT } from "@/lib/i18n/server";
@@ -35,7 +36,16 @@ export default async function PrivacyPage() {
                 {PRIVACY_EMAIL}
               </a>
             ) : (
-              c.contactFallback
+              <>
+                {t.support.privacyContacts}{" "}
+                <a href={supportWhatsAppUrl()} target="_blank" rel="noopener noreferrer" className="text-rose-600 hover:text-rose-700">
+                  WhatsApp {SUPPORT_WHATSAPP_LABEL}
+                </a>
+                {" · "}
+                <a href={supportTelegramUrl()} target="_blank" rel="noopener noreferrer" className="text-rose-600 hover:text-rose-700">
+                  Telegram @{SUPPORT_TELEGRAM}
+                </a>
+              </>
             )}
           </dd>
         </div>

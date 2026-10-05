@@ -1,3 +1,4 @@
+import { SupportContacts } from "@/components/layout/support-contacts";
 import { FOR_STORES } from "@/lib/i18n/content/for-stores";
 import { getLocale } from "@/lib/i18n/server";
 import { pageMeta } from "@/lib/seo";
@@ -119,6 +120,7 @@ export default async function ForStoresPage() {
               </details>
             ))}
           </div>
+          <SupportContacts className="mt-8 print:break-inside-avoid" />
           <p className="mt-8 text-center text-sm text-stone-500">
             {c.thisPage} <span className="font-medium text-stone-900">shoptour.kz/magazinam</span>
           </p>

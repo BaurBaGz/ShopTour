@@ -1,3 +1,4 @@
+import { SupportContacts } from "@/components/layout/support-contacts";
 import { getT } from "@/lib/i18n/server";
 import Link from "next/link";
 import { StorefrontCard } from "@/components/dashboard/storefront-card";
@@ -134,6 +135,8 @@ export default async function DashboardHomePage() {
       </section>
 
       <StorefrontCard slug={store.slug} published={store.status === "published"} canEdit={can("store")} />
+
+      <SupportContacts />
     </div>
   );
 }

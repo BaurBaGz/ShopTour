@@ -519,6 +519,13 @@ const en: Dictionary = {
   /** Кабинет магазина — отдельный словарь */
   cabinet,
 
+  support: {
+    title: "Need help?",
+    text: "Write to the ShopTour team — we will help you set up the store, upload items and answer questions.",
+    whatsappMessage: "Hello! I'm writing about ShopTour.",
+    privacyContacts: "WhatsApp or Telegram:",
+  },
+
   notFound: {
     code: "Error 404",
     pageTitle: "This page does not exist",

@@ -519,6 +519,13 @@ const kk: Dictionary = {
   /** Кабинет магазина — отдельный словарь */
   cabinet,
 
+  support: {
+    title: "Көмек керек пе?",
+    text: "ShopTour командасына жазыңыз — дүкенді ашуға, тауарларды жүктеуге көмектесеміз және сұрақтарға жауап береміз.",
+    whatsappMessage: "Сәлеметсіз бе! ShopTour туралы жазып тұрмын.",
+    privacyContacts: "WhatsApp немесе Telegram:",
+  },
+
   notFound: {
     code: "404 қатесі",
     pageTitle: "Мұндай бет жоқ",

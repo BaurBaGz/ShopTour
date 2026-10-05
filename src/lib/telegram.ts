@@ -77,3 +77,26 @@ export function setWebhook(url: string) {
     allowed_updates: ["message", "callback_query"],
   });
 }
+
+/**
+ * Сообщение команде ShopTour (о новом магазине и т. п.). Получатели — сотрудники админки,
+ * у которых к своему магазину подключён этот бот: только таким чатам бот может писать первым.
+ */
+export async function notifyStaff(html: string) {
+  if (!telegramConfigured()) return;
+  const { createAdminClient } = await import("@/lib/supabase/admin");
+  const admin = createAdminClient();
+  const { data: staff } = await admin.from("staff").select("user_id");
+  const ids = (staff ?? []).map((s) => s.user_id);
+  if (ids.length === 0) return;
+  const { data: stores } = await admin.from("stores").select("id").in("owner_id", ids);
+  const storeIds = (stores ?? []).map((s) => s.id);
+  if (storeIds.length === 0) return;
+  const { data: links } = await admin
+    .from("store_notifications")
+    .select("telegram_chat_id")
+    .in("store_id", storeIds)
+    .not("telegram_chat_id", "is", null);
+  const chats = [...new Set((links ?? []).map((l) => l.telegram_chat_id as number))];
+  await Promise.all(chats.map((chatId) => sendMessage(chatId, html)));
+}

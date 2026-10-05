@@ -8,6 +8,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { getLocale, getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
+import { esc, notifyStaff } from "@/lib/telegram";
 
 export type AuthActionState = {
   error?: string;
@@ -138,20 +139,43 @@ export async function registerAction(
     const admin = createAdminClient();
     const { data: existing } = await admin.from("stores").select("id").eq("owner_id", user.id).maybeSingle();
     if (!existing) {
-      const { error: storeError } = await admin.from("stores").insert({ ...store, status: "draft" });
+      const { data: created, error: storeError } = await admin.from("stores").insert({ ...store, status: "draft" }).select("id").single();
       if (storeError) return { error: t.auth.errorStore(storeError.message) };
+      await notifyNewStore(created.id, store, email);
     }
     return { success: t.auth.confirmSent(email) };
   }
 
-  const { error: storeError } = await supabase.from("stores").insert(store);
+  const { data: created, error: storeError } = await supabase.from("stores").insert(store).select("id").single();
 
   if (storeError) {
     return { error: t.auth.errorStore(storeError.message) };
   }
+  await notifyNewStore(created.id, store, email);
 
   revalidatePath("/", "layout");
   redirect("/dashboard");
+}
+
+/** Команде ShopTour — в Telegram: новый магазин ждёт проверки (по-русски, это для админки) */
+async function notifyNewStore(id: string, store: { name: string; city: string; address: string; phone: string | null }, email: string) {
+  try {
+    await notifyStaff(
+      [
+        `🆕 <b>Новый магазин ждёт проверки</b>`,
+        "",
+        `${esc(store.name)} — ${esc(store.city)}, ${esc(store.address)}`,
+        store.phone ? `Телефон: ${esc(store.phone)}` : null,
+        `Email: ${esc(email)}`,
+        "",
+        `<a href="https://www.shoptour.kz/admin/partners/${id}">Открыть в админке</a>`,
+      ]
+        .filter((line) => line !== null)
+        .join("\n"),
+    );
+  } catch (error) {
+    console.error("[register] notify staff:", (error as Error).message);
+  }
 }
 
 /** Понятная ошибка регистрации или null */

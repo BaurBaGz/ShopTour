@@ -534,6 +534,13 @@ const ru = {
   /** Кабинет магазина — отдельный словарь */
   cabinet,
 
+  support: {
+    title: "Нужна помощь?",
+    text: "Напишите команде ShopTour — поможем завести магазин, загрузить товары и ответим на вопросы.",
+    whatsappMessage: "Здравствуйте! Пишу по поводу ShopTour.",
+    privacyContacts: "WhatsApp или Telegram:",
+  },
+
   notFound: {
     code: "Ошибка 404",
     pageTitle: "Такой страницы нет",
