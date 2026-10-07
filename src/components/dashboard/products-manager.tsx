@@ -20,6 +20,7 @@ export type ManagedProduct = {
   in_stock: boolean;
   is_hidden: boolean;
   is_draft: boolean;
+  listing?: string;
   category: string | null;
 };
 
@@ -155,6 +156,7 @@ export function ProductsManager({ products: initial }: { products: ManagedProduc
                   </div>
                   {p.is_hidden && <p className="mt-1 text-xs text-amber-700">{c.hiddenByAdmin}</p>}
                   {p.is_draft && <p className="mt-1 text-xs font-medium text-stone-500">{c.draft}</p>}
+                  {p.listing && p.listing !== "sale" && <p className="mt-1 text-xs font-semibold text-violet-700">{c.rentBadge}</p>}
                   {!p.images[0] && <p className="mt-1 text-xs text-amber-700">{c.addPhoto}</p>}
                 </div>
               </div>

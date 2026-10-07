@@ -6,7 +6,8 @@ import { getT } from "@/lib/i18n/server";
 import { normalizePhone, notifyStore } from "@/lib/reservations";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { getSizeStock } from "@/lib/utils/product";
+import { isForRent, isForSale, rentPrice } from "@/lib/rental";
+import { almatyToday, getSizeStock } from "@/lib/utils/product";
 
 export type ReserveState = { error?: string };
 
@@ -20,6 +21,9 @@ export async function createReservationAction(_prev: ReserveState, formData: For
   const phone = normalizePhone(String(formData.get("phone") ?? ""));
   const visit = formData.get("visit") === "tomorrow" ? "tomorrow" : "today";
   const comment = String(formData.get("comment") ?? "").trim().slice(0, 300) || null;
+  // Запись на примерку (прокат) или бронь для покупки
+  const kind = formData.get("kind") === "fitting" ? "fitting" : "reserve";
+  const eventDate = kind === "fitting" ? String(formData.get("eventDate") ?? "").trim() || null : null;
 
   const t = await getT();
   const user = await getSessionUser();
@@ -27,16 +31,23 @@ export async function createReservationAction(_prev: ReserveState, formData: For
   if (!UUID_RE.test(productId)) return { error: t.reserve.errorNotFound };
   if (!name) return { error: t.reserve.errorName };
   if (!phone) return { error: t.reserve.errorPhone };
+  if (eventDate !== null) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(eventDate) || Number.isNaN(Date.parse(eventDate))) return { error: t.rent.errorEventDate };
+    if (eventDate < almatyToday()) return { error: t.rent.errorEventPast };
+  }
 
   const admin = createAdminClient();
   const { data: product } = await admin
     .from("products")
-    .select("id, name, price, sizes, size_stock, in_stock, is_hidden, is_draft, store:stores!products_store_id_fkey ( id, status )")
+    .select("id, name, price, listing, rent_price, sizes, size_stock, in_stock, is_hidden, is_draft, store:stores!products_store_id_fkey ( id, status )")
     .eq("id", productId)
     .maybeSingle();
   const store = (product?.store ?? null) as { id: string; status: string } | null;
   if (!product || !store || store.status !== "published" || product.is_hidden || product.is_draft) return { error: t.reserve.errorUnavailable };
   if (!product.in_stock) return { error: t.reserve.errorSoldOut };
+  if (kind === "fitting" ? !isForRent(product) : !isForSale(product)) {
+    return { error: kind === "fitting" ? t.rent.errorNotForRent : t.reserve.errorUnavailable };
+  }
   if (product.sizes.length > 0) {
     if (!size || !product.sizes.includes(size)) return { error: t.reserve.errorChooseSize };
     if (getSizeStock(product, size) === 0) return { error: t.reserve.errorSizeSoldOut(size) };
@@ -47,7 +58,7 @@ export async function createReservationAction(_prev: ReserveState, formData: For
   // Лимиты считаем и по телефону, и по аккаунту: иначе один человек шлёт брони с разными номерами
   const { data: recent } = await admin
     .from("reservations")
-    .select("id, product_id, size, status, created_at, customer_phone")
+    .select("id, product_id, size, status, created_at, customer_phone, kind")
     .or(`customer_phone.eq.${phone},user_id.eq.${user.id}`)
     .gte("created_at", dayAgo);
 
@@ -57,6 +68,7 @@ export async function createReservationAction(_prev: ReserveState, formData: For
       r.customer_phone === phone &&
       r.product_id === productId &&
       (r.size ?? null) === size &&
+      (r.kind ?? "reserve") === kind &&
       (r.status === "new" || r.status === "confirmed"),
   );
   if (same) redirect(`/reservations/${same.id}`);
@@ -74,7 +86,10 @@ export async function createReservationAction(_prev: ReserveState, formData: For
       product_id: product.id,
       product_name: product.name,
       size,
-      price: product.price,
+      // У записи на примерку — цена проката за сутки
+      price: Math.round(kind === "fitting" ? rentPrice(product) : product.price),
+      kind,
+      event_date: eventDate,
       customer_name: name,
       customer_phone: phone,
       visit,

@@ -56,6 +56,12 @@ export default async function ReservationPage({ params }: PageProps) {
     getSessionUser(),
   ]);
   const style = STATUS_STYLE[r.status];
+  // Запись на примерку (прокат) — свои подписи статусов
+  const fitting = r.kind === "fitting";
+  const statusTexts = fitting ? t.reservation.fittingStatus : t.reservation.status;
+  const eventDate = r.event_date
+    ? new Intl.DateTimeFormat(t.intl, { day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${r.event_date}T00:00:00Z`))
+    : null;
   const contact = store?.whatsapp ?? store?.phone ?? null;
   const whatsapp = contact
     ? buildWhatsAppUrl(contact, t.reservation.whatsappMessage(r.product_name, r.size, r.customer_name))
@@ -69,8 +75,8 @@ export default async function ReservationPage({ params }: PageProps) {
         <p className="text-3xl" aria-hidden>
           {style.icon}
         </p>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight text-stone-900">{t.reservation.status[r.status].label}</h1>
-        <p className="mt-1 text-stone-700">{t.reservation.status[r.status].text}</p>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight text-stone-900">{statusTexts[r.status].label}</h1>
+        <p className="mt-1 text-stone-700">{statusTexts[r.status].text}</p>
       </div>
 
       <section className="flex gap-4 rounded-3xl border border-stone-200 bg-white p-4 sm:p-5">
@@ -86,11 +92,13 @@ export default async function ReservationPage({ params }: PageProps) {
             <p className="font-semibold text-stone-900">{r.product_name}</p>
           )}
           <p className="mt-1 text-stone-600">
+            {fitting ? `${t.reservation.fittingLabel} · ` : ""}
             {r.size ? `${t.purchase.sizeShort(r.size)} · ` : ""}
             {formatPrice(r.price)}
           </p>
           <p className="mt-2 text-stone-500">
             {r.customer_name}, {maskPhone(r.customer_phone)} · {t.reservation.comes[r.visit]}
+            {eventDate ? ` · ${t.reservation.eventLine(eventDate)}` : ""}
           </p>
         </div>
       </section>

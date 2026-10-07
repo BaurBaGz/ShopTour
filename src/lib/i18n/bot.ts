@@ -14,6 +14,8 @@ const s = (n: number, one: string, many: string) => (n === 1 ? one : many);
 
 export type BotMessages = {
   reservation: string;
+  fitting: string;
+  eventDate: (date: string) => string;
   size: (size: string) => string;
   price: (price: string) => string;
   customer: (name: string) => string;
@@ -48,6 +50,8 @@ export type BotMessages = {
 
 const ru: BotMessages = {
   reservation: "Бронь",
+  fitting: "Примерка (прокат)",
+  eventDate: (date) => `Дата события: <b>${date}</b>`,
   size: (size) => `Размер: <b>${size}</b>`,
   price: (price) => `Цена: ${price}`,
   customer: (name) => `Покупатель: ${name}`,
@@ -94,6 +98,8 @@ const ru: BotMessages = {
 
 const kk: BotMessages = {
   reservation: "Брон",
+  fitting: "Киіп көру (жалға)",
+  eventDate: (date) => `Іс-шара күні: <b>${date}</b>`,
   size: (size) => `Өлшемі: <b>${size}</b>`,
   price: (price) => `Бағасы: ${price}`,
   customer: (name) => `Сатып алушы: ${name}`,
@@ -140,6 +146,8 @@ const kk: BotMessages = {
 
 const en: BotMessages = {
   reservation: "Reservation",
+  fitting: "Fitting (rental)",
+  eventDate: (date) => `Event date: <b>${date}</b>`,
   size: (size) => `Size: <b>${size}</b>`,
   price: (price) => `Price: ${price}`,
   customer: (name) => `Shopper: ${name}`,

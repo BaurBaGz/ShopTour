@@ -15,6 +15,7 @@ import { ShowOnMapLink } from "@/components/store/show-on-map-link";
 import { StoreAvatar } from "@/components/store/store-avatar";
 import { AUDIENCE_COLOR, AUDIENCE_SECTION } from "@/lib/audience";
 import { getT } from "@/lib/i18n/server";
+import { isForRent, isForSale, rentPrice } from "@/lib/rental";
 import { getSessionUser } from "@/lib/auth/session";
 import { getProductById, getProducts } from "@/lib/data/catalog";
 import { formatPrice } from "@/lib/utils/format";
@@ -24,7 +25,7 @@ import { formatDiscountDeadline, getDiscountPercent } from "@/lib/utils/product"
 type ProductPageProps = {
   params: Promise<{ id: string }>;
   /** reserve — вернулись после входа: сразу открыть бронь (значение — размер или «1») */
-  searchParams: Promise<{ reserve?: string }>;
+  searchParams: Promise<{ reserve?: string; fit?: string }>;
 };
 
 export async function generateMetadata({
@@ -76,7 +77,8 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
         phone: typeof meta.contact_phone === "string" ? meta.contact_phone : "",
       }
     : null;
-  const reserveOnOpen = (await searchParams).reserve?.slice(0, 20) ?? null;
+  const query = await searchParams;
+  const reserveOnOpen = query.reserve?.slice(0, 20) ?? null;
   const discount = getDiscountPercent(product);
   const t = await getT();
   const promotions = store ? await getStorePromotions(store.id) : [];
@@ -157,8 +159,11 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                     : "text-2xl font-bold text-stone-900"
                 }
               >
-                {formatPrice(product.price)}
+                {isForSale(product) ? formatPrice(product.price) : t.rent.perDay(formatPrice(rentPrice(product)))}
               </p>
+              {isForRent(product) && (
+                <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">{t.rent.badge}</span>
+              )}
               {discount && product.old_price && (
                 <>
                   <p className="text-lg text-stone-500 line-through">
@@ -189,11 +194,37 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
 
           <StorePromotions promotions={promotions} />
 
+          {/* Прокат: цена за сутки, условия, залог; при «и то, и другое» — пояснение про продажу новой вещи */}
+          {isForRent(product) && (
+            <section className="rounded-2xl border border-violet-200 bg-violet-50/60 p-4 text-sm">
+              <p className="font-semibold text-stone-900">{t.rent.section}</p>
+              <dl className="mt-2 grid gap-1.5 text-stone-700">
+                <div className="flex flex-wrap gap-x-2">
+                  <dt className="text-stone-500">{t.rent.priceDay}:</dt>
+                  <dd className="font-semibold text-stone-900">{t.rent.perDay(formatPrice(rentPrice(product)))}</dd>
+                </div>
+                {product.rent_terms && (
+                  <div className="flex flex-wrap gap-x-2">
+                    <dt className="text-stone-500">{t.rent.terms}:</dt>
+                    <dd>{product.rent_terms}</dd>
+                  </div>
+                )}
+                <div className="flex flex-wrap gap-x-2">
+                  <dt className="text-stone-500">{t.rent.deposit}:</dt>
+                  <dd>{product.rent_deposit || t.rent.noDeposit}</dd>
+                </div>
+              </dl>
+              {isForSale(product) && <p className="mt-2 text-xs text-stone-500">{t.rent.buyNote}</p>}
+              <p className="mt-2 text-xs text-stone-500">{t.rent.fittingNote}</p>
+            </section>
+          )}
+
           <ProductPurchase
             product={product}
             contactPhone={contactPhone}
             viewer={viewer}
             reserveOnOpen={reserveOnOpen}
+            fitOnOpen={query.fit === "1"}
           />
 
           {product.description && (

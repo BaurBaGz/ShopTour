@@ -1,6 +1,7 @@
 // Разбор формы товара — общий для кабинета магазина и админки
 import { parseAudience } from "@/lib/audience";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { parseListing, type Listing } from "@/lib/rental";
 import { almatyToday } from "@/lib/utils/product";
 import type { ProductAudience } from "@/types/database";
 
@@ -63,18 +64,33 @@ export type ProductFields = {
   images: string[];
   in_stock: boolean;
   audience: ProductAudience;
+  listing: Listing;
+  rent_price: number | null;
+  rent_terms: string | null;
+  rent_deposit: string | null;
 };
 
 /** Поля товара из формы с проверками; ошибка — понятным текстом для формы */
 export function parseProductForm(formData: FormData, c: Dictionary["cabinet"]["productForm"]): { fields: ProductFields } | { error: string } {
   const name = String(formData.get("name") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
-  const price = Number(formData.get("price"));
+  // Прокат: у товара только для проката цена продажи не нужна — в price кладём цену за сутки
+  const listing = parseListing(formData.get("listing"));
+  const rentPriceRaw = String(formData.get("rentPrice") ?? "").trim();
+  const rentPrice = listing === "sale" || rentPriceRaw === "" ? null : Number(rentPriceRaw);
+  const rentTerms = listing === "sale" ? "" : String(formData.get("rentTerms") ?? "").trim();
+  const rentDeposit = listing === "sale" ? "" : String(formData.get("rentDeposit") ?? "").trim();
+  const price = listing === "rent" ? (rentPrice ?? NaN) : Number(formData.get("price"));
   const categoryId = String(formData.get("categoryId") ?? "").trim();
   const sizeStock = parseSizeStock(String(formData.get("sizeStock") ?? ""));
   const oldPriceRaw = String(formData.get("oldPrice") ?? "").trim();
   const oldPrice = oldPriceRaw === "" ? null : Number(oldPriceRaw);
 
+  if (listing !== "sale" && (rentPrice === null || !Number.isFinite(rentPrice) || rentPrice < 0)) {
+    return { error: c.errorRentPrice };
+  }
+  if (rentTerms.length > 300) return { error: c.errorRentTermsLong };
+  if (rentDeposit.length > 100) return { error: c.errorRentDepositLong };
   if (!name || !categoryId || Number.isNaN(price) || price < 0) {
     return { error: c.errorRequired };
   }
@@ -106,14 +122,19 @@ export function parseProductForm(formData: FormData, c: Dictionary["cabinet"]["p
       name,
       description: description || null,
       price,
-      old_price: oldPrice,
-      discount_until: discountUntil,
+      // Скидка — только на продажу
+      old_price: listing === "rent" ? null : oldPrice,
+      discount_until: listing === "rent" ? null : discountUntil,
       category_id: categoryId,
       sizes: sizeStock.sizes,
       size_stock: sizeStock.sizeStock,
       audience,
       images: parseImages(String(formData.get("images") ?? "")),
       in_stock: formData.get("inStock") === "on",
+      listing,
+      rent_price: rentPrice,
+      rent_terms: rentTerms || null,
+      rent_deposit: rentDeposit || null,
     },
   };
 }

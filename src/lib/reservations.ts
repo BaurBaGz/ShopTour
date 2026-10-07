@@ -39,8 +39,9 @@ function siteUrl() {
 /** Текст брони для магазина — на его языке */
 export function reservationText(r: Reservation, m: BotMessages) {
   const lines = [
-    `🛍 <b>${m.reservation}</b> — ${esc(r.product_name)}`,
+    `${r.kind === "fitting" ? "🪡" : "🛍"} <b>${r.kind === "fitting" ? m.fitting : m.reservation}</b> — ${esc(r.product_name)}`,
     r.size ? m.size(esc(r.size)) : null,
+    r.event_date ? m.eventDate(r.event_date.split("-").reverse().join(".")) : null,
     m.price(formatPrice(r.price)),
     "",
     m.customer(esc(r.customer_name)),

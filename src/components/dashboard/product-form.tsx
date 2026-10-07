@@ -1,14 +1,16 @@
 "use client";
 
+import { parseListing, type Listing } from "@/lib/rental";
 import { useT } from "@/lib/i18n/client";
 import Link from "next/link";
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import {
   saveProductAction,
   type ProductActionState,
 } from "@/app/(cabinet)/dashboard/actions";
 import { ImagesInput } from "@/components/admin/images-input";
 import { AudienceField } from "@/components/dashboard/audience-field";
+import { RentalFields } from "@/components/dashboard/rental-fields";
 import { SizeStockEditor } from "@/components/dashboard/size-stock-editor";
 import type { Category, Product } from "@/lib/data/types";
 import { cn } from "@/lib/utils/cn";
@@ -36,6 +38,7 @@ export function ProductForm({ categories, product, storeId }: ProductFormProps) 
   const categoryRef = useRef<HTMLSelectElement>(null);
   const t = useT();
   const c = t.cabinet.productForm;
+  const [listing, setListing] = useState<Listing>(parseListing(product?.listing));
 
   useEffect(() => {
     if (product) return;
@@ -71,9 +74,10 @@ export function ProductForm({ categories, product, storeId }: ProductFormProps) 
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-5">
+        {listing !== "rent" && (
         <div>
           <label htmlFor="product-price" className={labelClass}>
-            {c.price}
+            {listing === "both" ? c.salePrice : c.price}
           </label>
           <input
             id="product-price"
@@ -87,6 +91,7 @@ export function ProductForm({ categories, product, storeId }: ProductFormProps) 
             className={inputClass}
           />
         </div>
+        )}
         <div>
           <label htmlFor="product-category" className={labelClass}>
             {c.category}
@@ -110,6 +115,8 @@ export function ProductForm({ categories, product, storeId }: ProductFormProps) 
           </select>
         </div>
       </div>
+
+      <RentalFields listing={listing} onListingChange={setListing} defaults={product} inputClass={inputClass} labelClass={labelClass} />
 
       <AudienceField defaultValue={product?.audience} />
 

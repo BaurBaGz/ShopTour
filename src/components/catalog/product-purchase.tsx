@@ -6,6 +6,7 @@ import { ReserveSheet } from "@/components/catalog/reserve-sheet";
 import { FavoriteButton } from "@/components/favorites/favorite-button";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { useT } from "@/lib/i18n/client";
+import { isForRent, isForSale, rentPrice } from "@/lib/rental";
 import { cn } from "@/lib/utils/cn";
 import { formatPrice } from "@/lib/utils/format";
 import { formatStockLeft, getSizeStock } from "@/lib/utils/product";
@@ -21,6 +22,8 @@ type ProductPurchaseProps = {
     sizes: string[];
     size_stock: Json;
     in_stock: boolean;
+    listing?: string;
+    rent_price?: number | null;
   };
   /** Номер для WhatsApp (whatsapp или phone магазина) */
   contactPhone: string | null;
@@ -28,9 +31,11 @@ type ProductPurchaseProps = {
   viewer: { name: string; phone: string } | null;
   /** Вернулись после входа — открыть бронь сразу; значение — размер или «1» */
   reserveOnOpen?: string | null;
+  /** Вернулись после входа к записи на примерку (прокат), а не к брони */
+  fitOnOpen?: boolean;
 };
 
-export function ProductPurchase({ product, contactPhone, viewer, reserveOnOpen = null }: ProductPurchaseProps) {
+export function ProductPurchase({ product, contactPhone, viewer, reserveOnOpen = null, fitOnOpen = false }: ProductPurchaseProps) {
   const t = useT();
   const sizes = product.sizes ?? [];
   const stockOf = (size: string) => getSizeStock(product, size);
@@ -56,10 +61,16 @@ export function ProductPurchase({ product, contactPhone, viewer, reserveOnOpen =
   const trackWhatsApp = () => track({ type: "whatsapp_click", productId: product.id });
   const needsSize = sizes.length > 0 && !selectedSize && availableSizes.length > 1;
   const sizesRef = useRef<HTMLDivElement>(null);
-  const [reserving, setReserving] = useState(Boolean(reserveOnOpen && viewer));
-  const closeReserve = useCallback(() => setReserving(false), []);
+  // Что открыто: бронь для покупки или запись на примерку (прокат)
+  const forSale = isForSale(product);
+  const forRent = isForRent(product);
+  const [reserving, setReserving] = useState<"reserve" | "fitting" | null>(
+    reserveOnOpen && viewer ? (fitOnOpen && forRent ? "fitting" : forSale ? "reserve" : "fitting") : null,
+  );
+  const closeReserve = useCallback(() => setReserving(null), []);
   // Бронь: размер нужен, если он есть у товара
-  const openReserve = () => (needsSize ? goToSizes() : setReserving(true));
+  const openReserve = (mode: "reserve" | "fitting" = forSale ? "reserve" : "fitting") => (needsSize ? goToSizes() : setReserving(mode));
+  const dayPrice = formatPrice(rentPrice(product));
 
   // Кнопка в нижней панели без выбранного размера ведёт к размерам
   const goToSizes = () => {
@@ -130,13 +141,25 @@ export function ProductPurchase({ product, contactPhone, viewer, reserveOnOpen =
       )}
 
       <div className="flex flex-wrap gap-3">
-        {!soldOut && (
+        {!soldOut && forSale && (
           <button
             type="button"
-            onClick={openReserve}
+            onClick={() => openReserve("reserve")}
             className="hidden min-h-11 items-center rounded-full bg-rose-600 px-5 text-sm font-semibold text-white transition hover:bg-rose-700 sm:inline-flex"
           >
             {selectedSize ? t.purchase.reserveSize(selectedSize) : needsSize ? t.purchase.chooseAndReserve : t.purchase.reserveInStore}
+          </button>
+        )}
+        {!soldOut && forRent && (
+          <button
+            type="button"
+            onClick={() => openReserve("fitting")}
+            className={cn(
+              "hidden min-h-11 items-center rounded-full px-5 text-sm font-semibold transition sm:inline-flex",
+              forSale ? "text-rose-700 ring-1 ring-rose-200 hover:bg-rose-50" : "bg-rose-600 text-white hover:bg-rose-700",
+            )}
+          >
+            {selectedSize ? t.rent.bookFittingSize(selectedSize) : t.rent.bookFitting}
           </button>
         )}
         {whatsappHref && !soldOut && (
@@ -163,7 +186,7 @@ export function ProductPurchase({ product, contactPhone, viewer, reserveOnOpen =
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="text-lg font-bold leading-tight text-stone-900">
-              {formatPrice(product.price)}
+              {forSale ? formatPrice(product.price) : t.rent.perDay(dayPrice)}
             </p>
             {product.old_price && product.old_price > product.price ? (
               <p className="text-xs text-stone-500 line-through">{formatPrice(product.old_price)}</p>
@@ -197,19 +220,35 @@ export function ProductPurchase({ product, contactPhone, viewer, reserveOnOpen =
                   <WhatsAppIcon className="h-5 w-5" />
                 </a>
               )}
-              <button
-                type="button"
-                onClick={openReserve}
-                className="min-h-11 rounded-full bg-rose-600 px-5 text-sm font-semibold text-white"
-              >
-                {selectedSize ? t.purchase.reserveShortSize(selectedSize) : t.purchase.reserveShort}
-              </button>
+              {forSale && (
+                <button
+                  type="button"
+                  onClick={() => openReserve("reserve")}
+                  className="min-h-11 rounded-full bg-rose-600 px-5 text-sm font-semibold text-white"
+                >
+                  {selectedSize && !forRent ? t.purchase.reserveShortSize(selectedSize) : t.purchase.reserveShort}
+                </button>
+              )}
+              {forRent && (
+                <button
+                  type="button"
+                  onClick={() => openReserve("fitting")}
+                  className={cn(
+                    "min-h-11 rounded-full px-4 text-sm font-semibold",
+                    forSale ? "text-rose-700 ring-1 ring-rose-200" : "bg-rose-600 text-white",
+                  )}
+                >
+                  {t.rent.bookFittingShort}
+                </button>
+              )}
             </div>
           )}
         </div>
       </div>
 
-      {reserving && !needsSize && <ReserveSheet product={product} size={selectedSize} viewer={viewer} onClose={closeReserve} />}
+      {reserving && !needsSize && (
+        <ReserveSheet product={product} size={selectedSize} viewer={viewer} mode={reserving} onClose={closeReserve} />
+      )}
     </div>
   );
 }

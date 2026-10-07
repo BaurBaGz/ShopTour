@@ -6,6 +6,7 @@ import { FavoriteButton } from "@/components/favorites/favorite-button";
 import type { ProductWithRelations } from "@/lib/data/types";
 import { AUDIENCE_COLOR } from "@/lib/audience";
 import { useT } from "@/lib/i18n/client";
+import { isForRent, isForSale, rentPrice } from "@/lib/rental";
 import { formatNearDistance } from "@/lib/near";
 import { formatPrice } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
@@ -69,6 +70,9 @@ export function ProductCard({ product, className }: ProductCardProps) {
               {product.categories.name}
             </span>
           )}
+          {isForRent(product) && (
+            <span className="absolute bottom-3 right-3 rounded-full bg-violet-600 px-2.5 py-1 text-xs font-bold text-white">{t.rent.badge}</span>
+          )}
           {discount && (
             <span className="absolute bottom-3 left-3 rounded-full bg-rose-600 px-2.5 py-1 text-xs font-bold text-white">
               −{discount}%
@@ -106,7 +110,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
               discount ? "text-rose-600" : "text-stone-900",
             )}
           >
-            {formatPrice(product.price)}
+            {isForSale(product) ? formatPrice(product.price) : t.rent.perDay(formatPrice(rentPrice(product)))}
           </span>
           {discount && product.old_price && (
             <span className="text-xs text-stone-500 line-through">
@@ -114,6 +118,9 @@ export function ProductCard({ product, className }: ProductCardProps) {
             </span>
           )}
         </p>
+        {product.listing === "both" && (
+          <p className="-mt-1 text-xs font-medium text-violet-700">{t.rent.alsoRent(formatPrice(rentPrice(product)))}</p>
+        )}
         {deadline && <p className="-mt-1 text-xs font-medium text-rose-700">{deadline}</p>}
 
         {store && (

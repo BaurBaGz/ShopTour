@@ -111,6 +111,10 @@ export interface Database {
           in_stock: boolean;
           is_hidden: boolean;
           is_draft: boolean;
+          listing?: string;
+          rent_price?: number | null;
+          rent_terms?: string | null;
+          rent_deposit?: string | null;
           audience: ProductAudience;
           created_at: string;
         };
@@ -129,6 +133,10 @@ export interface Database {
           in_stock?: boolean;
           is_hidden?: boolean;
           is_draft?: boolean;
+          listing?: string;
+          rent_price?: number | null;
+          rent_terms?: string | null;
+          rent_deposit?: string | null;
           audience?: ProductAudience;
           created_at?: string;
         };
@@ -147,6 +155,10 @@ export interface Database {
           in_stock?: boolean;
           is_hidden?: boolean;
           is_draft?: boolean;
+          listing?: string;
+          rent_price?: number | null;
+          rent_terms?: string | null;
+          rent_deposit?: string | null;
           audience?: ProductAudience;
           created_at?: string;
         };
@@ -396,6 +408,8 @@ export interface Database {
           telegram_message_id: number | null;
           created_at: string;
           answered_at: string | null;
+          kind?: string;
+          event_date?: string | null;
         };
         Insert: {
           id?: string;
@@ -413,11 +427,15 @@ export interface Database {
           telegram_message_id?: number | null;
           created_at?: string;
           answered_at?: string | null;
+          kind?: string;
+          event_date?: string | null;
         };
         Update: {
           status?: ReservationStatus;
           telegram_message_id?: number | null;
           answered_at?: string | null;
+          kind?: string;
+          event_date?: string | null;
         };
         Relationships: [];
       };

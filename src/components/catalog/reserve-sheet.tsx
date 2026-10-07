@@ -5,7 +5,9 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { createReservationAction, type ReserveState } from "@/app/(site)/reservations/actions";
 import { useT } from "@/lib/i18n/client";
 import { PrivacyConsent } from "@/components/layout/privacy-consent";
+import { rentPrice } from "@/lib/rental";
 import { cn } from "@/lib/utils/cn";
+import { almatyToday } from "@/lib/utils/product";
 import { formatPrice } from "@/lib/utils/format";
 import { submitKeepingValues } from "@/lib/form-submit";
 
@@ -15,7 +17,9 @@ const CONTACT_KEY = "shoptour:contact";
 export const PENDING_RESERVE_KEY = "shoptour:pending-reserve";
 
 type ReserveSheetProps = {
-  product: { id: string; name: string; price: number };
+  product: { id: string; name: string; price: number; rent_price?: number | null; listing?: string };
+  /** reserve — отложить для покупки, fitting — запись на примерку (прокат) */
+  mode?: "reserve" | "fitting";
   size: string | null;
   /** Вошедший покупатель; null — вместо формы предлагаем войти */
   viewer: { name: string; phone: string } | null;
@@ -26,15 +30,18 @@ const inputClass =
   "min-h-12 w-full rounded-xl border border-stone-200 px-4 text-base outline-none focus:border-rose-300 focus:ring-4 focus:ring-rose-500/15";
 
 /** «Отложить в магазине»: имя, телефон, когда придёте. Снизу на телефоне, по центру на компьютере. */
-export function ReserveSheet({ product, size, viewer, onClose }: ReserveSheetProps) {
+export function ReserveSheet({ product, size, viewer, mode = "reserve", onClose }: ReserveSheetProps) {
   const [state, action, pending] = useActionState<ReserveState, FormData>(createReservationAction, {});
+  const fitting = mode === "fitting";
   const t = useT();
+  const title = fitting ? t.rent.fittingTitle : t.reserve.title;
+  const priceLabel = fitting ? t.rent.perDay(formatPrice(rentPrice(product))) : formatPrice(product.price);
   const [visit, setVisit] = useState<"today" | "tomorrow">("today");
   const nameRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
 
   // Вернуться к этому товару после входа — с тем же размером и открытой бронью
-  const back = `/products/${product.id}?reserve=${encodeURIComponent(size ?? "1")}`;
+  const back = `/products/${product.id}?reserve=${encodeURIComponent(size ?? "1")}${fitting ? "&fit=1" : ""}`;
 
   useEffect(() => {
     try {
@@ -82,11 +89,11 @@ export function ReserveSheet({ product, size, viewer, onClose }: ReserveSheetPro
           <div className="flex items-start justify-between gap-3">
             <div>
               <h2 id="reserve-title" className="text-lg font-semibold text-stone-900">
-                {t.reserve.title}
+                {title}
               </h2>
               <p className="mt-0.5 text-sm text-stone-500">
                 {product.name}
-                {size ? t.reserve.sizeSuffix(size) : ""} · {formatPrice(product.price)}
+                {size ? t.reserve.sizeSuffix(size) : ""} · {priceLabel}
               </p>
             </div>
             <button type="button" onClick={onClose} aria-label={t.reserve.close} className="-mr-2 -mt-1 flex h-11 w-11 items-center justify-center rounded-full text-stone-500 hover:bg-stone-100">
@@ -124,16 +131,17 @@ export function ReserveSheet({ product, size, viewer, onClose }: ReserveSheetPro
       >
         <input type="hidden" name="productId" value={product.id} />
         {size && <input type="hidden" name="size" value={size} />}
+        <input type="hidden" name="kind" value={fitting ? "fitting" : "reserve"} />
         <input type="hidden" name="visit" value={visit} />
 
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 id="reserve-title" className="text-lg font-semibold text-stone-900">
-              {t.reserve.title}
+              {title}
             </h2>
             <p className="mt-0.5 text-sm text-stone-500">
               {product.name}
-              {size ? t.reserve.sizeSuffix(size) : ""} · {formatPrice(product.price)}
+              {size ? t.reserve.sizeSuffix(size) : ""} · {priceLabel}
             </p>
           </div>
           <button type="button" onClick={onClose} aria-label={t.reserve.close} className="-mr-2 -mt-1 flex h-11 w-11 items-center justify-center rounded-full text-stone-500 hover:bg-stone-100">
@@ -166,7 +174,7 @@ export function ReserveSheet({ product, size, viewer, onClose }: ReserveSheetPro
             <p className="mt-1 text-xs text-stone-500">{t.reserve.phoneHint}</p>
           </div>
           <fieldset>
-            <legend className="mb-1.5 block text-sm font-medium text-stone-700">{t.reserve.whenTitle}</legend>
+            <legend className="mb-1.5 block text-sm font-medium text-stone-700">{fitting ? t.rent.whenFitting : t.reserve.whenTitle}</legend>
             <div className="grid grid-cols-2 gap-2">
               {(
                 [
@@ -189,6 +197,15 @@ export function ReserveSheet({ product, size, viewer, onClose }: ReserveSheetPro
               ))}
             </div>
           </fieldset>
+          {fitting && (
+            <div>
+              <label htmlFor="reserve-event" className="mb-1.5 block text-sm font-medium text-stone-700">
+                {t.rent.eventDate} <span className="font-normal text-stone-400">{t.reserve.optional}</span>
+              </label>
+              <input id="reserve-event" name="eventDate" type="date" min={almatyToday()} className={inputClass} />
+              <p className="mt-1 text-xs text-stone-500">{t.rent.eventDateHint}</p>
+            </div>
+          )}
           <div>
             <label htmlFor="reserve-comment" className="mb-1.5 block text-sm font-medium text-stone-700">
               {t.reserve.comment} <span className="font-normal text-stone-400">{t.reserve.optional}</span>
@@ -208,10 +225,10 @@ export function ReserveSheet({ product, size, viewer, onClose }: ReserveSheetPro
           disabled={pending}
           className="mt-5 min-h-12 w-full rounded-xl bg-rose-600 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:opacity-60"
         >
-          {pending ? t.reserve.sending : t.reserve.submit}
+          {pending ? t.reserve.sending : fitting ? t.rent.bookFitting : t.reserve.submit}
         </button>
         <p className="mt-3 text-center text-xs text-stone-500">
-          {t.reserve.freeNote}
+          {fitting ? t.rent.fittingFree : t.reserve.freeNote}
         </p>
         <PrivacyConsent className="mt-1 text-center" />
       </form>

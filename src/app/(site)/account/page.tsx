@@ -33,7 +33,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
     supabase.from("saved_tours").select("id, name, store_ids, created_at").order("created_at", { ascending: false }),
     supabase
       .from("reservations")
-      .select("id, product_name, size, price, status, created_at")
+      .select("id, product_name, size, price, status, created_at, kind")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(20),
@@ -45,6 +45,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
     price: number;
     status: ReservationStatus;
     created_at: string;
+    kind?: string;
   }[];
   if (toursResult.error) console.error("[account] tours:", toursResult.error.message);
   const rows = (toursResult.data ?? []) as { id: string; name: string; store_ids: string[]; created_at: string }[];
@@ -130,7 +131,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
                           : "shrink-0 text-sm text-stone-500"
                     }
                   >
-                    {t.reservation.status[r.status].label}
+                    {(r.kind === "fitting" ? t.reservation.fittingStatus : t.reservation.status)[r.status].label}
                   </span>
                 </Link>
               </li>

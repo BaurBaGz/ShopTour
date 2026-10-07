@@ -1,5 +1,7 @@
 "use client";
 
+import { RentalFields } from "@/components/dashboard/rental-fields";
+import { parseListing, type Listing } from "@/lib/rental";
 import { useActionState, useState } from "react";
 import type { AdminProductState } from "@/app/admin/(panel)/products/actions";
 import { ImagesInput } from "@/components/admin/images-input";
@@ -27,6 +29,7 @@ export function AdminProductForm({ action, product, stores, categories, defaultS
   const [state, formAction, pending] = useActionState(action, {});
   // Магазин нужен до загрузки фото: файлы кладутся в его папку
   const [storeId, setStoreId] = useState(product?.store_id ?? defaultStoreId ?? "");
+  const [listing, setListing] = useState<Listing>(parseListing(product?.listing));
 
   return (
     <form onSubmit={submitKeepingValues(formAction)} className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -63,10 +66,15 @@ export function AdminProductForm({ action, product, stores, categories, defaultS
                 ))}
               </select>
             </div>
-            <div>
-              <label htmlFor="ap-price" className={label}>Цена, ₸ *</label>
-              <input id="ap-price" name="price" type="number" min={0} step={100} required defaultValue={product?.price ?? ""} className={field} />
+            <div className="sm:col-span-2">
+              <RentalFields listing={listing} onListingChange={setListing} defaults={product} inputClass={field} labelClass={label} />
             </div>
+            {listing !== "rent" && (
+              <div>
+                <label htmlFor="ap-price" className={label}>{listing === "both" ? "Цена продажи, ₸ *" : "Цена, ₸ *"}</label>
+                <input id="ap-price" name="price" type="number" min={0} step={100} required defaultValue={product?.price ?? ""} className={field} />
+              </div>
+            )}
             <div>
               <label htmlFor="ap-old" className={label}>Старая цена, ₸</label>
               <input id="ap-old" name="oldPrice" type="number" min={0} step={100} defaultValue={product?.old_price ?? ""} placeholder="Для скидки" className={field} />

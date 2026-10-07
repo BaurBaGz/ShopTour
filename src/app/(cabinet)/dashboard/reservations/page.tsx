@@ -11,7 +11,7 @@ export default async function DashboardReservationsPage() {
   const [reservationsResult, notifyResult] = await Promise.all([
     supabase
       .from("reservations")
-      .select("id, product_name, size, price, customer_name, customer_phone, visit, comment, status, created_at")
+      .select("id, product_name, size, price, customer_name, customer_phone, visit, comment, status, created_at, kind, event_date")
       .eq("store_id", store.id)
       .gte("created_at", monthAgo)
       .order("created_at", { ascending: false })

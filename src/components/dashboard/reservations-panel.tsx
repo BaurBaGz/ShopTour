@@ -24,6 +24,8 @@ export type DashboardReservation = {
   phone_label: string;
   visit_label: string;
   visit: "today" | "tomorrow";
+  kind?: string;
+  event_date?: string | null;
   comment: string | null;
   status: ReservationStatus;
   created_at: string;
@@ -48,6 +50,7 @@ export function ReservationsPanel({ reservations: initial, telegram }: Props) {
   const router = useRouter();
   const t = useT();
   const c = t.cabinet.reservations;
+  const dayFormat = new Intl.DateTimeFormat(t.intl, { day: "numeric", month: "long", timeZone: "UTC" });
   const timeFormat = new Intl.DateTimeFormat(t.intl, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Almaty" });
   const [items, setItems] = useState(initial);
   const [linkUrl, setLinkUrl] = useState<string | null>(null);
@@ -175,11 +178,16 @@ export function ReservationsPanel({ reservations: initial, telegram }: Props) {
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="font-medium text-stone-900">
+                    {r.kind === "fitting" && (
+                      <span className="mr-2 rounded-full bg-violet-100 px-2 py-0.5 align-middle text-xs font-semibold text-violet-800">{c.fitting}</span>
+                    )}
                     {r.product_name}
                     {r.size ? `, ${r.size}` : ""}
                   </p>
                   <p className="text-sm text-stone-500">
-                    {formatPrice(r.price)} · {c.comes[r.visit]} · {timeFormat.format(new Date(r.created_at))}
+                    {formatPrice(r.price)} · {c.comes[r.visit]}
+                    {r.event_date ? ` · ${c.eventDate(dayFormat.format(new Date(`${r.event_date}T00:00:00Z`)))}` : ""} ·{" "}
+                    {timeFormat.format(new Date(r.created_at))}
                   </p>
                 </div>
                 <span className={cn("rounded-full px-2.5 py-1 text-xs font-medium", STATUS_CLASS[r.status])}>{c.status[r.status]}</span>

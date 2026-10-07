@@ -11,6 +11,7 @@ export async function SiteHeader() {
   const nav = [
     { href: "/catalog", label: t.nav.catalog },
     { href: "/sale", label: t.nav.sale, desktopOnly: true },
+    { href: "/rent", label: t.rent.title, desktopOnly: true },
     { href: "/stores", label: t.nav.storesMap, shortLabel: t.nav.storesMapShort },
   ];
   const user = await getSessionUser();

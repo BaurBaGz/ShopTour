@@ -22,6 +22,9 @@ export async function SiteFooter() {
           <Link href="/sale" className={link}>
             {t.nav.sale}
           </Link>
+          <Link href="/rent" className={link}>
+            {t.rent.title}
+          </Link>
           <Link href="/stores" className={link}>
             {t.nav.storesMap}
           </Link>

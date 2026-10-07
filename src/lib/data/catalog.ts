@@ -100,6 +100,8 @@ export async function getProductsWithError(options?: {
   audiences?: ProductAudience[] | null;
   /** Только товары с действующей скидкой — для вкладки «Скидки» */
   onSale?: boolean;
+  /** Только вещи напрокат — для вкладки «Прокат» */
+  forRent?: boolean;
 }): Promise<DataResult<ProductWithRelations[]>> {
   const envError = checkSupabaseEnv();
   if (envError) {
@@ -144,6 +146,10 @@ export async function getProductsWithError(options?: {
 
   if (options?.storeId) {
     query = query.eq("store_id", options.storeId);
+  }
+
+  if (options?.forRent) {
+    query = query.in("listing", ["rent", "both"]);
   }
 
   if (options?.onSale) {

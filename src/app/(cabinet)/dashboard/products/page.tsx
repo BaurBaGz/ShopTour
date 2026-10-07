@@ -23,6 +23,7 @@ export default async function DashboardProductsPage() {
     in_stock: p.in_stock,
     is_hidden: p.is_hidden,
     is_draft: p.is_draft ?? false,
+    listing: p.listing,
     category: categoryMap[p.category_id] ?? null,
   }));
   const withPhoto = managed.filter((p) => p.images.length > 0).length;

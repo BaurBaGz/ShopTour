@@ -51,6 +51,14 @@ export function SectionTabs({ current, saleLink = false }: { current: Section | 
             {t.sections.sale}
           </Link>
         )}
+        {saleLink && (
+          <Link
+            href={current ? `/rent?for=${current}` : "/rent"}
+            className="flex min-h-10 shrink-0 items-center rounded-full bg-violet-600 px-4 text-sm font-semibold text-white transition hover:bg-violet-700"
+          >
+            {t.rent.title}
+          </Link>
+        )}
       </div>
       {isKidsSection(current) && (
         <div className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0">
