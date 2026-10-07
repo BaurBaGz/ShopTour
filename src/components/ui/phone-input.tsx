@@ -49,7 +49,9 @@ export function PhoneInput({ name, id, defaultValue, required, className, inputR
         id={`${id}-code`}
         value={code}
         onChange={(e) => setCode(e.target.value)}
-        className={cn(className, "w-28 shrink-0 pr-1")}
+        // Ширину задаём стилем: в общих классах полей есть w-full, и код страны растягивался на всю строку
+        className={cn(className, "shrink-0 pr-1")}
+        style={{ width: "6.75rem", flex: "none" }}
       >
         {COUNTRY_CODES.map((c) => (
           <option key={c.code} value={c.code} title={c.country}>
@@ -66,7 +68,8 @@ export function PhoneInput({ name, id, defaultValue, required, className, inputR
         onChange={(e) => onRestChange(e.target.value)}
         required={required}
         placeholder={placeholder}
-        className={cn(className, "min-w-0 flex-1")}
+        className={cn(className, "min-w-0")}
+        style={{ flex: "1 1 0%", width: "auto" }}
       />
     </div>
   );
