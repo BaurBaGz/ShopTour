@@ -1,5 +1,6 @@
 "use client";
 
+import { PhoneInput } from "@/components/ui/phone-input";
 import { useT } from "@/lib/i18n/client";
 import { useActionState } from "react";
 import type { PartnerFormState } from "@/app/admin/(panel)/partners/actions";
@@ -48,11 +49,11 @@ export function PartnerForm({ action, store, submitLabel, storeId, allowLogoUrl 
         </div>
         <div>
           <label htmlFor="p-phone" className={label}>{c.phone}</label>
-          <input id="p-phone" name="phone" type="tel" defaultValue={store?.phone ?? ""} className={field} placeholder="+7 727 000 00 00" />
+          <PhoneInput id="p-phone" name="phone" defaultValue={store?.phone} className={field} />
         </div>
         <div>
           <label htmlFor="p-whatsapp" className={label}>WhatsApp</label>
-          <input id="p-whatsapp" name="whatsapp" type="tel" defaultValue={store?.whatsapp ?? ""} className={field} placeholder="+7 701 000 00 00" />
+          <PhoneInput id="p-whatsapp" name="whatsapp" defaultValue={store?.whatsapp} className={field} />
         </div>
         <div>
           <label htmlFor="p-instagram" className={label}>Instagram</label>

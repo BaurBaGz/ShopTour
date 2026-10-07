@@ -1,19 +1,8 @@
-/** Ссылка wa.me из номера телефона или WhatsApp */
-export function buildWhatsAppUrl(
-  phoneOrWhatsapp: string,
-  message?: string,
-): string {
-  let digits = phoneOrWhatsapp.replace(/\D/g, "");
+import { splitPhone } from "@/lib/utils/phone";
 
-  if (digits.startsWith("8") && digits.length === 11) {
-    digits = "7" + digits.slice(1);
-  }
-  if (!digits.startsWith("7") && digits.length === 10) {
-    digits = "7" + digits;
-  }
-
-  const base = `https://wa.me/${digits}`;
-  if (!message) return base;
-
-  return `${base}?text=${encodeURIComponent(message)}`;
+/** Ссылка wa.me из номера телефона или WhatsApp (код страны — как в номере, без кода — +7) */
+export function buildWhatsAppUrl(phoneOrWhatsapp: string, message?: string): string {
+  const { code, rest } = splitPhone(phoneOrWhatsapp);
+  const base = `https://wa.me/${code}${rest}`;
+  return message ? `${base}?text=${encodeURIComponent(message)}` : base;
 }

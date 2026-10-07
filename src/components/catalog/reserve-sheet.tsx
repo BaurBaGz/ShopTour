@@ -5,6 +5,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { createReservationAction, type ReserveState } from "@/app/(site)/reservations/actions";
 import { useT } from "@/lib/i18n/client";
 import { PrivacyConsent } from "@/components/layout/privacy-consent";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { rentPrice } from "@/lib/rental";
 import { cn } from "@/lib/utils/cn";
 import { almatyToday } from "@/lib/utils/product";
@@ -39,6 +40,8 @@ export function ReserveSheet({ product, size, viewer, mode = "reserve", onClose 
   const [visit, setVisit] = useState<"today" | "tomorrow">("today");
   const nameRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
+  // Номер из аккаунта или прошлой брони; ключ пересоздаёт поле телефона с ним
+  const [presetPhone, setPresetPhone] = useState<string | null>(null);
 
   // Вернуться к этому товару после входа — с тем же размером и открытой бронью
   const back = `/products/${product.id}?reserve=${encodeURIComponent(size ?? "1")}${fitting ? "&fit=1" : ""}`;
@@ -54,12 +57,12 @@ export function ReserveSheet({ product, size, viewer, mode = "reserve", onClose 
         const name = viewer.name || saved?.name;
         const phone = viewer.phone || saved?.phone;
         if (name && nameRef.current) nameRef.current.value = name;
-        if (phone && phoneRef.current) phoneRef.current.value = phone;
+        if (phone) setPresetPhone(String(phone));
       }
     } catch {
       // без подсказки
     }
-    (nameRef.current?.value ? phoneRef.current : nameRef.current)?.focus();
+    if (!nameRef.current?.value) nameRef.current?.focus();
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     const overflow = document.body.style.overflow;
@@ -160,15 +163,13 @@ export function ReserveSheet({ product, size, viewer, mode = "reserve", onClose 
             <label htmlFor="reserve-phone" className="mb-1.5 block text-sm font-medium text-stone-700">
               {t.reserve.phone}
             </label>
-            <input
+            <PhoneInput
+              key={presetPhone ?? "empty"}
               id="reserve-phone"
-              ref={phoneRef}
               name="phone"
-              type="tel"
+              inputRef={phoneRef}
+              defaultValue={presetPhone}
               required
-              inputMode="tel"
-              autoComplete="tel"
-              placeholder="+7 701 123 45 67"
               className={inputClass}
             />
             <p className="mt-1 text-xs text-stone-500">{t.reserve.phoneHint}</p>

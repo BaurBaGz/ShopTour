@@ -5,7 +5,19 @@ import { useState } from "react";
 import { getSizeStock } from "@/lib/utils/product";
 import type { Json } from "@/types/database";
 
-type Row = { key: number; size: string; stock: string };
+type Row = { key: number; size: string; stock: string; custom?: boolean };
+
+// Размеры для выпадающего списка; чего нет в списке — «Другой размер…» и ввод вручную
+const SIZE_GROUPS: { id: "letters" | "clothing" | "jeans" | "shoes" | "kids" | "other"; sizes: string[] }[] = [
+  { id: "letters", sizes: ["XXS", "XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL"] },
+  { id: "clothing", sizes: ["40", "42", "44", "46", "48", "50", "52", "54", "56", "58", "60"] },
+  { id: "jeans", sizes: ["24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "36", "38"] },
+  { id: "shoes", sizes: ["33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46"] },
+  { id: "kids", sizes: ["56", "62", "68", "74", "80", "86", "92", "98", "104", "110", "116", "122", "128", "134", "140", "146", "152", "158", "164"] },
+  { id: "other", sizes: ["One size"] },
+];
+const KNOWN_SIZES = new Set(SIZE_GROUPS.flatMap((g) => g.sizes));
+const OTHER = "__other__";
 
 
 type SizeStockEditorProps = {
@@ -29,7 +41,7 @@ export function SizeStockEditor({ sizes = [], sizeStock = {} }: SizeStockEditorP
   const [rows, setRows] = useState<Row[]>(() => {
     const initial = sizes.map((size, index) => {
       const stock = getSizeStock({ sizes, size_stock: sizeStock }, size);
-      return { key: index, size, stock: stock === undefined ? "" : String(stock) };
+      return { key: index, size, stock: stock === undefined ? "" : String(stock), custom: !KNOWN_SIZES.has(size) };
     });
     return initial.length > 0 ? initial : [{ key: 0, size: "", stock: "" }];
   });
@@ -49,7 +61,7 @@ export function SizeStockEditor({ sizes = [], sizeStock = {} }: SizeStockEditorP
       const filled = current.filter((row) => row.size.trim());
       const have = new Set(filled.map((row) => row.size.trim().toUpperCase()));
       let key = nextKey;
-      const added = preset.filter((size) => !have.has(size.toUpperCase())).map((size) => ({ key: key++, size, stock: "" }));
+      const added = preset.filter((size) => !have.has(size.toUpperCase())).map((size) => ({ key: key++, size, stock: "", custom: !KNOWN_SIZES.has(size) }));
       setNextKey(key);
       return [...filled, ...added];
     });
@@ -89,14 +101,40 @@ export function SizeStockEditor({ sizes = [], sizeStock = {} }: SizeStockEditorP
 
       <div className="space-y-2">
         {rows.map((row) => (
-          <div key={row.key} className="flex items-center gap-2">
-            <input
-              value={row.size}
-              onChange={(e) => update(row.key, { size: e.target.value })}
-              placeholder={c.sizePlaceholder}
-              aria-label={c.size}
-              className={inputClass}
-            />
+          <div key={row.key} className="flex items-start gap-2">
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+              <select
+                value={row.custom ? OTHER : row.size}
+                onChange={(e) =>
+                  e.target.value === OTHER ? update(row.key, { custom: true, size: "" }) : update(row.key, { custom: false, size: e.target.value })
+                }
+                aria-label={c.size}
+                className={inputClass}
+              >
+                <option value="">{c.sizeChoose}</option>
+                {SIZE_GROUPS.map((group) => (
+                  <optgroup key={group.id} label={c.sizeGroups[group.id]}>
+                    {group.sizes.map((size) => (
+                      <option key={`${group.id}-${size}`} value={size}>
+                        {size}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+                <option value={OTHER}>{c.sizeOther}</option>
+              </select>
+              {row.custom && (
+                <input
+                  value={row.size}
+                  onChange={(e) => update(row.key, { size: e.target.value })}
+                  placeholder={c.sizeCustomPlaceholder}
+                  aria-label={c.size}
+                  maxLength={20}
+                  autoFocus
+                  className={inputClass}
+                />
+              )}
+            </div>
             <input
               value={row.stock}
               onChange={(e) => update(row.key, { stock: e.target.value })}
@@ -106,7 +144,7 @@ export function SizeStockEditor({ sizes = [], sizeStock = {} }: SizeStockEditorP
               inputMode="numeric"
               placeholder={c.stockPlaceholder}
               aria-label={c.stockOf(row.size || "")}
-              className={inputClass}
+              className={`${inputClass} max-w-[7.5rem]`}
             />
             <button
               type="button"

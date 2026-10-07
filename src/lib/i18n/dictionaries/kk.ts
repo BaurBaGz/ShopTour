@@ -7,6 +7,7 @@ const kk: Dictionary = {
   intl: "kk-KZ",
 
   common: {
+    countryCode: "Ел коды",
     back: "Артқа",
     cancel: "Бас тарту",
     languageLabel: "Сайт тілі",

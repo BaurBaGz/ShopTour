@@ -1,5 +1,6 @@
 "use server";
 
+import { storePhone } from "@/lib/utils/phone";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { EMAIL_RE, findOrCreateUser } from "@/lib/auth/accounts";
@@ -24,8 +25,8 @@ function readInfo(formData: FormData) {
     description: text("description") || null,
     city: text("city") || "Алматы",
     address: text("address"),
-    phone: text("phone") || null,
-    whatsapp: text("whatsapp") || null,
+    phone: storePhone(text("phone").slice(0, 30)),
+    whatsapp: storePhone(text("whatsapp").slice(0, 30)),
     instagram: text("instagram") || null,
     logo_url: text("logo_url") || null,
   };

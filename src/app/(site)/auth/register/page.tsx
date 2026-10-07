@@ -46,12 +46,12 @@ export default async function RegisterPage() {
             {
               name: "phone",
               label: t.auth.phone,
-              placeholder: "+7 727 000 00 00",
+              type: "phone",
             },
             {
               name: "whatsapp",
               label: t.auth.whatsapp,
-              placeholder: "+7 700 000 00 00",
+              type: "phone",
             },
             {
               name: "description",

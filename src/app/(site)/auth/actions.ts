@@ -1,5 +1,6 @@
 "use server";
 
+import { storePhone } from "@/lib/utils/phone";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -129,8 +130,8 @@ export async function registerAction(
     description: description || null,
     address,
     city,
-    phone: phone || null,
-    whatsapp: whatsapp || null,
+    phone: storePhone(phone),
+    whatsapp: storePhone(whatsapp),
   };
 
   if (!authData.session) {

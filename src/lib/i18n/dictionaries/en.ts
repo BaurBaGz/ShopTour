@@ -8,6 +8,7 @@ const en: Dictionary = {
   intl: "en-US",
 
   common: {
+    countryCode: "Country code",
     back: "Back",
     cancel: "Cancel",
     languageLabel: "Site language",

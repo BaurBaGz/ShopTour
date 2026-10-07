@@ -2,24 +2,19 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { botMessages, type BotMessages } from "@/lib/i18n/bot";
 import { editMessage, esc, sendMessage } from "@/lib/telegram";
 import { formatPrice } from "@/lib/utils/format";
+import { displayPhone } from "@/lib/utils/phone";
 import type { Database, ReservationStatus } from "@/types/database";
 
 // Бронь размера: сообщение магазину в Telegram и ответы на него (кнопки в боте и кабинет)
 
 export type Reservation = Database["public"]["Tables"]["reservations"]["Row"];
 
-/** «8 701 123-45-67», «+7 (701) 1234567» → «77011234567»; иначе null */
-export function normalizePhone(input: string): string | null {
-  let digits = input.replace(/\D/g, "");
-  if (digits.length === 11 && digits.startsWith("8")) digits = "7" + digits.slice(1);
-  if (digits.length === 10) digits = "7" + digits;
-  return /^7\d{10}$/.test(digits) ? digits : null;
-}
+// Телефоны — общие правила сайта (код страны, показ)
+export { normalizePhone } from "@/lib/utils/phone";
 
-/** «77011234567» → «+7 701 123 45 67» */
+/** «77011234567» → «+7 701 123 45 67», «996555123456» → «+996 555 123 456» */
 export function formatPhone(phone: string) {
-  const d = phone.replace(/\D/g, "");
-  return d.length === 11 ? `+${d[0]} ${d.slice(1, 4)} ${d.slice(4, 7)} ${d.slice(7, 9)} ${d.slice(9)}` : phone;
+  return displayPhone(`+${phone.replace(/\D/g, "")}`);
 }
 
 export const VISIT_LABELS = { today: "сегодня", tomorrow: "завтра" } as const;

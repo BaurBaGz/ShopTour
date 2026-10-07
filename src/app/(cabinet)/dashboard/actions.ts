@@ -1,5 +1,6 @@
 "use server";
 
+import { storePhone } from "@/lib/utils/phone";
 import { getLocale, getT } from "@/lib/i18n/server";
 import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
@@ -263,8 +264,8 @@ export async function updateOwnStoreAction(_prev: StoreProfileState, formData: F
     description: text("description", 1000) || null,
     city: text("city", 60) || "Алматы",
     address: text("address", 200),
-    phone: text("phone", 30) || null,
-    whatsapp: text("whatsapp", 30) || null,
+    phone: storePhone(text("phone", 30)),
+    whatsapp: storePhone(text("whatsapp", 30)),
     instagram: text("instagram", 100).replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/\/$/, "") || null,
     // Логотип — только загруженный файл; прежний логотип остаётся как был
     logo_url: isStoreMediaUrl(logo, store.id, "stores") || (logo && logo === store.logo_url) ? logo : null,

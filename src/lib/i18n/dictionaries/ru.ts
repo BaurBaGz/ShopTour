@@ -16,6 +16,7 @@ const ru = {
   intl: "ru-RU",
 
   common: {
+    countryCode: "Код страны",
     back: "Назад",
     cancel: "Отмена",
     languageLabel: "Язык сайта",

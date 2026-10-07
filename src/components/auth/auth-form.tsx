@@ -1,5 +1,6 @@
 "use client";
 
+import { PhoneInput } from "@/components/ui/phone-input";
 import { useActionState } from "react";
 import type { AuthActionState } from "@/app/(site)/auth/actions";
 import { PrivacyConsent } from "@/components/layout/privacy-consent";
@@ -67,14 +68,23 @@ export function AuthForm({
               >
                 {field.label}
               </label>
-              <input
-                id={field.name}
-                name={field.name}
-                type={field.type ?? "text"}
-                placeholder={field.placeholder}
-                required={field.required}
-                className="w-full rounded-xl border border-stone-200 px-4 py-3 text-stone-900 outline-none transition focus:border-rose-300 focus:ring-4 focus:ring-rose-500/15"
-              />
+              {field.type === "phone" ? (
+                <PhoneInput
+                  id={field.name}
+                  name={field.name}
+                  required={field.required}
+                  className="w-full rounded-xl border border-stone-200 px-4 py-3 text-stone-900 outline-none transition focus:border-rose-300 focus:ring-4 focus:ring-rose-500/15"
+                />
+              ) : (
+                <input
+                  id={field.name}
+                  name={field.name}
+                  type={field.type ?? "text"}
+                  placeholder={field.placeholder}
+                  required={field.required}
+                  className="w-full rounded-xl border border-stone-200 px-4 py-3 text-stone-900 outline-none transition focus:border-rose-300 focus:ring-4 focus:ring-rose-500/15"
+                />
+              )}
             </div>
           ))}
 
