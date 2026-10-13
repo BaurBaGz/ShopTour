@@ -21,10 +21,10 @@ import { AUDIENCE_COLOR, AUDIENCE_SECTION } from "@/lib/audience";
 import { getT } from "@/lib/i18n/server";
 import { isForRent, isForSale, rentPrice } from "@/lib/rental";
 import { getSessionUser } from "@/lib/auth/session";
-import { getProductById, getProducts } from "@/lib/data/catalog";
+import { getProductById, getProducts, getSimilarProducts } from "@/lib/data/catalog";
 import { formatPrice } from "@/lib/utils/format";
 import { buildInstagramUrl } from "@/lib/utils/instagram";
-import { formatDiscountDeadline, getDiscountPercent } from "@/lib/utils/product";
+import { formatDiscountDeadline, getAvailableSizes, getDiscountPercent } from "@/lib/utils/product";
 
 type ProductPageProps = {
   params: Promise<{ id: string }>;
@@ -85,7 +85,8 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   const reserveOnOpen = query.reserve?.slice(0, 20) ?? null;
   const discount = getDiscountPercent(product);
   const t = await getT();
-  const [promotions, stats, productReviews, storeReviews, trust, popularity, mine] = await Promise.all([
+  const soldOut = !product.in_stock || (product.sizes.length > 0 && getAvailableSizes(product).length === 0);
+  const [promotions, stats, productReviews, storeReviews, trust, popularity, mine, similar] = await Promise.all([
     store ? getStorePromotions(store.id) : [],
     store ? getReviewStats(store.id, product.id) : null,
     getProductReviews(product.id, 100),
@@ -93,6 +94,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
     store ? getStoreTrust(store.id) : null,
     getProductPopularity(product.id),
     user ? getMyReview(user.id, product.id) : null,
+    getSimilarProducts(product),
   ]);
   // Интерес к вещи — только когда цифры заметные, иначе «1 раз» скорее отпугивает
   const popular = [
@@ -333,6 +335,18 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
         </div>
       </div>
 
+      {/* Вещи нет — сразу предлагаем похожие, чтобы покупатель не ушёл ни с чем */}
+      {soldOut && similar.length > 0 && (
+        <section className="mt-16">
+          <h2 className="mb-6 text-2xl font-semibold tracking-tight text-stone-900">{t.productPage.similarSoldOut}</h2>
+          <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+            {similar.map((item) => (
+              <ProductCard key={item.id} product={item} />
+            ))}
+          </div>
+        </section>
+      )}
+
       {store && stats && (
         <ProductReviews
           productId={product.id}
@@ -351,6 +365,17 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
           </h2>
           <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
             {moreFromStore.map((item) => (
+              <ProductCard key={item.id} product={item} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {!soldOut && similar.length > 0 && (
+        <section className="mt-16">
+          <h2 className="mb-6 text-2xl font-semibold tracking-tight text-stone-900">{t.productPage.similarTitle}</h2>
+          <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+            {similar.map((item) => (
               <ProductCard key={item.id} product={item} />
             ))}
           </div>

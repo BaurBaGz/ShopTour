@@ -267,6 +267,8 @@ const ru = {
     soldBy: "Продаёт магазин",
     allStoreProducts: "Все товары магазина →",
     otherProducts: (store: string) => `Другие товары магазина ${store}`,
+    similarTitle: "Похожие вещи в других магазинах",
+    similarSoldOut: "Этой вещи сейчас нет — похожие в других магазинах",
   },
 
   reviews: {

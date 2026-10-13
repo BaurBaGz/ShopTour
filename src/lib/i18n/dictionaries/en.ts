@@ -257,6 +257,8 @@ const en: Dictionary = {
     soldBy: "Sold by",
     allStoreProducts: "All items of this store →",
     otherProducts: (store) => `More from ${store}`,
+    similarTitle: "Similar items in other stores",
+    similarSoldOut: "This item is out of stock — similar ones in other stores",
   },
 
   reviews: {

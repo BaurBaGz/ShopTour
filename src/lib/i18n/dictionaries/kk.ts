@@ -257,6 +257,8 @@ const kk: Dictionary = {
     soldBy: "Сататын дүкен",
     allStoreProducts: "Дүкеннің барлық тауары →",
     otherProducts: (store) => `${store} дүкенінің басқа тауарлары`,
+    similarTitle: "Басқа дүкендердегі ұқсас заттар",
+    similarSoldOut: "Бұл зат қазір жоқ — басқа дүкендердегі ұқсастары",
   },
 
   reviews: {

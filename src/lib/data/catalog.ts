@@ -419,3 +419,41 @@ export async function getCategoryIdsForAudiences(audiences: ProductAudience[]): 
   logSupabaseError("getCategoryIdsForAudiences", error);
   return new Set(((data ?? []) as { category_id: string }[]).map((r) => r.category_id));
 }
+
+/** Для кого ещё подходит вещь: женское — и унисекс, унисекс — всем взрослым, детское — всем детским */
+const SIMILAR_AUDIENCES: Record<ProductAudience, ProductAudience[]> = {
+  women: ["women", "unisex"],
+  men: ["men", "unisex"],
+  unisex: ["unisex", "women", "men"],
+  girls: ["girls", "kids"],
+  boys: ["boys", "kids"],
+  kids: ["kids", "girls", "boys"],
+};
+
+/**
+ * Похожие вещи в других магазинах: та же категория и аудитория, цена поближе к этой,
+ * прокат — к прокату. Не больше двух вещей одного магазина, чтобы был выбор.
+ */
+export async function getSimilarProducts(
+  product: Pick<ProductDetails, "id" | "store_id" | "category_id" | "audience" | "price" | "listing">,
+  limit = 4,
+): Promise<ProductWithRelations[]> {
+  const candidates = (
+    await getProducts({ categoryId: product.category_id, audiences: SIMILAR_AUDIENCES[product.audience], limit: 60 })
+  ).filter((p) => p.store_id !== product.store_id && p.id !== product.id);
+
+  const rent = product.listing === "rent";
+  const score = (p: ProductWithRelations) =>
+    // Насколько отличается цена (в разах) + штраф, если одна вещь напрокат, а другая на продажу
+    Math.abs(Math.log(Math.max(p.price, 1) / Math.max(product.price, 1))) + ((p.listing === "rent") !== rent ? 1 : 0);
+
+  const perStore = new Map<string, number>();
+  return candidates
+    .sort((a, b) => score(a) - score(b))
+    .filter((p) => {
+      const n = perStore.get(p.store_id) ?? 0;
+      perStore.set(p.store_id, n + 1);
+      return n < 2;
+    })
+    .slice(0, limit);
+}
