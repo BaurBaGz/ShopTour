@@ -11,6 +11,10 @@ import { BackLink } from "@/components/ui/back-link";
 import { DistanceFromMe } from "@/components/catalog/distance-from-me";
 import { ProductCard } from "@/components/catalog/product-card";
 import { ProductPurchase } from "@/components/catalog/product-purchase";
+import { ProductReviews } from "@/components/reviews/product-reviews";
+import { RatingBadge } from "@/components/reviews/stars";
+import { StoreTrustLine } from "@/components/reviews/store-trust";
+import { getMyReview, getProductPopularity, getProductReviews, getReviewStats, getStoreReviews, getStoreTrust } from "@/lib/data/reviews";
 import { ShowOnMapLink } from "@/components/store/show-on-map-link";
 import { StoreAvatar } from "@/components/store/store-avatar";
 import { AUDIENCE_COLOR, AUDIENCE_SECTION } from "@/lib/audience";
@@ -81,7 +85,20 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   const reserveOnOpen = query.reserve?.slice(0, 20) ?? null;
   const discount = getDiscountPercent(product);
   const t = await getT();
-  const promotions = store ? await getStorePromotions(store.id) : [];
+  const [promotions, stats, productReviews, storeReviews, trust, popularity, mine] = await Promise.all([
+    store ? getStorePromotions(store.id) : [],
+    store ? getReviewStats(store.id, product.id) : null,
+    getProductReviews(product.id),
+    store ? getStoreReviews(store.id, 10) : [],
+    store ? getStoreTrust(store.id) : null,
+    getProductPopularity(product.id),
+    user ? getMyReview(user.id, product.id) : null,
+  ]);
+  // Интерес к вещи — только когда цифры заметные, иначе «1 раз» скорее отпугивает
+  const popular = [
+    popularity.reservations >= 2 ? t.reviews.reservedWeek(popularity.reservations) : null,
+    popularity.viewers >= 10 ? t.reviews.viewedWeek(popularity.viewers) : null,
+  ].filter((line): line is string => line !== null);
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
@@ -151,6 +168,11 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
             <h1 className="mt-3 text-3xl font-semibold tracking-tight text-stone-900 sm:text-4xl">
               {product.name}
             </h1>
+            {stats && stats.productAvg !== null && (
+              <a href="#reviews" className="mt-2 inline-block hover:opacity-80">
+                <RatingBadge avg={stats.productAvg} countLabel={t.reviews.count(stats.productCount)} starsLabel={t.reviews.stars(Math.round(stats.productAvg))} />
+              </a>
+            )}
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <p
                 className={
@@ -191,6 +213,10 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
               </p>
             )}
           </div>
+
+          {popular.length > 0 && (
+            <p className="-mt-2 text-sm font-medium text-orange-700">🔥 {popular.join(" · ")}</p>
+          )}
 
           <StorePromotions promotions={promotions} />
 
@@ -261,6 +287,8 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                 </div>
               </div>
 
+              {stats && <StoreTrustLine stats={stats} trust={trust} t={t} reviewsHref="#reviews" className="mt-4" />}
+
               <div className="mt-5 flex flex-wrap gap-3 text-sm">
                 {store.phone && (
                   <a
@@ -292,6 +320,17 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
           )}
         </div>
       </div>
+
+      {store && stats && (
+        <ProductReviews
+          productId={product.id}
+          storeId={store.id}
+          stats={stats}
+          productReviews={productReviews}
+          storeReviews={storeReviews}
+          viewer={viewer ? { name: viewer.name, mine } : null}
+        />
+      )}
 
       {store && moreFromStore.length > 0 && (
         <section className="mt-16">

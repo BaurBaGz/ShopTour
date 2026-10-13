@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { TrackView } from "@/components/analytics/track-view";
 import { StorePromotions } from "@/components/promotions/promotion-list";
+import { ReviewItem } from "@/components/reviews/review-item";
+import { StoreTrustLine } from "@/components/reviews/store-trust";
 import { StoreHero } from "@/components/store/store-hero";
 import { StoreProducts } from "@/components/store/store-products";
 import { BackLink } from "@/components/ui/back-link";
 import { getProducts } from "@/lib/data/catalog";
 import { getStorePromotions } from "@/lib/data/promotions";
+import { getReviewStats, getStoreReviews, getStoreTrust } from "@/lib/data/reviews";
 import type { Store } from "@/lib/data/types";
 import { getT } from "@/lib/i18n/server";
 import { pageMeta } from "@/lib/seo";
@@ -29,12 +32,15 @@ export async function storeMetadata(store: Store | null): Promise<Metadata> {
 export async function StoreView({ store }: { store: Store }) {
   const id = store.id;
   const t = await getT();
-  const [all, promotions] = await Promise.all([
+  const [all, promotions, reviewStats, reviews, trust] = await Promise.all([
     getProducts({
       storeId: id,
       includeOutOfStock: true,
     }),
     getStorePromotions(id),
+    getReviewStats(id),
+    getStoreReviews(id, 30),
+    getStoreTrust(id),
   ]);
   // Что можно купить — сначала, закончившееся — в конце витрины
   const soldOut = (p: (typeof all)[number]) => !p.in_stock || (p.sizes.length > 0 && getAvailableSizes(p).length === 0);
@@ -54,7 +60,9 @@ export async function StoreView({ store }: { store: Store }) {
         </div>
       </div>
 
-      <StoreHero store={store} stats={stats} t={t} />
+      <StoreHero store={store} stats={stats} t={t}>
+        <StoreTrustLine stats={reviewStats} trust={trust} t={t} reviewsHref="#reviews" className="mt-3" />
+      </StoreHero>
 
       <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8" aria-label={t.store.productsLabel}>
         <StorePromotions promotions={promotions} className="mb-6 max-w-2xl" />
@@ -67,6 +75,23 @@ export async function StoreView({ store }: { store: Store }) {
               {t.store.emptyText}
             </p>
           </div>
+        )}
+      </section>
+
+      <section id="reviews" aria-labelledby="store-reviews-title" className="mx-auto max-w-7xl scroll-mt-20 px-4 pb-12 sm:px-6 lg:px-8">
+        <h2 id="store-reviews-title" className="text-2xl font-semibold tracking-tight text-stone-900">
+          {t.reviews.storeSectionTitle}
+        </h2>
+        {reviews.length > 0 ? (
+          <div className="mt-4 grid max-w-3xl gap-3">
+            {reviews.map((review) => (
+              <ReviewItem key={review.id} review={review} mode="store" t={t} />
+            ))}
+          </div>
+        ) : (
+          <p className="mt-3 max-w-3xl rounded-2xl border border-dashed border-stone-300 px-4 py-6 text-sm text-stone-600">
+            {t.reviews.noStoreReviews} {t.reviews.writeFromProduct}
+          </p>
         )}
       </section>
     </main>

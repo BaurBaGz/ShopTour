@@ -1,6 +1,6 @@
 "use client";
 
-import { ChartIcon, GridIcon, HomeIcon, ImageIcon, StoreIcon, TagIcon, UsersIcon } from "@/components/admin/admin-icons";
+import { ChartIcon, GridIcon, HomeIcon, ImageIcon, StarIcon, StoreIcon, TagIcon, UsersIcon } from "@/components/admin/admin-icons";
 import { PanelShell, type PanelNavItem } from "@/components/panel/panel-shell";
 import type { StaffRole } from "@/types/database";
 
@@ -8,6 +8,7 @@ const NAV: (PanelNavItem & { adminOnly?: boolean })[] = [
   { href: "/admin", label: "Главная", icon: HomeIcon },
   { href: "/admin/partners", label: "Партнёры", icon: StoreIcon },
   { href: "/admin/products", label: "Товары", icon: TagIcon },
+  { href: "/admin/reviews", label: "Отзывы", icon: StarIcon },
   { href: "/admin/categories", label: "Категории", icon: GridIcon },
   { href: "/admin/banners", label: "Баннеры", icon: ImageIcon },
   { href: "/admin/analytics", label: "Аналитика", icon: ChartIcon },
@@ -22,6 +23,7 @@ const TITLES: [string, string][] = [
   ["/admin/products", "Товары"],
   ["/admin/partners/new", "Новый партнёр"],
   ["/admin/partners", "Партнёры"],
+  ["/admin/reviews", "Отзывы"],
   ["/admin/categories", "Категории"],
   ["/admin/staff", "Сотрудники"],
   ["/admin/account", "Мой аккаунт"],

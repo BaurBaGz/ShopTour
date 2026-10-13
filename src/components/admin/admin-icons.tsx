@@ -101,3 +101,9 @@ export const PercentIcon = ({ className }: IconProps) => (
     <circle cx="17" cy="17" r="2.5" />
   </svg>
 );
+
+export const StarIcon = ({ className }: IconProps) => (
+  <svg className={className} {...base}>
+    <path d="m12 3 2.7 5.6 6.1.8-4.5 4.2 1.1 6-5.4-2.9-5.4 2.9 1.1-6-4.5-4.2 6.1-.8z" />
+  </svg>
+);

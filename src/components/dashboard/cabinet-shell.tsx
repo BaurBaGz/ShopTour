@@ -1,6 +1,6 @@
 "use client";
 
-import { BagIcon, ChartIcon, HomeIcon, PercentIcon, StoreIcon, TagIcon, UsersIcon } from "@/components/admin/admin-icons";
+import { BagIcon, ChartIcon, HomeIcon, PercentIcon, StarIcon, StoreIcon, TagIcon, UsersIcon } from "@/components/admin/admin-icons";
 import { PanelShell, type PanelNavItem } from "@/components/panel/panel-shell";
 import type { CabinetRole, Permission } from "@/lib/auth/permissions";
 import { useT } from "@/lib/i18n/client";
@@ -13,11 +13,13 @@ type CabinetShellProps = {
   permissions: Permission[];
   /** Брони, которые ждут ответа, — число в меню */
   waitingReservations: number;
+  /** Отзывы без ответа за 30 дней — число в меню */
+  unansweredReviews: number;
   children: React.ReactNode;
 };
 
 /** Кабинет магазина — тот же каркас, что у админки: меню слева, у каждой зоны своя страница */
-export function CabinetShell({ store, email, role, permissions, waitingReservations, children }: CabinetShellProps) {
+export function CabinetShell({ store, email, role, permissions, waitingReservations, unansweredReviews, children }: CabinetShellProps) {
   const shell = useT().cabinet;
   const titles: [string, string][] = [
     ["/dashboard/reservations", shell.shell.reservations],
@@ -25,6 +27,7 @@ export function CabinetShell({ store, email, role, permissions, waitingReservati
     ["/dashboard/products", shell.shell.products],
     ["/dashboard/promotions", shell.shell.promotions],
     ["/dashboard/analytics", shell.shell.analytics],
+    ["/dashboard/reviews", shell.shell.reviews],
     ["/dashboard/settings", shell.shell.store],
     ["/dashboard/staff", shell.shell.staff],
     ["/dashboard/password", shell.shell.account],
@@ -36,6 +39,7 @@ export function CabinetShell({ store, email, role, permissions, waitingReservati
     { href: "/dashboard/products", label: shell.shell.products, icon: TagIcon, permission: "products" },
     { href: "/dashboard/promotions", label: shell.shell.promotions, icon: PercentIcon, permission: "promotions" },
     { href: "/dashboard/analytics", label: shell.shell.analytics, icon: ChartIcon, permission: "analytics" },
+    { href: "/dashboard/reviews", label: shell.shell.reviews, icon: StarIcon, badge: unansweredReviews, permission: "reviews" },
     { href: "/dashboard/settings", label: shell.shell.store, icon: StoreIcon, permission: "store" },
     { href: "/dashboard/staff", label: shell.shell.staff, icon: UsersIcon, permission: "staff" },
   ];

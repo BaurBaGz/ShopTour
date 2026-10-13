@@ -1,7 +1,7 @@
 // Роли и доступы сотрудников магазина. Без серверных импортов — используется и в браузере.
 // Те же названия доступов проверяет база (функция has_store_permission).
 
-export const PERMISSIONS = ["reservations", "products", "products_delete", "promotions", "analytics", "store", "staff"] as const;
+export const PERMISSIONS = ["reservations", "products", "products_delete", "promotions", "analytics", "reviews", "store", "staff"] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
 export const PERMISSION_LABELS: Record<Permission, { label: string; hint: string }> = {
@@ -10,6 +10,7 @@ export const PERMISSION_LABELS: Record<Permission, { label: string; hint: string
   products_delete: { label: "Удаление товаров", hint: "удалять товар насовсем" },
   promotions: { label: "Акции", hint: "создавать и снимать акции" },
   analytics: { label: "Статистика", hint: "раздел «Статистика»" },
+  reviews: { label: "Отзывы", hint: "отвечать на отзывы покупателей и жаловаться на них" },
   store: { label: "Профиль магазина", hint: "название, контакты, точка на карте, адрес витрины, Telegram" },
   staff: { label: "Сотрудники", hint: "добавлять людей, менять роли и доступы, отключать" },
 };
@@ -29,7 +30,7 @@ export const ROLE_LABELS: Record<CabinetRole, string> = {
 /** Шаблоны: какие доступы проставляются при выборе роли (потом их можно менять у каждого сотрудника) */
 export const ROLE_TEMPLATES: Record<MemberRole, Permission[]> = {
   admin: [...PERMISSIONS],
-  marketing: ["products", "promotions", "analytics", "store"],
+  marketing: ["products", "promotions", "analytics", "reviews", "store"],
   seller: ["reservations", "products", "promotions"],
 };
 

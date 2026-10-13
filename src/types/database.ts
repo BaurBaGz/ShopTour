@@ -439,6 +439,62 @@ export interface Database {
         };
         Relationships: [];
       };
+      reviews: {
+        Row: {
+          id: string;
+          store_id: string;
+          product_id: string | null;
+          product_name: string | null;
+          user_id: string;
+          author_name: string;
+          outcome: ReviewOutcome | null;
+          store_rating: number | null;
+          product_rating: number | null;
+          fit: ReviewFit | null;
+          body: string | null;
+          verified: boolean;
+          status: "published" | "hidden";
+          reported_at: string | null;
+          report_reason: string | null;
+          store_reply: string | null;
+          store_reply_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          store_id: string;
+          product_id?: string | null;
+          product_name?: string | null;
+          user_id: string;
+          author_name: string;
+          outcome?: ReviewOutcome | null;
+          store_rating?: number | null;
+          product_rating?: number | null;
+          fit?: ReviewFit | null;
+          body?: string | null;
+          verified?: boolean;
+          status?: "published" | "hidden";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          author_name?: string;
+          outcome?: ReviewOutcome | null;
+          store_rating?: number | null;
+          product_rating?: number | null;
+          fit?: ReviewFit | null;
+          body?: string | null;
+          verified?: boolean;
+          status?: "published" | "hidden";
+          reported_at?: string | null;
+          report_reason?: string | null;
+          store_reply?: string | null;
+          store_reply_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       store_notifications: {
         Row: {
           store_id: string;
@@ -477,6 +533,26 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      review_stats: {
+        Args: { p_store: string; p_product?: string | null };
+        Returns: {
+          store_count: number;
+          store_avg: number | null;
+          product_count: number;
+          product_avg: number | null;
+          fit_small: number;
+          fit_true: number;
+          fit_large: number;
+        }[];
+      };
+      store_trust: {
+        Args: { p_store: string };
+        Returns: { answered: number; kept: number; median_minutes: number | null }[];
+      };
+      product_popularity: {
+        Args: { p_product: string };
+        Returns: { reservations: number; viewers: number }[];
+      };
       current_staff_role: { Args: Record<string, never>; Returns: StaffRole | null };
       is_staff: { Args: Record<string, never>; Returns: boolean };
       is_admin: { Args: Record<string, never>; Returns: boolean };
@@ -577,4 +653,8 @@ export type AnalyticsEventType =
 export type UserListKind = "favorites" | "tour" | "recent";
 export type ReservationStatus = "new" | "confirmed" | "declined" | "completed" | "no_show";
 export type ReservationVisit = "today" | "tomorrow";
+/** Как сходил автор отзыва: купил / примерил / был в магазине / только смотрел на сайте */
+export type ReviewOutcome = "bought" | "tried" | "visited" | "online";
+/** Как сидит: маломерит / в размер / большемерит */
+export type ReviewFit = "small" | "true" | "large";
 export type ProductAudience = "women" | "men" | "unisex" | "girls" | "boys" | "kids";

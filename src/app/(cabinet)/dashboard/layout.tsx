@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { ChangePasswordForm } from "@/components/admin/change-password-form";
 import { CabinetShell } from "@/components/dashboard/cabinet-shell";
 import { requireCabinetPage } from "@/lib/auth/session";
+import { countUnansweredReviews } from "@/lib/data/reviews";
 import { createClient } from "@/lib/supabase/server";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -23,9 +24,10 @@ export default async function CabinetLayout({ children }: { children: React.Reac
       .eq("status", "new");
     waiting = count ?? 0;
   }
+  const unansweredReviews = permissions.includes("reviews") ? await countUnansweredReviews(store.id) : 0;
 
   return (
-    <CabinetShell store={{ name: store.name, slug: store.slug }} email={user.email ?? ""} role={role} permissions={permissions} waitingReservations={waiting}>
+    <CabinetShell store={{ name: store.name, slug: store.slug }} email={user.email ?? ""} role={role} permissions={permissions} waitingReservations={waiting} unansweredReviews={unansweredReviews}>
       {mustChangePassword ? (
         // Новый продавец с временным паролем: сначала свой пароль, потом всё остальное
         <div className="mx-auto max-w-md">

@@ -7,4 +7,4 @@ export const OPERATOR_NAME: string | null = null;
 export const PRIVACY_EMAIL: string | null = null;
 
 /** Дата последней редакции политики (ГГГГ-ММ-ДД) */
-export const PRIVACY_UPDATED = "2026-10-02";
+export const PRIVACY_UPDATED = "2026-10-13";

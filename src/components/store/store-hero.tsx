@@ -14,6 +14,8 @@ type StoreHeroProps = {
   store: Store;
   stats: { total: number; available: number; discounted: number };
   t: Dictionary;
+  /** Оценка и доверие — под счётчиками товаров */
+  children?: React.ReactNode;
 };
 
 const button =
@@ -21,7 +23,7 @@ const button =
 const outline = `${button} bg-white text-stone-800 ring-1 ring-stone-200 hover:bg-stone-50`;
 
 /** Шапка витрины магазина — светлая, как профиль в Instagram */
-export function StoreHero({ store, stats, t }: StoreHeroProps) {
+export function StoreHero({ store, stats, t, children }: StoreHeroProps) {
   const contactPhone = store.whatsapp ?? store.phone;
   const whatsappHref = contactPhone
     ? buildWhatsAppUrl(contactPhone, t.store.whatsappMessage(store.name))
@@ -59,6 +61,8 @@ export function StoreHero({ store, stats, t }: StoreHeroProps) {
             </span>
           )}
         </p>
+
+        {children}
 
         {store.description && <p className="mt-3 max-w-2xl leading-relaxed text-stone-700">{store.description}</p>}
 

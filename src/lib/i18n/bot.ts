@@ -31,6 +31,13 @@ export type BotMessages = {
   startNoCode: string;
   linkExpired: string;
   linked: (store: string) => string;
+  review: {
+    title: (product: string) => string;
+    product: (stars: string) => string;
+    store: (stars: string) => string;
+    author: (name: string) => string;
+    reply: string;
+  };
   summary: {
     hello: (store: string) => string;
     visitors: (n: number) => string;
@@ -79,6 +86,13 @@ const ru: BotMessages = {
   linkExpired: "Ссылка устарела. Откройте кабинет магазина и нажмите «Подключить Telegram» ещё раз.",
   linked: (store) =>
     `Готово! Брони магазина <b>${store}</b> будут приходить сюда.\n\nНа каждую бронь отвечайте кнопками «✅ Отложили» или «❌ Нет в наличии» — покупатель сразу увидит ответ на сайте.`,
+  review: {
+    title: (product) => `⭐ <b>Новый отзыв</b> — ${product}`,
+    product: (stars) => `Товар: ${stars}`,
+    store: (stars) => `Магазин: ${stars}`,
+    author: (name) => `Автор: ${name}`,
+    reply: "Ответить в кабинете",
+  },
   summary: {
     hello: (store) => `☀️ Доброе утро! <b>${store}</b> вчера на ShopTour:`,
     visitors: (n) => `👀 ${n} ${plural(n, "человек смотрел", "человека смотрели", "человек смотрели")} ваш магазин`,
@@ -127,6 +141,13 @@ const kk: BotMessages = {
   linkExpired: "Сілтеме ескірген. Дүкен кабинетін ашып, «Telegram-ды қосу» түймесін қайта басыңыз.",
   linked: (store) =>
     `Дайын! <b>${store}</b> дүкенінің брондары осында келеді.\n\nӘр бронға «✅ Сақтап қойдық» немесе «❌ Қолда жоқ» түймелерімен жауап беріңіз — сатып алушы жауапты сайттан бірден көреді.`,
+  review: {
+    title: (product) => `⭐ <b>Жаңа пікір</b> — ${product}`,
+    product: (stars) => `Тауар: ${stars}`,
+    store: (stars) => `Дүкен: ${stars}`,
+    author: (name) => `Авторы: ${name}`,
+    reply: "Кабинетте жауап беру",
+  },
   summary: {
     hello: (store) => `☀️ Қайырлы таң! <b>${store}</b> кеше ShopTour-да:`,
     visitors: (n) => `👀 Дүкеніңізді ${n} адам қарады`,
@@ -175,6 +196,13 @@ const en: BotMessages = {
   linkExpired: "The link has expired. Open your store dashboard and tap “Connect Telegram” again.",
   linked: (store) =>
     `Done! Reservations for <b>${store}</b> will arrive here.\n\nAnswer each one with the buttons “✅ Set aside” or “❌ Out of stock” — the shopper sees the answer on the site right away.`,
+  review: {
+    title: (product) => `⭐ <b>New review</b> — ${product}`,
+    product: (stars) => `Item: ${stars}`,
+    store: (stars) => `Store: ${stars}`,
+    author: (name) => `By: ${name}`,
+    reply: "Reply in the dashboard",
+  },
   summary: {
     hello: (store) => `☀️ Good morning! <b>${store}</b> on ShopTour yesterday:`,
     visitors: (n) => `👀 ${n} ${s(n, "person", "people")} viewed your store`,
