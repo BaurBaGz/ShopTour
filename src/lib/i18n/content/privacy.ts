@@ -43,7 +43,7 @@ export const PRIVACY: Record<Locale, PrivacyContent> = {
           [
             "Аккаунт покупателя: email, пароль (хранится в зашифрованном виде, мы его не видим), имя — если вы его указали.",
             "Бронь вещи: имя, номер телефона, когда вы придёте и ваш комментарий.",
-            "Отзыв: подпись, которую вы указали, оценки и текст. Отзыв виден всем на сайте; магазин может на него ответить.",
+            "Отзыв: подпись, которую вы указали, оценки, текст и фото, если вы их приложили. Отзыв виден всем на сайте; магазин может на него ответить. Из фото мы удаляем геолокацию и данные камеры.",
             "Избранное, маршруты и история просмотров: без аккаунта они хранятся только в вашем браузере; с аккаунтом — ещё и у нас, чтобы быть на всех ваших устройствах.",
             "Магазины и их сотрудники: email и имя сотрудника, а также данные магазина, которые видят все — название, адрес, телефон, WhatsApp, Instagram, товары и фото.",
             "Статистика посещений: какие страницы, магазины и товары открывали, нажатия на WhatsApp, телефон, карту и маршрут, поисковые запросы в каталоге. Посетитель в статистике — случайный номер из вашего браузера, без имени, email и телефона.",
@@ -156,7 +156,7 @@ export const PRIVACY: Record<Locale, PrivacyContent> = {
           [
             "Сатып алушының аккаунты: email, құпиясөз (шифрланған түрде сақталады, біз оны көрмейміз), атыңыз — егер көрсетсеңіз.",
             "Затты брондау: атыңыз, телефон нөміріңіз, қашан келетініңіз және түсініктемеңіз.",
-            "Пікір: сіз көрсеткен қолтаңба, бағалар мен мәтін. Пікірді сайтта бәрі көреді; дүкен оған жауап бере алады.",
+            "Пікір: сіз көрсеткен қолтаңба, бағалар, мәтін және тіркеген болсаңыз — фото. Пікірді сайтта бәрі көреді; дүкен оған жауап бере алады. Фотодан геолокация мен камера деректерін жоямыз.",
             "Таңдаулылар, маршруттар және қарау тарихы: аккаунтсыз олар тек браузеріңізде сақталады; аккаунтпен — барлық құрылғыңызда болуы үшін бізде де сақталады.",
             "Дүкендер мен олардың қызметкерлері: қызметкердің email-і мен аты, сондай-ақ бәріне көрінетін дүкен деректері — атауы, мекенжайы, телефоны, WhatsApp, Instagram, тауарлары мен фотолары.",
             "Кіру статистикасы: қай беттер, дүкендер мен тауарлар ашылды, WhatsApp, телефон, карта және маршрут түймелерінің басылуы, каталогтағы іздеу сұраулары. Статистикадағы келуші — браузеріңіздегі кездейсоқ нөмір, аты, email-і және телефоны жоқ.",
@@ -269,7 +269,7 @@ export const PRIVACY: Record<Locale, PrivacyContent> = {
           [
             "Shopper account: email, password (stored encrypted — we cannot see it), your name if you provide it.",
             "Item reservation: your name, phone number, when you will come and your comment.",
-            "Review: the name you choose to show, your ratings and text. Everyone on the site can see a review; the store can reply to it.",
+            "Review: the name you choose to show, your ratings, text and photos if you attach them. Everyone on the site can see a review; the store can reply to it. We remove location and camera data from photos.",
             "Favorites, routes and viewing history: without an account they are stored only in your browser; with an account they are also stored with us so that they are available on all your devices.",
             "Stores and their staff: the staff member's email and name, and the store details that everyone can see — name, address, phone, WhatsApp, Instagram, items and photos.",
             "Visit statistics: which pages, stores and items were opened, taps on WhatsApp, phone, map and route, search queries in the catalog. A visitor in the statistics is a random number from your browser, with no name, email or phone.",

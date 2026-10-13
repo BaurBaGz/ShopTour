@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useState } from "react";
 import { ReviewForm } from "@/components/reviews/review-form";
 import { ReviewItem } from "@/components/reviews/review-item";
+import { ReviewPhotos } from "@/components/reviews/review-photos";
 import { Stars } from "@/components/reviews/stars";
 import type { PublicReview, ReviewStats } from "@/lib/data/reviews";
 import { useT } from "@/lib/i18n/client";
@@ -21,21 +22,53 @@ type ProductReviewsProps = {
 };
 
 const FITS: ReviewFit[] = ["small", "true", "large"];
+const STARS = [5, 4, 3, 2, 1] as const;
+type Filter = "all" | "photos" | (typeof STARS)[number];
 
 /** Отзывы в карточке товара: две вкладки — о товаре и о магазине — и форма своего отзыва */
 export function ProductReviews({ productId, storeId, stats, productReviews, storeReviews, viewer }: ProductReviewsProps) {
   const t = useT();
   const r = t.reviews;
-  const [tab, setTab] = useState<"product" | "store">("product");
+  const [tab, setTabState] = useState<"product" | "store">("product");
+  const [filter, setFilter] = useState<Filter>("all");
+  const setTab = (next: "product" | "store") => {
+    setTabState(next);
+    setFilter("all");
+  };
   const [writing, setWriting] = useState(false);
   const closeForm = useCallback(() => setWriting(false), []);
 
   const fitTotal = stats.fit.small + stats.fit.true + stats.fit.large;
   const mine = viewer?.mine ?? null;
   const list = tab === "product" ? productReviews : storeReviews;
+  const ratingOf = (review: PublicReview) => (tab === "product" ? review.product_rating : review.store_rating);
+  const matches = (review: PublicReview) =>
+    filter === "all" ? true : filter === "photos" ? review.photos.length > 0 : ratingOf(review) === filter;
+  // Сколько отзывов на каждую оценку и с фото — для кнопок фильтра и полосок
+  const starCounts = Object.fromEntries(STARS.map((n) => [n, list.filter((review) => ratingOf(review) === n).length])) as Record<number, number>;
+  const rated = STARS.reduce((sum, n) => sum + starCounts[n], 0);
+  const withPhotos = list.filter((review) => review.photos.length > 0).length;
   // Свой отзыв показываем отдельно сверху — не дублируем его в списке
-  const others = mine ? list.filter((review) => review.id !== mine.id) : list;
-  const showMine = mine !== null && !writing && (tab === "product" || mine.store_rating !== null);
+  const others = (mine ? list.filter((review) => review.id !== mine.id) : list).filter(matches);
+  const showMine = mine !== null && !writing && (tab === "product" || mine.store_rating !== null) && matches(mine);
+  // Лента «Фото покупателей» — из отзывов о товаре
+  const buyerPhotos = productReviews.flatMap((review) => review.photos.map((path) => ({ path, author: review.author_name }))).slice(0, 15);
+
+  const chip = (id: Filter, text: string, count: number) => (
+    <button
+      key={String(id)}
+      type="button"
+      aria-pressed={filter === id}
+      disabled={count === 0 && filter !== id}
+      onClick={() => setFilter(id)}
+      className={cn(
+        "min-h-11 rounded-full px-3.5 text-sm font-medium transition disabled:opacity-40 sm:min-h-9",
+        filter === id ? "bg-rose-600 text-white" : "bg-white text-stone-700 ring-1 ring-stone-200 hover:bg-stone-50",
+      )}
+    >
+      {text} <span className={filter === id ? "text-rose-100" : "text-stone-400"}>{count}</span>
+    </button>
+  );
 
   const tabButton = (id: "product" | "store", text: string, count: number) => (
     <button
@@ -85,6 +118,15 @@ export function ProductReviews({ productId, storeId, stats, productReviews, stor
         </div>
       )}
 
+      {buyerPhotos.length > 0 && (
+        <div className="mt-5">
+          <p className="mb-2 text-sm font-semibold text-stone-700">
+            📷 {r.buyerPhotos} <span className="font-normal text-stone-400">{buyerPhotos.length}</span>
+          </p>
+          <ReviewPhotos photos={buyerPhotos} size="lg" />
+        </div>
+      )}
+
       <div role="tablist" className="mt-5 flex flex-wrap gap-2">
         {tabButton("product", r.aboutProduct, stats.productCount)}
         {tabButton("store", r.aboutStore, stats.storeCount)}
@@ -115,6 +157,27 @@ export function ProductReviews({ productId, storeId, stats, productReviews, stor
             <p className="text-sm text-stone-500">{r.newStore}</p>
           )}
 
+          {rated > 0 && (
+            <ul className="mt-4 flex flex-col gap-1 border-t border-stone-100 pt-3">
+              {STARS.map((n) => (
+                <li key={n}>
+                  <button
+                    type="button"
+                    onClick={() => setFilter(filter === n ? "all" : n)}
+                    disabled={starCounts[n] === 0}
+                    className="flex w-full items-center gap-2 rounded-lg py-0.5 text-xs text-stone-600 hover:text-stone-900 disabled:hover:text-stone-600"
+                  >
+                    <span className="w-6 shrink-0 text-left">{n} ★</span>
+                    <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-stone-100">
+                      <span className="block h-full rounded-full bg-amber-500" style={{ width: `${Math.round((starCounts[n] / rated) * 100)}%` }} />
+                    </span>
+                    <span className="w-6 shrink-0 text-right text-stone-400">{starCounts[n]}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
           {tab === "product" && fitTotal > 0 && (
             <div className="mt-4 border-t border-stone-100 pt-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">{r.fitTitle}</p>
@@ -139,6 +202,13 @@ export function ProductReviews({ productId, storeId, stats, productReviews, stor
         </div>
 
         <div role="tabpanel" className="flex flex-col gap-3">
+          {list.length > 0 && (
+            <div className="flex flex-wrap gap-2" aria-label={r.title}>
+              {chip("all", r.filterAll, list.length)}
+              {STARS.map((n) => chip(n, r.starFilter(n), starCounts[n]))}
+              {chip("photos", `📷 ${r.withPhotos}`, withPhotos)}
+            </div>
+          )}
           {showMine && mine && (
             <ReviewItem review={mine} mode={tab} t={t}>
               <p className="mt-2 text-xs font-semibold text-rose-600">{r.yourReview}</p>
@@ -148,7 +218,8 @@ export function ProductReviews({ productId, storeId, stats, productReviews, stor
           {others.map((review) => (
             <ReviewItem key={review.id} review={review} mode={tab} t={t} />
           ))}
-          {others.length === 0 && !showMine && (
+          {others.length === 0 && !showMine && filter !== "all" && <p className="text-sm text-stone-500">{r.noMatch}</p>}
+          {others.length === 0 && !showMine && filter === "all" && (
             <p className="rounded-2xl border border-dashed border-stone-300 px-4 py-6 text-sm text-stone-600">
               {tab === "product" ? r.noProductReviews : r.noStoreReviews} {r.beFirst}
             </p>

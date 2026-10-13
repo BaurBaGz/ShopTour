@@ -1,8 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { deleteReviewAdminAction, dismissReportAction, setReviewStatusAction } from "@/app/admin/(panel)/reviews/actions";
+import { deleteReviewAdminAction, dismissReportAction, removeReviewPhotoAction, setReviewStatusAction } from "@/app/admin/(panel)/reviews/actions";
+import { reviewPhotoUrl } from "@/lib/review-photo-url";
 import type { AdminReview } from "@/lib/data/reviews";
 
 const OUTCOME: Record<string, string> = {
@@ -69,6 +71,25 @@ function Row({ review, canDelete }: { review: AdminReview; canDelete: boolean })
         {review.fit && ` · ${FIT[review.fit]}`}
       </p>
       {review.body && <p className="mt-2 whitespace-pre-line text-sm text-stone-800">{review.body}</p>}
+      {review.photos.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-2">
+          {review.photos.map((path) => (
+            <div key={path} className="relative">
+              <a href={reviewPhotoUrl(path)} target="_blank" rel="noopener noreferrer" className="relative block h-24 w-24 overflow-hidden rounded-xl bg-stone-100 ring-1 ring-stone-200">
+                <Image src={reviewPhotoUrl(path)} alt="Фото к отзыву" fill className="object-cover" sizes="96px" />
+              </a>
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => window.confirm("Удалить это фото из отзыва?") && run(() => removeReviewPhotoAction(review.id, path))}
+                className="mt-1 w-24 rounded-lg text-xs text-red-700 hover:bg-red-50"
+              >
+                Удалить фото
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
       {review.store_reply && (
         <p className="mt-2 rounded-xl bg-stone-50 px-3 py-2 text-sm text-stone-700">
           <span className="text-xs font-semibold text-stone-500">Ответ магазина: </span>

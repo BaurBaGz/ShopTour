@@ -1,10 +1,12 @@
 "use client";
 
-import { useActionState, useEffect, useState, useTransition } from "react";
+import Image from "next/image";
+import { startTransition, useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { deleteReviewAction, saveReviewAction, type ReviewState } from "@/app/(site)/reviews/actions";
 import type { PublicReview } from "@/lib/data/reviews";
 import { useT } from "@/lib/i18n/client";
-import { submitKeepingValues } from "@/lib/form-submit";
+import { compressToWebp } from "@/lib/media";
+import { MAX_REVIEW_PHOTOS, reviewPhotoUrl } from "@/lib/review-photo-url";
 import { showToast } from "@/lib/toast";
 import { cn } from "@/lib/utils/cn";
 import type { ReviewFit, ReviewOutcome } from "@/types/database";
@@ -63,6 +65,45 @@ export function ReviewForm({ productId, mine, defaultName, onDone }: ReviewFormP
   const [storeRating, setStoreRating] = useState<number | null>(mine?.store_rating ?? null);
   const [removing, startRemoving] = useTransition();
   const [removeError, setRemoveError] = useState<string | null>(null);
+  // Фото: уже загруженные (при изменении отзыва) и новые файлы с превью
+  const [kept, setKept] = useState<string[]>(mine?.photos ?? []);
+  const [added, setAdded] = useState<{ file: File; preview: string }[]>([]);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const [preparing, setPreparing] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const slots = MAX_REVIEW_PHOTOS - kept.length - added.length;
+
+  // Превью живут в памяти браузера — освобождаем, когда форма закрывается
+  const addedRef = useRef(added);
+  addedRef.current = added;
+  useEffect(() => () => addedRef.current.forEach((a) => URL.revokeObjectURL(a.preview)), []);
+
+  const addFiles = (list: FileList | null) => {
+    const files = Array.from(list ?? []).filter((f) => f.type.startsWith("image/"));
+    setPhotoError(files.length > slots ? r.errorPhotoCount(MAX_REVIEW_PHOTOS) : null);
+    setAdded((current) => [...current, ...files.slice(0, Math.max(0, slots)).map((file) => ({ file, preview: URL.createObjectURL(file) }))]);
+    if (fileInput.current) fileInput.current.value = "";
+  };
+
+  // Фото сжимаем в браузере (с телефона они по 5+ МБ), затем отправляем вместе с формой
+  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    formData.delete("photoPicker");
+    kept.forEach((path) => formData.append("keepPhoto", path));
+    setPreparing(true);
+    try {
+      for (const { file } of added) {
+        formData.append("photo", await compressToWebp(file, 1600, r.errorPhotoType), "photo.webp");
+      }
+    } catch {
+      setPreparing(false);
+      setPhotoError(r.errorPhotoType);
+      return;
+    }
+    setPreparing(false);
+    startTransition(() => formAction(formData));
+  };
 
   useEffect(() => {
     if (!state.success) return;
@@ -80,7 +121,7 @@ export function ReviewForm({ productId, mine, defaultName, onDone }: ReviewFormP
   };
 
   return (
-    <form onSubmit={submitKeepingValues(formAction)} className="flex flex-col gap-5 rounded-2xl border border-stone-200 bg-white p-4 sm:p-5">
+    <form onSubmit={submit} className="flex flex-col gap-5 rounded-2xl border border-stone-200 bg-white p-4 sm:p-5">
       <input type="hidden" name="productId" value={productId} />
 
       <fieldset>
@@ -118,6 +159,42 @@ export function ReviewForm({ productId, mine, defaultName, onDone }: ReviewFormP
         <textarea id="review-body" name="body" rows={4} maxLength={1000} defaultValue={mine?.body ?? ""} placeholder={r.bodyPlaceholder} className={field} />
       </div>
 
+      <fieldset>
+        <legend className={label}>{r.photos}</legend>
+        <div className="flex flex-wrap gap-2">
+          {kept.map((path) => (
+            <div key={path} className="relative h-20 w-20 overflow-hidden rounded-xl bg-stone-100 ring-1 ring-stone-200">
+              <Image src={reviewPhotoUrl(path)} alt="" fill className="object-cover" sizes="80px" />
+              <button type="button" onClick={() => setKept((k) => k.filter((p) => p !== path))} aria-label={r.removePhoto} className="absolute right-0.5 top-0.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-xs text-white">
+                ✕
+              </button>
+            </div>
+          ))}
+          {added.map((a) => (
+            <div key={a.preview} className="relative h-20 w-20 overflow-hidden rounded-xl bg-stone-100 ring-1 ring-stone-200">
+              {/* Превью локального файла (blob:) — обычный img, next/image его не обрабатывает */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={a.preview} alt="" className="h-full w-full object-cover" />
+              <button type="button" onClick={() => {
+                  URL.revokeObjectURL(a.preview);
+                  setAdded((list) => list.filter((x) => x !== a));
+                }} aria-label={r.removePhoto} className="absolute right-0.5 top-0.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-xs text-white">
+                ✕
+              </button>
+            </div>
+          ))}
+          {slots > 0 && (
+            <label className="flex h-20 w-20 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-stone-300 text-xs font-medium text-stone-600 transition hover:bg-stone-50">
+              <span className="text-xl" aria-hidden>📷</span>
+              {r.addPhoto}
+              <input ref={fileInput} type="file" name="photoPicker" accept="image/*" multiple className="sr-only" onChange={(e) => addFiles(e.target.files)} />
+            </label>
+          )}
+        </div>
+        <p className="mt-1 text-xs text-stone-500">{r.photosHint(MAX_REVIEW_PHOTOS)}</p>
+        {photoError && <p role="alert" className="mt-1 text-sm text-red-700">{photoError}</p>}
+      </fieldset>
+
       <div>
         <label htmlFor="review-name" className={label}>{r.name}</label>
         <input id="review-name" name="authorName" required maxLength={40} defaultValue={mine?.author_name ?? defaultName} placeholder={r.namePlaceholder} className={field} />
@@ -131,8 +208,8 @@ export function ReviewForm({ productId, mine, defaultName, onDone }: ReviewFormP
       )}
 
       <div className="flex flex-wrap gap-2">
-        <button type="submit" disabled={pending || removing} className="min-h-11 rounded-xl bg-stone-900 px-5 text-sm font-semibold text-white transition hover:bg-rose-600 disabled:opacity-60">
-          {pending ? r.saving : mine ? r.save : r.publish}
+        <button type="submit" disabled={pending || removing || preparing} className="min-h-11 rounded-xl bg-stone-900 px-5 text-sm font-semibold text-white transition hover:bg-rose-600 disabled:opacity-60">
+          {pending || preparing ? r.saving : mine ? r.save : r.publish}
         </button>
         <button type="button" onClick={onDone} className="min-h-11 rounded-xl px-4 text-sm font-medium text-stone-700 ring-1 ring-stone-200 hover:bg-stone-50">
           {r.cancel}

@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { getSessionUser } from "@/lib/auth/session";
 import { isUuid } from "@/lib/catalog-filters";
 import { getT } from "@/lib/i18n/server";
+import { isReviewPhotoPath, MAX_REVIEW_PHOTOS } from "@/lib/review-photo-url";
+import { prepareReviewPhoto, removeReviewPhotos, ReviewPhotoError, uploadReviewPhotos } from "@/lib/review-photos";
 import { notifyStoreReview, REVIEW_FITS, REVIEW_OUTCOMES } from "@/lib/reviews";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { ReviewFit, ReviewOutcome } from "@/types/database";
@@ -49,6 +51,11 @@ export async function saveReviewAction(_prev: ReviewState, formData: FormData): 
   if (!authorName || authorName.length > 40) return { error: r.errorName };
   if (body && body.length > 1000) return { error: r.errorBody };
 
+  // Фото: какие из уже загруженных оставить и новые файлы
+  const keep = formData.getAll("keepPhoto").map(String).filter(isReviewPhotoPath);
+  const files = formData.getAll("photo").filter((f): f is File => f instanceof File && f.size > 0);
+  if (keep.length + files.length > MAX_REVIEW_PHOTOS) return { error: r.errorPhotoCount(MAX_REVIEW_PHOTOS) };
+
   const admin = createAdminClient();
   const { data: product } = await admin
     .from("products")
@@ -72,27 +79,45 @@ export async function saveReviewAction(_prev: ReviewState, formData: FormData): 
 
   const { data: existing } = await admin
     .from("reviews")
-    .select("id")
+    .select("id, photos")
     .eq("user_id", user.id)
     .eq("product_id", productId)
     .maybeSingle();
 
-  if (existing) {
-    const { error } = await admin.from("reviews").update(fields).eq("id", existing.id);
-    if (error) {
-      console.error("[reviews] update:", error.message);
-      return { error: r.errorFailed };
+  // Оставить можно только свои прежние фото этого отзыва
+  const kept = keep.filter((path) => existing?.photos.includes(path));
+
+  if (!existing) {
+    // От спама: не больше 5 новых отзывов в час и 20 в сутки с одного аккаунта
+    const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { data: recent } = await admin.from("reviews").select("created_at").eq("user_id", user.id).gte("created_at", dayAgo);
+    if ((recent ?? []).length >= 20 || (recent ?? []).filter((x) => x.created_at >= hourAgo).length >= 5) {
+      return { error: r.errorTooMany };
     }
-    revalidateReviewPages(productId, store);
-    return { success: r.updated };
   }
 
-  // От спама: не больше 5 новых отзывов в час и 20 в сутки с одного аккаунта
-  const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-  const { data: recent } = await admin.from("reviews").select("created_at").eq("user_id", user.id).gte("created_at", dayAgo);
-  if ((recent ?? []).length >= 20 || (recent ?? []).filter((x) => x.created_at >= hourAgo).length >= 5) {
-    return { error: r.errorTooMany };
+  let uploaded: string[] = [];
+  try {
+    const prepared = await Promise.all(files.map(prepareReviewPhoto));
+    uploaded = await uploadReviewPhotos(user.id, prepared);
+  } catch (error) {
+    if (error instanceof ReviewPhotoError) return { error: error.reason === "size" ? r.errorPhotoSize : r.errorPhotoType };
+    console.error("[reviews] upload:", error instanceof Error ? error.message : error);
+    return { error: r.errorFailed };
+  }
+  const photos = [...kept, ...uploaded];
+
+  if (existing) {
+    const { error } = await admin.from("reviews").update({ ...fields, photos }).eq("id", existing.id);
+    if (error) {
+      console.error("[reviews] update:", error.message);
+      await removeReviewPhotos(uploaded);
+      return { error: r.errorFailed };
+    }
+    await removeReviewPhotos(existing.photos.filter((path) => !photos.includes(path)));
+    revalidateReviewPages(productId, store);
+    return { success: r.updated };
   }
 
   const { count: reservations } = await admin
@@ -105,6 +130,7 @@ export async function saveReviewAction(_prev: ReviewState, formData: FormData): 
     .from("reviews")
     .insert({
       ...fields,
+      photos,
       store_id: store.id,
       product_id: product.id,
       product_name: product.name,
@@ -115,6 +141,7 @@ export async function saveReviewAction(_prev: ReviewState, formData: FormData): 
     .single();
   if (error || !created) {
     console.error("[reviews] insert:", error?.message);
+    await removeReviewPhotos(uploaded);
     return { error: r.errorFailed };
   }
 
@@ -136,8 +163,9 @@ export async function deleteReviewAction(reviewId: string): Promise<{ error?: st
     .delete()
     .eq("id", reviewId)
     .eq("user_id", user.id)
-    .select("product_id, store:stores!reviews_store_id_fkey ( id, slug )");
+    .select("product_id, photos, store:stores!reviews_store_id_fkey ( id, slug )");
   if (error || !data?.length) return { error: r.errorFailed };
+  await removeReviewPhotos(data[0].photos ?? []);
   const store = data[0].store as unknown as { id: string; slug: string } | null;
   if (data[0].product_id && store) revalidateReviewPages(data[0].product_id, store);
   return {};

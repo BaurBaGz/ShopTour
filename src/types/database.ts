@@ -454,6 +454,7 @@ export interface Database {
           product_rating: number | null;
           fit: ReviewFit | null;
           body: string | null;
+          photos: string[];
           verified: boolean;
           is_example: boolean;
           status: "published" | "hidden";
@@ -477,6 +478,7 @@ export interface Database {
           product_rating?: number | null;
           fit?: ReviewFit | null;
           body?: string | null;
+          photos?: string[];
           verified?: boolean;
           status?: "published" | "hidden";
           created_at?: string;
@@ -489,6 +491,7 @@ export interface Database {
           product_rating?: number | null;
           fit?: ReviewFit | null;
           body?: string | null;
+          photos?: string[];
           verified?: boolean;
           status?: "published" | "hidden";
           reported_at?: string | null;

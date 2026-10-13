@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getSessionUser, getStoreForOwner } from "@/lib/auth/session";
 import { getStaffMember } from "@/lib/auth/staff";
 import { getT } from "@/lib/i18n/server";
+import { removeUserReviewPhotos } from "@/lib/review-photos";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -40,6 +41,9 @@ export async function deleteAccountAction(
     console.error("[account] delete:", error.message);
     return { error: t.account.deleteErrorFailed };
   }
+
+  // Отзывы удалились вместе с аккаунтом; их фото из хранилища убираем отдельно
+  await removeUserReviewPhotos(user.id);
 
   revalidatePath("/", "layout");
   redirect("/account/deleted");

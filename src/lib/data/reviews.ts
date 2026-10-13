@@ -19,6 +19,7 @@ export type PublicReview = Pick<
   | "product_rating"
   | "fit"
   | "body"
+  | "photos"
   | "verified"
   | "is_example"
   | "store_reply"
@@ -28,7 +29,7 @@ export type PublicReview = Pick<
 >;
 
 const PUBLIC_COLUMNS =
-  "id, product_id, product_name, author_name, outcome, store_rating, product_rating, fit, body, verified, is_example, store_reply, store_reply_at, created_at, status";
+  "id, product_id, product_name, author_name, outcome, store_rating, product_rating, fit, body, photos, verified, is_example, store_reply, store_reply_at, created_at, status";
 
 export type ReviewStats = {
   storeCount: number;

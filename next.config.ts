@@ -15,6 +15,10 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  experimental: {
+    // Отзыв с тремя фото с телефона (их ещё в браузере сжимаем, но запас нужен)
+    serverActions: { bodySizeLimit: "4mb" },
+  },
   images: {
     // Фото — только по https (ссылки с http не принимаем и при сохранении товара)
     remotePatterns: [

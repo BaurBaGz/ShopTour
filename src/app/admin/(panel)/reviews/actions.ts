@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getStaffForAction } from "@/lib/auth/staff";
 import { isUuid } from "@/lib/catalog-filters";
+import { removeReviewPhotos } from "@/lib/review-photos";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type Result = { error?: string };
@@ -50,7 +51,23 @@ export async function deleteReviewAdminAction(id: string): Promise<Result> {
   if (!isUuid(id)) return { error: "Отзыв не найден" };
   await revalidateReview(id);
   const admin = createAdminClient();
-  const { error } = await admin.from("reviews").delete().eq("id", id);
+  const { data, error } = await admin.from("reviews").delete().eq("id", id).select("photos");
   if (error) return { error: error.message };
+  await removeReviewPhotos(data?.[0]?.photos ?? []);
+  return {};
+}
+
+/** Убрать одно фото из отзыва (неприличное, чужое, с личными данными) */
+export async function removeReviewPhotoAction(id: string, path: string): Promise<Result> {
+  const { error: accessError } = await getStaffForAction();
+  if (accessError) return { error: accessError };
+  if (!isUuid(id)) return { error: "Отзыв не найден" };
+  const admin = createAdminClient();
+  const { data } = await admin.from("reviews").select("photos").eq("id", id).maybeSingle();
+  if (!data?.photos.includes(path)) return { error: "Фото не найдено" };
+  const { error } = await admin.from("reviews").update({ photos: data.photos.filter((p) => p !== path) }).eq("id", id);
+  if (error) return { error: error.message };
+  await removeReviewPhotos([path]);
+  await revalidateReview(id);
   return {};
 }

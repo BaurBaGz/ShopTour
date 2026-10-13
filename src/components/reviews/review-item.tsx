@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ReviewPhotos } from "@/components/reviews/review-photos";
 import { Stars } from "@/components/reviews/stars";
 import type { PublicReview } from "@/lib/data/reviews";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
@@ -45,6 +46,9 @@ export function ReviewItem({ review, mode, t, children }: ReviewItemProps) {
         </p>
       )}
       {review.body && <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-stone-700">{review.body}</p>}
+      {review.photos?.length > 0 && (
+        <ReviewPhotos photos={review.photos.map((path) => ({ path, author: review.author_name }))} className="mt-3" />
+      )}
       {review.store_reply && (
         <div className="mt-3 rounded-xl bg-stone-50 px-3 py-2.5 text-sm">
           <p className="text-xs font-semibold text-stone-500">{r.storeReply}</p>

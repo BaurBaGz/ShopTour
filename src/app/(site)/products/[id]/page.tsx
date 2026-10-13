@@ -88,8 +88,8 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   const [promotions, stats, productReviews, storeReviews, trust, popularity, mine] = await Promise.all([
     store ? getStorePromotions(store.id) : [],
     store ? getReviewStats(store.id, product.id) : null,
-    getProductReviews(product.id),
-    store ? getStoreReviews(store.id, 10) : [],
+    getProductReviews(product.id, 100),
+    store ? getStoreReviews(store.id, 100) : [],
     store ? getStoreTrust(store.id) : null,
     getProductPopularity(product.id),
     user ? getMyReview(user.id, product.id) : null,

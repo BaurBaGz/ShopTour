@@ -11,8 +11,13 @@ const QUALITY = 0.85;
 
 /** Уменьшаем фото с телефона (часто 4000+ px и 5+ МБ) до 1600 px в WebP */
 async function compressImage(file: File, c: ImageMessages): Promise<Blob> {
+  return compressToWebp(file, MAX_SIDE, c.processFailed);
+}
+
+/** Сжать фото в браузере до maxSide px в WebP (заодно пропадают данные EXIF) */
+export async function compressToWebp(file: File, maxSide: number, failText: string): Promise<Blob> {
   const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
+  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
   const width = Math.round(bitmap.width * scale);
   const height = Math.round(bitmap.height * scale);
   const canvas = document.createElement("canvas");
@@ -21,7 +26,7 @@ async function compressImage(file: File, c: ImageMessages): Promise<Blob> {
   canvas.getContext("2d")!.drawImage(bitmap, 0, 0, width, height);
   bitmap.close();
   const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", QUALITY));
-  if (!blob) throw new Error(c.processFailed);
+  if (!blob) throw new Error(failText);
   return blob;
 }
 
