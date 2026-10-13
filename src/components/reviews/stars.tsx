@@ -23,12 +23,13 @@ export function Stars({ value, label, className }: StarsProps) {
 }
 
 /** «★ 4.8 · 12 отзывов» — коротко рядом с названием магазина или товара */
-export function RatingBadge({ avg, countLabel, starsLabel, className }: { avg: number; countLabel: string; starsLabel: string; className?: string }) {
+export function RatingBadge({ avg, countLabel, starsLabel, note, className }: { avg: number; countLabel: string; starsLabel: string; note?: string | null; className?: string }) {
   return (
     <span className={cn("inline-flex items-center gap-1.5 text-sm", className)}>
       <Stars value={avg} label={starsLabel} className="text-sm" />
       <span className="font-semibold text-stone-900">{avg.toFixed(1)}</span>
       <span className="text-stone-500">· {countLabel}</span>
+      {note && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">{note}</span>}
     </span>
   );
 }

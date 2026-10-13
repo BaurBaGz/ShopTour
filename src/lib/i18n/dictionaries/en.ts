@@ -322,6 +322,14 @@ const en: Dictionary = {
     viewedWeek: (n) => `${n} ${s(n, "person", "people")} viewed it this week`,
   },
 
+  example: {
+    badge: "Example",
+    notice:
+      "This is an example listing: the item and its reviews were created by the ShopTour team to show what a store looks like on the site. The item may not actually be for sale.",
+    review: "Example review",
+    ratings: "based on example reviews",
+  },
+
   store: {
     metaNotFound: "Store not found — ShopTour",
     metaDescription: (name, city) => `${name}, ${city}: items and sizes in stock, address on the map, WhatsApp.`,

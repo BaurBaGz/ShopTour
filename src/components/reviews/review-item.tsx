@@ -28,6 +28,7 @@ export function ReviewItem({ review, mode, t, children }: ReviewItemProps) {
         <span className="text-xs text-stone-500">{reviewDate(review.created_at, t)}</span>
       </div>
       <div className="mt-1.5 flex flex-wrap gap-1.5 text-xs">
+        {review.is_example && <span className="rounded-full bg-amber-100 px-2 py-0.5 font-semibold text-amber-800">{t.example.review}</span>}
         {review.verified && <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700">✓ {r.verified}</span>}
         {review.outcome && <span className="rounded-full bg-stone-100 px-2 py-0.5 text-stone-600">{r.outcome[review.outcome]}</span>}
         {mode === "product" && review.fit && <span className="rounded-full bg-stone-100 px-2 py-0.5 text-stone-600">{r.fit[review.fit]}</span>}

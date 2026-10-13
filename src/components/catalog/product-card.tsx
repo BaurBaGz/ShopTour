@@ -95,6 +95,9 @@ export function ProductCard({ product, className }: ProductCardProps) {
             {t.audience[product.audience].label}
           </p>
         )}
+        {product.is_example && (
+          <span className="-mb-1 w-fit rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">{t.example.badge}</span>
+        )}
         <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-stone-900">
           <Link
             href={`/products/${product.id}`}

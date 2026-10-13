@@ -37,6 +37,7 @@ function Row({ review, canDelete }: { review: AdminReview; canDelete: boolean })
     <li className={`rounded-2xl border bg-white p-4 ${review.reported_at ? "border-amber-300" : "border-stone-200"}`}>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
         <span className="font-semibold text-stone-900">{review.author_name}</span>
+        {review.is_example && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">пример</span>}
         {review.verified && <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700">бронировал(а)</span>}
         {review.status === "hidden" && <span className="rounded-full bg-stone-200 px-2 py-0.5 text-xs text-stone-700">скрыт</span>}
         <span className="text-xs text-stone-500">{date(review.created_at)}</span>

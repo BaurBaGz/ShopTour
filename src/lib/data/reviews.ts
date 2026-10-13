@@ -20,6 +20,7 @@ export type PublicReview = Pick<
   | "fit"
   | "body"
   | "verified"
+  | "is_example"
   | "store_reply"
   | "store_reply_at"
   | "created_at"
@@ -27,17 +28,20 @@ export type PublicReview = Pick<
 >;
 
 const PUBLIC_COLUMNS =
-  "id, product_id, product_name, author_name, outcome, store_rating, product_rating, fit, body, verified, store_reply, store_reply_at, created_at, status";
+  "id, product_id, product_name, author_name, outcome, store_rating, product_rating, fit, body, verified, is_example, store_reply, store_reply_at, created_at, status";
 
 export type ReviewStats = {
   storeCount: number;
   storeAvg: number | null;
+  /** Все отзывы с оценкой магазина — примеры (тогда рядом с оценкой пишем «примеры») */
+  storeOnlyExamples: boolean;
   productCount: number;
   productAvg: number | null;
+  productOnlyExamples: boolean;
   fit: { small: number; true: number; large: number };
 };
 
-const EMPTY_STATS: ReviewStats = { storeCount: 0, storeAvg: null, productCount: 0, productAvg: null, fit: { small: 0, true: 0, large: 0 } };
+const EMPTY_STATS: ReviewStats = { storeCount: 0, storeAvg: null, storeOnlyExamples: false, productCount: 0, productAvg: null, productOnlyExamples: false, fit: { small: 0, true: 0, large: 0 } };
 
 /** Средние оценки магазина (и товара, если передан) — кэш на запрос */
 export const getReviewStats = cache(async (storeId: string, productId: string | null = null): Promise<ReviewStats> => {
@@ -49,8 +53,10 @@ export const getReviewStats = cache(async (storeId: string, productId: string | 
   return {
     storeCount: row.store_count,
     storeAvg: row.store_avg === null ? null : Number(row.store_avg),
+    storeOnlyExamples: row.store_count > 0 && row.store_examples === row.store_count,
     productCount: row.product_count,
     productAvg: row.product_avg === null ? null : Number(row.product_avg),
+    productOnlyExamples: row.product_count > 0 && row.product_examples === row.product_count,
     fit: { small: row.fit_small, true: row.fit_true, large: row.fit_large },
   };
 });

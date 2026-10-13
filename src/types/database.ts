@@ -111,6 +111,8 @@ export interface Database {
           in_stock: boolean;
           is_hidden: boolean;
           is_draft: boolean;
+          /** Товар-пример (витрина для показа магазинам) */
+          is_example?: boolean;
           listing?: string;
           rent_price?: number | null;
           rent_terms?: string | null;
@@ -445,7 +447,7 @@ export interface Database {
           store_id: string;
           product_id: string | null;
           product_name: string | null;
-          user_id: string;
+          user_id: string | null;
           author_name: string;
           outcome: ReviewOutcome | null;
           store_rating: number | null;
@@ -453,6 +455,7 @@ export interface Database {
           fit: ReviewFit | null;
           body: string | null;
           verified: boolean;
+          is_example: boolean;
           status: "published" | "hidden";
           reported_at: string | null;
           report_reason: string | null;
@@ -466,8 +469,9 @@ export interface Database {
           store_id: string;
           product_id?: string | null;
           product_name?: string | null;
-          user_id: string;
+          user_id?: string | null;
           author_name: string;
+          is_example?: boolean;
           outcome?: ReviewOutcome | null;
           store_rating?: number | null;
           product_rating?: number | null;
@@ -538,8 +542,10 @@ export interface Database {
         Returns: {
           store_count: number;
           store_avg: number | null;
+          store_examples: number;
           product_count: number;
           product_avg: number | null;
+          product_examples: number;
           fit_small: number;
           fit_true: number;
           fit_large: number;

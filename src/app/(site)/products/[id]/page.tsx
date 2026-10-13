@@ -170,7 +170,12 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
             </h1>
             {stats && stats.productAvg !== null && (
               <a href="#reviews" className="mt-2 inline-block hover:opacity-80">
-                <RatingBadge avg={stats.productAvg} countLabel={t.reviews.count(stats.productCount)} starsLabel={t.reviews.stars(Math.round(stats.productAvg))} />
+                <RatingBadge
+                  avg={stats.productAvg}
+                  countLabel={t.reviews.count(stats.productCount)}
+                  starsLabel={t.reviews.stars(Math.round(stats.productAvg))}
+                  note={stats.productOnlyExamples ? t.example.ratings : null}
+                />
               </a>
             )}
             <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -213,6 +218,13 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
               </p>
             )}
           </div>
+
+          {product.is_example && (
+            <p className="-mt-2 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-200">
+              <span className="mr-2 rounded-full bg-amber-200 px-2 py-0.5 text-xs font-semibold">{t.example.badge}</span>
+              {t.example.notice}
+            </p>
+          )}
 
           {popular.length > 0 && (
             <p className="-mt-2 text-sm font-medium text-orange-700">🔥 {popular.join(" · ")}</p>

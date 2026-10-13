@@ -334,6 +334,14 @@ const ru = {
     viewedWeek: (n: number) => `Смотрели ${n} ${plural(n, "человек", "человека", "человек")} за неделю`,
   },
 
+  example: {
+    badge: "Пример",
+    notice:
+      "Это пример карточки: товар и отзывы созданы командой ShopTour, чтобы показать, как выглядит магазин на сайте. Такой вещи может не быть в продаже.",
+    review: "Пример отзыва",
+    ratings: "по примерам отзывов",
+  },
+
   store: {
     metaNotFound: "Магазин не найден — ShopTour",
     metaDescription: (name: string, city: string) =>

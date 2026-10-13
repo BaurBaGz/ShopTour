@@ -26,7 +26,12 @@ export function StoreTrustLine({ stats, trust, t, reviewsHref, className }: Stor
       <li>
         {stats.storeAvg !== null ? (
           <a href={reviewsHref} className="hover:opacity-80">
-            <RatingBadge avg={stats.storeAvg} countLabel={r.count(stats.storeCount)} starsLabel={r.stars(Math.round(stats.storeAvg))} />
+            <RatingBadge
+              avg={stats.storeAvg}
+              countLabel={r.count(stats.storeCount)}
+              starsLabel={r.stars(Math.round(stats.storeAvg))}
+              note={stats.storeOnlyExamples ? t.example.ratings : null}
+            />
           </a>
         ) : (
           <span className="text-stone-500">{r.newStore}</span>

@@ -99,6 +99,7 @@ export function ProductReviews({ productId, storeId, stats, productReviews, stor
                 <p className="text-3xl font-semibold text-stone-900">{stats.productAvg.toFixed(1)}</p>
                 <Stars value={stats.productAvg} label={r.stars(Math.round(stats.productAvg))} className="mt-1 text-lg" />
                 <p className="mt-1 text-sm text-stone-500">{r.count(stats.productCount)}</p>
+                {stats.productOnlyExamples && <p className="mt-1 text-xs font-semibold text-amber-800">{t.example.ratings}</p>}
               </>
             ) : (
               <p className="text-sm text-stone-500">{r.noProductReviews}</p>
@@ -108,6 +109,7 @@ export function ProductReviews({ productId, storeId, stats, productReviews, stor
               <p className="text-3xl font-semibold text-stone-900">{stats.storeAvg.toFixed(1)}</p>
               <Stars value={stats.storeAvg} label={r.stars(Math.round(stats.storeAvg))} className="mt-1 text-lg" />
               <p className="mt-1 text-sm text-stone-500">{r.count(stats.storeCount)}</p>
+              {stats.storeOnlyExamples && <p className="mt-1 text-xs font-semibold text-amber-800">{t.example.ratings}</p>}
             </>
           ) : (
             <p className="text-sm text-stone-500">{r.newStore}</p>
