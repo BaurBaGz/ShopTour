@@ -297,6 +297,8 @@ const ru = {
     storeReply: "Ответ магазина",
     item: (name: string) => `Товар: ${name}`,
     stars: (n: number) => `Оценка ${n} из 5`,
+    allReviews: (n: number) => `Все ${n} ${plural(n, "отзыв", "отзыва", "отзывов")}`,
+    closeReviews: "Закрыть отзывы",
     allStoreReviews: "Все отзывы о магазине →",
     newStore: "Новый магазин — отзывов пока нет",
     storeSectionTitle: "Отзывы о магазине",

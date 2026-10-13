@@ -33,7 +33,7 @@ function Lightbox({ photos, index, onClose }: { photos: ReviewPhoto[]; index: nu
   const arrow = "absolute top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-2xl text-white hover:bg-white/25";
 
   return (
-    <div role="dialog" aria-modal="true" aria-label={r.buyerPhotos} className="fixed inset-0 z-50 flex items-center justify-center bg-black/90" onClick={onClose}>
+    <div data-lightbox role="dialog" aria-modal="true" aria-label={r.buyerPhotos} className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90" onClick={onClose}>
       <div className="relative h-[85vh] w-[92vw] max-w-3xl" onClick={(e) => e.stopPropagation()}>
         <Image src={reviewPhotoUrl(photo.path)} alt={r.photoAlt(photo.author, current + 1)} fill className="object-contain" sizes="92vw" />
         {photos.length > 1 && (

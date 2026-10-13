@@ -287,6 +287,8 @@ const kk: Dictionary = {
     storeReply: "Дүкеннің жауабы",
     item: (name) => `Тауар: ${name}`,
     stars: (n) => `Баға: 5-тен ${n}`,
+    allReviews: (n) => `Барлық ${n} пікір`,
+    closeReviews: "Пікірлерді жабу",
     allStoreReviews: "Дүкен туралы барлық пікір →",
     newStore: "Жаңа дүкен — әзірге пікір жоқ",
     storeSectionTitle: "Дүкен туралы пікірлер",

@@ -287,6 +287,8 @@ const en: Dictionary = {
     storeReply: "Store reply",
     item: (name) => `Item: ${name}`,
     stars: (n) => `Rated ${n} out of 5`,
+    allReviews: (n) => `All ${n} ${s(n, "review", "reviews")}`,
+    closeReviews: "Close reviews",
     allStoreReviews: "All store reviews →",
     newStore: "New store — no reviews yet",
     storeSectionTitle: "Store reviews",
